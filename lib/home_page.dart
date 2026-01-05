@@ -15,6 +15,12 @@ class _HomePageState extends State<HomePage> {
   String? _location;
   bool _planted = false;
 
+  final List<String> instructionImages = [
+    'assets/images/info1.png',
+    'assets/images/info2.png',
+    'assets/images/info3.png',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -63,9 +69,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable location services.')),
-      );
+      _showSnack('Please enable location services.');
       return;
     }
 
@@ -73,19 +77,13 @@ class _HomePageState extends State<HomePage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied.')),
-        );
+        _showSnack('Location permission denied.');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permission permanently denied.'),
-        ),
-      );
+      _showSnack('Location permission permanently denied.');
       return;
     }
 
@@ -95,17 +93,14 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _location =
-          'Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)}';
+          'Lat: ${position.latitude.toStringAsFixed(5)}, '
+          'Lng: ${position.longitude.toStringAsFixed(5)}';
     });
   }
 
   Future<void> _confirmPlanting() async {
     if (_plantingDate == null || _location == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select date and capture location first!'),
-        ),
-      );
+      _showSnack('Please select date and capture location first!');
       return;
     }
 
@@ -134,26 +129,90 @@ class _HomePageState extends State<HomePage> {
 
     if (confirm == true) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('planting_date', _plantingDate!.toIso8601String());
+      await prefs.setString(
+        'planting_date',
+        _plantingDate!.toIso8601String(),
+      );
 
-      // Add to "my_crops" list
       List<String> cropsList = prefs.getStringList('my_crops') ?? [];
-      Map<String, dynamic> cropEntry = {
-        'name': 'Wheat',
-        'date': _plantingDate!.toIso8601String(),
-        'location': _location!,
-      };
-      cropsList.add(jsonEncode(cropEntry));
+      cropsList.add(
+        jsonEncode({
+          'name': 'Wheat',
+          'date': _plantingDate!.toIso8601String(),
+          'location': _location!,
+        }),
+      );
       await prefs.setStringList('my_crops', cropsList);
 
-      setState(() {
-        _planted = true;
-      });
+      setState(() => _planted = true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🌾 Wheat crop planted successfully!')),
-      );
+      _showSnack('🌾 Wheat crop planted successfully!');
     }
+  }
+
+  /// ℹ️ INFO BUTTON HANDLER
+  void _showInstructions() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const Text(
+                  '🌾 Wheat Planting Guide',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: instructionImages.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              instructionImages[index],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Step ${index + 1}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
   }
 
   @override
@@ -176,30 +235,37 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      const Text(
-                        'Plant Your Wheat Crop',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Plant Your Wheat Crop',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.info_outline,
+                              color: Colors.green,
+                            ),
+                            onPressed: _showInstructions,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.date_range),
                         label: const Text('Select Planting Date'),
                         onPressed: _selectDate,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade100,
-                          foregroundColor: Colors.green.shade900,
-                        ),
                       ),
                       if (_plantingDate != null)
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(8),
                           child: Text(
                             'Selected Date: ${_plantingDate!.toLocal().toString().split(' ')[0]}',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ),
                       const SizedBox(height: 10),
@@ -207,23 +273,17 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.my_location),
                         label: const Text('Capture Live Location'),
                         onPressed: _getLocation,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade100,
-                          foregroundColor: Colors.green.shade900,
-                        ),
                       ),
                       if (_location != null)
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            _location!,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Text(_location!),
                         ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.agriculture),
                         label: const Text('Plant Wheat Crop'),
+                        onPressed: _confirmPlanting,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
                           foregroundColor: Colors.white,
@@ -232,7 +292,6 @@ class _HomePageState extends State<HomePage> {
                             vertical: 12,
                           ),
                         ),
-                        onPressed: _confirmPlanting,
                       ),
                     ],
                   ),
