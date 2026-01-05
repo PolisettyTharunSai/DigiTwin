@@ -49,7 +49,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
     // } else {
     //   return 'assets/Models/mesh2.obg';
     // }
-    return 'assets/Models/mesh.obj';
+    return 'https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/main/wheat0.glb';
   }
 
   Future<void> _loadDayData() async {

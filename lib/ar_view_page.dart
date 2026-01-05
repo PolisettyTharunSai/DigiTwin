@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class ARViewPage extends StatelessWidget {
-  final String modelPath; // 🔁 now expects an HTTPS URL
+  final String modelPath; //  now expects an HTTPS URL
   final String cropName;
 
   const ARViewPage({
@@ -19,8 +19,7 @@ class ARViewPage extends StatelessWidget {
         backgroundColor: Colors.green.shade700,
       ),
       body: ModelViewer(
-        src: 'https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/main/Main_model.glb',
-
+        src: modelPath,
         ar: true,
         arModes: const ['scene-viewer'],
         arPlacement: ArPlacement.floor,

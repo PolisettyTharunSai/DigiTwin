@@ -70,6 +70,7 @@ flutter:
 
   assets:
     - assets1/models1/
+    - assets/images/image.png
     - assets/Models/
     - assets/Data/
     - assets/Data/day1/day1.txt
