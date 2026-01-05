@@ -1,0 +1,3 @@
+Crop stage:  Booting
+Water requirement: (200 ml/plant)
+Nutrient application:  (None)
