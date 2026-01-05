@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'ar_view_page1.dart';
+// import 'ar_view_page1.dart';
+import 'ar_view_page.dart';
 
 class RecommendationsPage extends StatefulWidget {
   final String cropName;

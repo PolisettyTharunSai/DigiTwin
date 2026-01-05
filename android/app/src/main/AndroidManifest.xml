@@ -7,7 +7,11 @@
     <!-- Camera (required for AR) -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="false"/>
     <application
+        android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true"
         android:label="first_app"
         android:name="${applicationName}"

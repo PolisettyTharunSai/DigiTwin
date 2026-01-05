@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
-class ARViewPage extends StatelessWidget {
+class AR3dViewPage extends StatelessWidget {
   final String modelPath;
   final String cropName;
 
-  const ARViewPage({
+  const AR3dViewPage({
     super.key,
     required this.modelPath,
     required this.cropName,
