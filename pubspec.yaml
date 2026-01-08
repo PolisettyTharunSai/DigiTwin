@@ -69,7 +69,6 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   assets:
-    - assets1/models1/
     - assets/images/
     - assets/Models/
     - assets/Data/
@@ -273,6 +272,7 @@ flutter:
     - assets/Data/day99/images/
     - assets/Data/day100/day100.txt
     - assets/Data/day100/images/
+
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
