@@ -27,6 +27,9 @@ class RecommendationsPage extends StatefulWidget {
 class _RecommendationsPageState extends State<RecommendationsPage> {
   late DateTime _selectedDate;
   final int _totalDays = 100;
+  bool _isEditingNotes = false;
+  late TextEditingController _notesController;
+  String _editableNotes = "";
 
   List<String> _imagePaths = [];
   List<String> _instructions = [];
@@ -42,6 +45,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
   @override
   void initState() {
     super.initState();
+    _editableNotes = widget.notes ?? "";
+    _notesController = TextEditingController(text: _editableNotes);
+
     _selectedDate = DateTime.now();
     if (_selectedDate.isBefore(widget.plantingDate)) {
       _selectedDate = widget.plantingDate;
@@ -144,7 +150,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
       _selectedImageIndex = 0;
     });
 
-    _pageController.jumpToPage(0);
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    }
   }
 
   /// 🌤 WEATHER CARD
@@ -211,7 +219,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                           aspectRatio: 1,
                           child: PageView.builder(
                             itemCount: _imagePaths.length,
-                            controller: PageController(initialPage: initialIndex),
+                            controller: PageController(
+                              initialPage: initialIndex,
+                            ),
                             onPageChanged: (index) {
                               setState(() {
                                 _selectedImageIndex = index;
@@ -248,7 +258,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                                         ? () async {
                                       setState(() {
                                         _selectedDate = _selectedDate
-                                            .subtract(const Duration(days: 1));
+                                            .subtract(
+                                          const Duration(days: 1),
+                                        );
                                       });
                                       await _loadDayData();
                                       setDialogState(() {});
@@ -268,8 +280,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                                     onPressed: _currentDay < _totalDays
                                         ? () async {
                                       setState(() {
-                                        _selectedDate =
-                                            _selectedDate.add(const Duration(days: 1));
+                                        _selectedDate = _selectedDate.add(
+                                          const Duration(days: 1),
+                                        );
                                       });
                                       await _loadDayData();
                                       setDialogState(() {});
@@ -368,11 +381,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
 
               if (_isToday)
                 Positioned(top: 12, left: 12, child: _badge("LIVE STATUS")),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: _badge("Day $_currentDay of $_totalDays"),
-              ),
+              Positioned(top: 12, right: 12, child: _badge("Day $_currentDay")),
               Positioned(bottom: 12, right: 12, child: _watchIn3D(context)),
             ],
           ),
@@ -463,8 +472,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                     onPressed: _currentDay > 1
                         ? () {
                       setState(() {
-                        _selectedDate = _selectedDate
-                            .subtract(const Duration(days: 1));
+                        _selectedDate = _selectedDate.subtract(
+                          const Duration(days: 1),
+                        );
                         _loadDayData();
                       });
                     }
@@ -477,14 +487,15 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                     icon: const Icon(Icons.arrow_forward),
                     label: const Text("Next Day"),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade600,
-                        foregroundColor: Colors.white,
+                      backgroundColor: Colors.green.shade600,
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: _currentDay < _totalDays
                         ? () {
                       setState(() {
-                        _selectedDate =
-                            _selectedDate.add(const Duration(days: 1));
+                        _selectedDate = _selectedDate.add(
+                          const Duration(days: 1),
+                        );
                         _loadDayData();
                       });
                     }
@@ -538,10 +549,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
           color: Colors.white.withOpacity(0.95),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 8,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 8),
           ],
         ),
         child: const Row(
@@ -580,7 +588,11 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
         const SizedBox(height: 4),
         RichText(
           text: TextSpan(
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.black,
+            ),
             children: [
               TextSpan(text: value),
               if (accuracy != null)
@@ -644,41 +656,147 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
 
   /// 🔹 NOTES CARD
   Widget _notesCard() {
-    if (widget.notes == null || widget.notes!.isEmpty) return const SizedBox();
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 20),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            Colors.green.shade50,
+            Colors.green.shade100.withOpacity(0.4),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.green.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// HEADER
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.note_alt, color: Colors.green.shade700, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                "Farmer's Notes",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green.shade800,
+              Row(
+                children: [
+                  Icon(
+                    Icons.note_alt_rounded,
+                    color: Colors.green.shade700,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Farmer’s Notes",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade800,
+                    ),
+                  ),
+                ],
+              ),
+
+              /// EDIT ICON
+              IconButton(
+                icon: Icon(
+                  _isEditingNotes ? Icons.close : Icons.edit,
+                  color: Colors.green.shade700,
                 ),
+                tooltip: _isEditingNotes ? "Cancel" : "Edit Notes",
+                onPressed: () {
+                  setState(() {
+                    _isEditingNotes = !_isEditingNotes;
+                    _notesController.text = _editableNotes;
+                  });
+                },
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            widget.notes!,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.green.shade900,
-              fontStyle: FontStyle.italic,
+
+          const SizedBox(height: 12),
+
+          /// BODY
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _isEditingNotes
+                ? Column(
+              key: const ValueKey("edit"),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _notesController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: "Write important observations...",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: Colors.green.shade300,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: Colors.green.shade600,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                /// ACTION BUTTONS
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      child: const Text("Cancel"),
+                      onPressed: () {
+                        setState(() => _isEditingNotes = false);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.save, size: 18),
+                      label: const Text("Save"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade600,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _editableNotes = _notesController.text;
+                          _isEditingNotes = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            )
+                : Text(
+              _editableNotes,
+              key: const ValueKey("view"),
+              style: TextStyle(
+                fontSize: 14.5,
+                height: 1.5,
+                color: Colors.green.shade900,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ],
@@ -760,7 +878,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                   iconColor: Colors.blue,
                   title: "WATERING",
                   description:
-                  "Apply a light pre-sowing irrigation to ensure the loamy soil has sufficient moisture for germination. If the soil is dry at the time of planting, provide a gentle irrigation immediately after sowing.",
+                  "Apply light irrigation before sowing and provide gentle watering after sowing if the soil is dry.",
                 ),
 
                 /// NUTRITION
@@ -769,7 +887,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                   iconColor: Colors.purple,
                   title: "NUTRITION",
                   description:
-                  "Apply a basal dose of NPK fertilizer. For tropical loamy soil, incorporate approximately 50kg of Nitrogen, 60kg of Phosphorus, and 40kg of Potassium per hectare into the soil during final land preparation.",
+                  "Apply a basal NPK dose of 50:60:40 kg/ha during final land preparation.",
                 ),
 
                 /// PROTECTION
@@ -778,7 +896,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                   iconColor: Colors.orange,
                   title: "PROTECTION",
                   description:
-                  "Perform seed treatment prior to sowing using a fungicide like Thiram or Carbendazim at a rate of 2.5g per kg of seed to prevent soil-borne diseases and seedling blight.",
+                  "Treat seeds with Thiram or Carbendazim at 2.5 g/kg before sowing to prevent diseases.",
                 ),
 
                 const SizedBox(height: 12),
