@@ -12,11 +12,20 @@ class MyCropsPage extends StatefulWidget {
 
 class _MyCropsPageState extends State<MyCropsPage> {
   List<Map<String, dynamic>> _myCrops = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String? _selectedCropFilter;
 
   @override
   void initState() {
     super.initState();
     _loadCrops();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCrops() async {
@@ -45,6 +54,26 @@ class _MyCropsPageState extends State<MyCropsPage> {
           .map((item) => jsonDecode(item) as Map<String, dynamic>)
           .toList();
     });
+  }
+
+  List<Map<String, dynamic>> get _filteredCrops {
+    return _myCrops.where((crop) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          crop.values.any((value) =>
+              value.toString().toLowerCase().contains(_searchQuery.toLowerCase()));
+
+      final matchesFilter = _selectedCropFilter == null ||
+          crop['crop'] == _selectedCropFilter;
+
+      return matchesSearch && matchesFilter;
+    }).toList();
+  }
+
+  List<String> get _uniqueCropTypes {
+    return _myCrops
+        .map((crop) => crop['crop']?.toString() ?? 'Unknown')
+        .toSet()
+        .toList();
   }
 
   /// 🔐 Safe string
@@ -77,6 +106,9 @@ class _MyCropsPageState extends State<MyCropsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredCrops = _filteredCrops;
+    final cropTypes = _uniqueCropTypes;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8F3),
 
@@ -164,177 +196,282 @@ class _MyCropsPageState extends State<MyCropsPage> {
       ),
 
       /// 🌱 Body
-      body: _myCrops.isEmpty
-          ? Center(
-        child: Text(
-          'No crops planted yet 🌱',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.green.shade700,
+      body: Column(
+        children: [
+          /// 🔍 Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search crops...',
+                prefixIcon: const Icon(Icons.search, color: Colors.green),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+            ),
           ),
-        ),
-      )
-          : RefreshIndicator(
-        onRefresh: _loadCrops,
-        child: GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.75,
-          ),
-          itemCount: _myCrops.length,
-          itemBuilder: (context, index) {
-            final crop = _myCrops[index];
 
-            final cropName =
-            _safe(crop['crop'], fallback: 'Unknown Crop');
-            final farmer =
-            _safe(crop['farmerName'], fallback: 'Unknown Farmer');
-            final dateIso = crop['date'];
-            final notes = crop['notes'];
-
-            final day = _cropDay(dateIso);
-            final imagePath = _dayImagePath(day);
-            final dateText = dateIso != null
-                ? DateTime.parse(dateIso)
-                .toLocal()
-                .toString()
-                .split(' ')[0]
-                : 'Unknown Date';
-
-            void openDetails() {
-              if (dateIso != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RecommendationsPage(
-                      cropName: cropName,
-                      plantingDate: DateTime.parse(dateIso),
-                      notes: notes,
+          /// 🏷️ Filter Chips
+          if (cropTypes.isNotEmpty)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: _selectedCropFilter == null,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCropFilter = null;
+                      });
+                    },
+                    selectedColor: Colors.green.shade600,
+                    labelStyle: TextStyle(
+                      color: _selectedCropFilter == null ? Colors.white : Colors.green.shade700,
                     ),
                   ),
-                );
-              }
-            }
-
-            return InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: openDetails,
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// 🖼️ Image
-                    AspectRatio(
-                      aspectRatio: 1.5,
-                      child: Image.asset(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          return Container(
-                            color: Colors.green.shade100,
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 40,
-                              color: Colors.green,
-                            ),
-                          );
+                  const SizedBox(width: 8),
+                  ...cropTypes.map((type) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(type),
+                        selected: _selectedCropFilter == type,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedCropFilter = selected ? type : null;
+                          });
                         },
+                        selectedColor: Colors.green.shade600,
+                        labelStyle: TextStyle(
+                          color: _selectedCropFilter == type ? Colors.white : Colors.green.shade700,
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+          /// 🌾 Crops List
+          Expanded(
+            child: _myCrops.isEmpty
+                ? Center(
+                    child: Text(
+                      'No crops planted yet 🌱',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.green.shade700,
                       ),
                     ),
-
-                    /// 📄 Info + Action
-                    Expanded(
-                      child: Padding(
-                        padding:
-                        const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  )
+                : filteredCrops.isEmpty
+                    ? Center(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            const Icon(Icons.search_off, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
                             Text(
-                              '$cropName (Day $day)',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-
-                            Row(
-                              children: [
-                                const Icon(Icons.person,
-                                    size: 14, color: Colors.green),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    farmer,
-                                    style: const TextStyle(
-                                        fontSize: 12),
-                                    maxLines: 1,
-                                    overflow:
-                                    TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 4),
-
-                            Row(
-                              children: [
-                                const Icon(Icons.calendar_today,
-                                    size: 14, color: Colors.green),
-                                const SizedBox(width: 4),
-                                Text(
-                                  dateText,
-                                  style: const TextStyle(
-                                      fontSize: 11),
-                                ),
-                              ],
-                            ),
-
-                            const Spacer(),
-
-                            /// 👉 Action Button
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: InkWell(
-                                onTap: openDetails,
-                                borderRadius:
-                                BorderRadius.circular(30),
-                                splashColor:
-                                Colors.green.withOpacity(0.2),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(6),
-                                  child: const Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.green,
-                                    size: 22,
-                                  ),
-                                ),
+                              'No matches found 🔍',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.green.shade700,
                               ),
                             ),
                           ],
                         ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadCrops,
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: filteredCrops.length,
+                          itemBuilder: (context, index) {
+                            final crop = filteredCrops[index];
+
+                            final cropName = _safe(crop['crop'], fallback: 'Unknown Crop');
+                            final farmer = _safe(crop['farmerName'], fallback: 'Unknown Farmer');
+                            final dateIso = crop['date'];
+                            final notes = crop['notes'];
+
+                            final day = _cropDay(dateIso);
+                            final imagePath = _dayImagePath(day);
+
+                            void openDetails() {
+                              if (dateIso != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RecommendationsPage(
+                                      cropName: cropName,
+                                      plantingDate: DateTime.parse(dateIso),
+                                      notes: notes,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
+                            return TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.95, end: 1.0),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              builder: (context, scale, child) {
+                                return Transform.scale(scale: scale, child: child);
+                              },
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: openDetails,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Stack(
+                                      children: [
+                                        /// 🌿 Plant Image
+                                        Positioned.fill(
+                                          child: Image.asset(
+                                            imagePath,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              color: Colors.green.shade100,
+                                              child: const Icon(Icons.image, size: 40),
+                                            ),
+                                          ),
+                                        ),
+
+                                        /// 🌫️ Gradient Overlay
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.black.withValues(alpha: 0.15),
+                                                  Colors.black.withValues(alpha: 0.65),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        /// 🟢 Day Badge (Top Right)
+                                        Positioned(
+                                          top: 10,
+                                          right: 10,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.shade600,
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              'Day $day',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        /// 📄 Crop Info (Bottom)
+                                        Positioned(
+                                          left: 12,
+                                          right: 12,
+                                          bottom: 14,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              /// 🌾 Crop Name
+                                              Text(
+                                                cropName,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+
+                                              const SizedBox(height: 6),
+
+                                              /// 👨‍🌾 Farmer Name
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.person,
+                                                      size: 14, color: Colors.white70),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      farmer,
+                                                      style: const TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 12,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+          ),
+        ],
       ),
     );
   }
