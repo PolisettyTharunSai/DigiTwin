@@ -1,15 +1,29 @@
 import 'package:flutter/material.dart';
-import 'subscriptions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'subscriptions.dart';
 
-class InsightsPage extends StatelessWidget {
+class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
 
-  /// 🌱 Get active crops count from SharedPreferences
-  Future<int> _getActiveCropsCount() async {
+  @override
+  State<InsightsPage> createState() => _InsightsPageState();
+}
+
+class _InsightsPageState extends State<InsightsPage> {
+  int _activeCropsCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCropCount();
+  }
+
+  Future<void> _loadCropCount() async {
     final prefs = await SharedPreferences.getInstance();
-    final crops = prefs.getStringList('my_crops') ?? [];
-    return crops.length;
+    final List<String> cropsList = prefs.getStringList('my_crops') ?? [];
+    setState(() {
+      _activeCropsCount = cropsList.length;
+    });
   }
 
   @override
@@ -18,7 +32,13 @@ class InsightsPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            100, // ✅ EXTRA BOTTOM PADDING (FIXES LOGOUT ISSUE)
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -37,11 +57,11 @@ class InsightsPage extends StatelessWidget {
                       child: Icon(Icons.person, size: 36, color: Colors.green),
                     ),
                     const SizedBox(width: 16),
-                    Column(
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          "Test Farmer",
+                          "Venkata Praneeth",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -50,7 +70,7 @@ class InsightsPage extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          "kisaan@email.com",
+                          "praneeth@email.com",
                           style: TextStyle(color: Colors.white70),
                         ),
                         SizedBox(height: 2),
@@ -66,35 +86,38 @@ class InsightsPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              /// 📊 Stats
+              /// 📊 STATS — FULL WIDTH & EQUAL SIZE
               Row(
                 children: [
-                  /// 🌾 ACTIVE CROPS (dynamic)
                   Expanded(
-                    child: FutureBuilder<int>(
-                      future: _getActiveCropsCount(),
-                      builder: (context, snapshot) {
-                        final value =
-                        snapshot.hasData ? snapshot.data.toString() : "...";
-                        return _statCard(
-                          "Active Crops",
-                          value!,
-                          Icons.grass,
-                        );
-                      },
+                    child: _StatCard(
+                      title: "Active Crops",
+                      value: _activeCropsCount.toString(),
+                      icon: Icons.grass,
                     ),
                   ),
-
                   const SizedBox(width: 12),
-                  _statCard("Alerts", "2", Icons.notifications),
+                  const Expanded(
+                    child: _StatCard(
+                      title: "Alerts",
+                      value: "2",
+                      icon: Icons.notifications,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  _statCard("Plan", "Active", Icons.workspace_premium),
+                  const Expanded(
+                    child: _StatCard(
+                      title: "Plan",
+                      value: "Active",
+                      icon: Icons.workspace_premium,
+                    ),
+                  ),
                 ],
               ),
 
               const SizedBox(height: 30),
 
-              /// ⚙️ Options
+              /// ⚙️ Account Section
               Text(
                 "Account",
                 style: TextStyle(
@@ -151,37 +174,7 @@ class InsightsPage extends StatelessWidget {
     );
   }
 
-  /// 📊 Stat card widget
-  Widget _statCard(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.green.shade600),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ⚙️ Option tile widget
-  Widget _optionTile(
+  static Widget _optionTile(
       BuildContext context, {
         required IconData icon,
         required String title,
@@ -195,7 +188,7 @@ class InsightsPage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12),
         ],
       ),
       child: ListTile(
@@ -207,6 +200,50 @@ class InsightsPage extends StatelessWidget {
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// 🔹 STAT CARD (EQUAL WIDTH GUARANTEED)
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.green.shade600),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
