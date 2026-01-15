@@ -113,9 +113,212 @@ class _HomePageState extends State<HomePage> {
       'notes': _notesController.text,
     }));
 
-    await prefs.setStringList('my_crops', crops);
+    // await prefs.setStringList('my_crops', crops);
 
-    widget.onPlantingConfirmed?.call();
+    _showVerificationDialog(crops);
+  }
+
+  void _showVerificationDialog(List<String> crops) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// 🌾 Header
+                Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.agriculture,
+                        size: 46,
+                        color: Colors.green.shade700,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Dear ${_farmerNameController.text},',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Please verify the details :',
+                  style: TextStyle(color: Colors.black54),
+                ),
+
+                const SizedBox(height: 14),
+
+                /// 📋 Details List
+                _detailRow('Crop', _selectedCrop),
+                _detailRow(
+                  'Planting Date',
+                  '${_dateController.text} ($_dateAccuracy)',
+                ),
+                _detailRow(
+                  'Location',
+                  _location ?? 'Not captured',
+                ),
+                _detailRow(
+                  'Notes',
+                  _notesController.text.trim().isEmpty
+                      ? '—'
+                      : _notesController.text.trim(),
+                ),
+
+                const SizedBox(height: 20),
+
+                /// Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(context);
+
+                          SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                          await prefs.setStringList('my_crops', crops);
+
+                          _showSuccessDialog();
+                        },
+                        child: const Text('Confirm'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// ✅ Success Icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade700,
+                    size: 48,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Crop Added Successfully',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  '$_selectedCrop planting has been saved.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.black54),
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onPlantingConfirmed?.call();
+                    },
+                    child: const Text('Done'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          const Text(':  '),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnack(String msg) {
@@ -213,22 +416,53 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                setState(() => _dateAccuracy = 'Exact'),
-                            child: const Text('Exact'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => _dateAccuracy = 'Exact'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _dateAccuracy == 'Exact'
+                                    ? Colors.green.shade700
+                                    : Colors.grey.shade200,
+                                foregroundColor: _dateAccuracy == 'Exact'
+                                    ? Colors.white
+                                    : Colors.black87,
+                                elevation: _dateAccuracy == 'Exact' ? 4 : 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Exact'),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                setState(() => _dateAccuracy = 'Approx'),
-                            child: const Text('Approx'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => _dateAccuracy = 'Approx'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _dateAccuracy == 'Approx'
+                                    ? Colors.green.shade700
+                                    : Colors.grey.shade200,
+                                foregroundColor: _dateAccuracy == 'Approx'
+                                    ? Colors.white
+                                    : Colors.black87,
+                                elevation: _dateAccuracy == 'Approx' ? 4 : 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Approx'),
+                            ),
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 12),
 
                     TextField(
