@@ -30,7 +30,7 @@ class _MyCropsPageState extends State<MyCropsPage> {
           'farmerName': 'Test Farmer',
           'crop': 'Wheat',
           'date': DateTime.now()
-              .subtract(const Duration(days: 3))
+              .subtract(const Duration(days: 1))
               .toIso8601String(),
           'dateAccuracy': 'Exact',
           'location': 'Lat: 17.3850, Lng: 78.4867',
@@ -194,6 +194,7 @@ class _MyCropsPageState extends State<MyCropsPage> {
             final farmer =
             _safe(crop['farmerName'], fallback: 'Unknown Farmer');
             final dateIso = crop['date'];
+            final notes = crop['notes'];
 
             final day = _cropDay(dateIso);
             final imagePath = _dayImagePath(day);
@@ -212,6 +213,7 @@ class _MyCropsPageState extends State<MyCropsPage> {
                     builder: (_) => RecommendationsPage(
                       cropName: cropName,
                       plantingDate: DateTime.parse(dateIso),
+                      notes: notes,
                     ),
                   ),
                 );
