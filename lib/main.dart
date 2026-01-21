@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(const WheatApp());
+import 'screens/splash_screen.dart';
+import 'theme/app_theme.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://dmttaxboppfkgwjrjmjv.supabase.co',
+    anonKey: 'sb_publishable_ym-0DfmWA2Wyjn-6aXDAIQ_Wbw3-bOB',
+  );
+
+  runApp(const MyApp());
 }
 
-class WheatApp extends StatelessWidget {
-  const WheatApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Wheat",
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
-      ),
-      home: const HomePage(),
+      theme: AppTheme.theme,
+      home: const SplashScreen(),
     );
   }
 }
