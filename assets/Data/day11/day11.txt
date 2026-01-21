@@ -1,0 +1,3 @@
+Crop stage:  Seedling
+Water requirement: (100 ml/plant)
+Nutrient application:  (None)
