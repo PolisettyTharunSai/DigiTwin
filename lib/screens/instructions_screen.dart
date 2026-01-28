@@ -1,6 +1,39 @@
 import 'package:flutter/material.dart';
 import 'section_detail_screen.dart';
 
+class _BottomCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 20);
+
+    path.quadraticBezierTo(
+      size.width * 0.05,
+      size.height,
+      size.width * 0.15,
+      size.height,
+    );
+
+    path.lineTo(size.width * 0.85, size.height);
+
+    path.quadraticBezierTo(
+      size.width * 0.95,
+      size.height,
+      size.width,
+      size.height - 20,
+    );
+
+    path.lineTo(size.width, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+
 enum ContentType {
   heading,
   paragraph,
@@ -320,34 +353,51 @@ class InstructionsScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.only(top: 50, left: 10, bottom: 10),
-            width: double.infinity,
-            color: primaryPurple,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 20, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Text(
-                  'Instructions',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white,
+// ---------- HEADER WITH CURVE ----------
+          ClipPath(
+            clipper: _BottomCurveClipper(),
+            child: Container(
+              padding: const EdgeInsets.only(
+                top: 50,
+                left: 10,
+                right: 10,
+                bottom: 18,
+              ),
+              width: double.infinity,
+              color: primaryPurple,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Instructions',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
+          // ---------- STACKED CARDS ----------
           Expanded(
-            child: Padding(
+            child: Container(
+              color: const Color(0xFFF5F0FF), // same family as card color
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: CustomScrollView(
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
                   for (int i = 0; i < sections.length; i++)
                     SliverPersistentHeader(
                       pinned: true,
@@ -355,18 +405,19 @@ class InstructionsScreen extends StatelessWidget {
                         section: sections[i],
                         index: i,
                         onTap: () {
-                          // Navigation logic
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  SectionDetailScreen(sectionIndex: i),
+                            ),
+                          );
                         },
                       ),
                     ),
-
-                  // --- CHANGE 2: Add large bottom padding here ---
-                  // Use MediaQuery to ensure there is enough space to scroll the last item
-                  // all the way to the top of the screen.
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height,
-                    ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -383,13 +434,8 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
   final int index;
   final VoidCallback onTap;
 
-  // --- CHANGE 1: Tune Overlapping here ---
   final double _maxExtent = 145.0;
-
-  // This controls how much of the card remains visible when stacked.
-  // Increase to 85.0 or 90.0 to see MORE of the card behind.
-  // Decrease to 60.0 or 50.0 to see LESS (more overlap).
-  final double _minExtent = 10.0;
+  final double _minExtent = 0.0;
 
   _SectionCardDelegate({
     required this.section,
@@ -398,7 +444,8 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -414,7 +461,7 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFFFFFFF),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -439,7 +486,8 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
                             height: 80,
                             color: const Color(0xFFFFB3B3),
                             child: const Center(
-                              child: Icon(Icons.broken_image, color: Colors.white),
+                              child: Icon(Icons.broken_image,
+                                  color: Colors.white),
                             ),
                           );
                         },
@@ -448,13 +496,15 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
                     const SizedBox(width: 15),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             section.title,
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 5),
                           Text(
@@ -462,7 +512,9 @@ class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                color: Colors.grey[600], fontSize: 12),
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'signup_screen.dart';
 import 'home_screen.dart';
+import 'placeholder.dart';
 
 class GetStartedScreen extends StatefulWidget {
   const GetStartedScreen({super.key});
@@ -15,16 +17,13 @@ class GetStartedScreen extends StatefulWidget {
 class _GetStartedScreenState extends State<GetStartedScreen> {
   static const primaryColor = Color(0xFF7F3DFF);
 
-  // 🔁 Toggle between welcome & login
   bool showLogin = false;
 
-  // 🔐 Login controllers
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   bool loading = false;
   bool showPassword = false;
 
-  // 🎞 Carousel
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -36,7 +35,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     'assets/onboarding/5.png',
   ];
 
-  // 📝 CAPTIONS (X5)
   final List<String> captions = [
     "Know the information",
     "Get your equipment",
@@ -75,7 +73,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     super.dispose();
   }
 
-  // 🔐 LOGIN
   Future<void> login() async {
     setState(() => loading = true);
 
@@ -86,10 +83,17 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       );
 
       if (res.session != null && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+        final prefs = await SharedPreferences.getInstance();
+        final isCropPlanted = prefs.getBool('isCropPlanted') ?? false;
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen(),
+            ),
+          );
+        }
       }
     } on AuthException catch (e) {
       _toast(e.message);
@@ -109,7 +113,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // 🔷 TOP PURPLE SECTION
           Expanded(
             flex: 3,
             child: Container(
@@ -136,8 +139,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
                       ),
                     ),
                   ),
-
-                  // 📝 WHITE TEXT (SYNCED WITH IMAGE)
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: Text(
@@ -150,10 +151,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // ●●● DOT INDICATORS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -176,8 +174,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
               ),
             ),
           ),
-
-          // 🔽 BOTTOM SECTION
           Expanded(
             flex: 2,
             child: SingleChildScrollView(
@@ -194,7 +190,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     );
   }
 
-  // 🟣 WELCOME UI
   Widget _welcomeUI() {
     return Column(
       key: const ValueKey("welcome"),
@@ -245,7 +240,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     );
   }
 
-  // 🔐 LOGIN UI
   Widget _loginUI() {
     return Column(
       key: const ValueKey("login"),

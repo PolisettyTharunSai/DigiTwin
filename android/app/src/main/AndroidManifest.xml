@@ -1,26 +1,43 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.wheat">
 
     <!-- ================= PERMISSIONS ================= -->
 
-    <!-- Internet access (API calls, images, analytics, etc.) -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Internet access (needed for GitHub raw URL models) -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Camera access -->
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Camera access (needed for AR) -->
+    <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Location access -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Location access (if you use geolocator) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- Optional: if location is needed in background -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/> -->
+    <!-- ================= FEATURES ================= -->
+
+    <!-- AR camera feature (optional so all devices can install) -->
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="false" />
+
+    <!-- Camera hardware feature (fixes "permission exists without corresponding hardware") -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <!-- ================= APPLICATION ================= -->
 
     <application
         android:label="wheat"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
+
+        <!-- ARCore support (optional so it does not block non-AR phones) -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
 
         <activity
             android:name=".MainActivity"
@@ -32,29 +49,29 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
-            <!-- Splash / Launch theme -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"
-                />
+                android:resource="@style/NormalTheme" />
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <!-- Flutter embedding -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
     </application>
 
-    <!-- Required for text processing plugins -->
+    <!-- ================= QUERIES ================= -->
+
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
         </intent>
     </queries>
 

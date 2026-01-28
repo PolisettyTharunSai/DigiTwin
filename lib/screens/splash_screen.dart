@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_screen.dart';
 import 'get_started_screen.dart';
+import 'placeholder.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -103,7 +105,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _start() {
-    /// 🔹 MOVE → IMMEDIATELY EXPAND + ICON FADE
     _moveController.forward().then((_) {
       if (!mounted) return;
 
@@ -115,27 +116,37 @@ class _SplashScreenState extends State<SplashScreen>
       _expandController.forward();
       _iconFadeController.forward();
 
-      /// TEXT COMES SHORTLY AFTER
       Future.delayed(const Duration(milliseconds: 150), () {
         if (!mounted) return;
         setState(() => showText = true);
         _textMoveController.forward();
       });
 
-      /// NAVIGATION
       Future.delayed(const Duration(milliseconds: 1800), _navigate);
     });
   }
 
-  void _navigate() {
+  Future<void> _navigate() async {
     final session = Supabase.instance.client.auth.currentSession;
+    if (!mounted) return;
+
+    if (session == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const GetStartedScreen()),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final isCropPlanted = prefs.getBool('isCropPlanted') ?? false;
+
     if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-        session != null ? const HomeScreen() : const GetStartedScreen(),
+        builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen(),
       ),
     );
   }
@@ -152,8 +163,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
-    /// 🟣 FINAL CIRCLE SIZE (SAFE WHITE SPACE)
     final maxCircleDiameter = size.width * 0.88;
 
     _expandSizeAnim =
@@ -164,7 +173,6 @@ class _SplashScreenState extends State<SplashScreen>
           CurvedAnimation(parent: _expandController, curve: Curves.easeInOut),
         );
 
-    /// ⬆️ TEXT FROM BOTTOM OF PHONE
     _textTranslateAnim = Tween<double>(begin: size.height / 2, end: 0).animate(
       CurvedAnimation(parent: _textMoveController, curve: Curves.linear),
     );
@@ -199,7 +207,6 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        /// 🚜 ICON (IMMEDIATE FADE-IN)
                         if (showIcon)
                           FadeTransition(
                             opacity: _iconFadeAnim,
@@ -209,8 +216,6 @@ class _SplashScreenState extends State<SplashScreen>
                               color: Colors.white,
                             ),
                           ),
-
-                        /// 📝 TEXT
                         if (showText)
                           Transform.translate(
                             offset: Offset(0, _textTranslateAnim.value),
