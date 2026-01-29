@@ -16,7 +16,7 @@ class ARViewPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('$cropName AR View'),
-        backgroundColor: Colors.green.shade700,
+        backgroundColor: Color(0xFF7F3DFF),
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),

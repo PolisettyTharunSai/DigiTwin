@@ -16,7 +16,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
+  // Brand Colors
   static const primaryColor = Color(0xFF7F3DFF);
+  static const accentColor = Color(0xFFFDFDF0); // Your requested color
 
   late AnimationController _moveController;
   late AnimationController _expandController;
@@ -146,7 +148,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen(),
+        builder: (_) =>
+        isCropPlanted ? const HomeScreen() : const PlaceholderScreen(),
       ),
     );
   }
@@ -210,23 +213,28 @@ class _SplashScreenState extends State<SplashScreen>
                         if (showIcon)
                           FadeTransition(
                             opacity: _iconFadeAnim,
-                            child: const Icon(
-                              Icons.agriculture,
-                              size: 120,
-                              color: Colors.white,
+                            child: const Padding(
+                              // Increased bottom padding to move icon UP
+                              padding: EdgeInsets.only(bottom: 80),
+                              child: Icon(
+                                Icons.agriculture,
+                                size: 120,
+                                color: accentColor,
+                              ),
                             ),
                           ),
                         if (showText)
                           Transform.translate(
                             offset: Offset(0, _textTranslateAnim.value),
                             child: const Padding(
-                              padding: EdgeInsets.only(top: 170),
+                              // Reduced top padding to move text UP
+                              padding: EdgeInsets.only(top: 100),
                               child: Text(
                                 "Digital Twin",
                                 style: TextStyle(
                                   fontSize: 36,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: accentColor,
                                   letterSpacing: 1.4,
                                 ),
                               ),

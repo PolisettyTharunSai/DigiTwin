@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'signup_screen.dart';
 import 'home_screen.dart';
 import 'placeholder.dart';
+import '../models/planting_data.dart';
 
 class GetStartedScreen extends StatefulWidget {
   const GetStartedScreen({super.key});
@@ -83,8 +85,55 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       );
 
       if (res.session != null && mounted) {
+        final userId = res.user!.id;
         final prefs = await SharedPreferences.getInstance();
-        final isCropPlanted = prefs.getBool('isCropPlanted') ?? false;
+
+        // 🔍 Use .maybeSingle() to avoid PGRST116 error if row doesn't exist
+        final userData = await Supabase.instance.client
+            .from('users')
+            .select('isCropPlanted')
+            .eq('id', userId)
+            .maybeSingle();
+
+        bool isCropPlanted = false;
+        
+        if (userData != null) {
+          isCropPlanted = userData['isCropPlanted'] ?? false;
+        } else {
+          // If no user row exists in 'users' table, create one
+          await Supabase.instance.client.from('users').insert({
+            'id': userId,
+            'email': emailCtrl.text.trim(),
+            'isCropPlanted': false,
+          });
+        }
+
+        if (isCropPlanted) {
+          // 🔍 Fetch 'profile' data from Supabase
+          final profileData = await Supabase.instance.client
+              .from('profile')
+              .select()
+              .eq('id', userId)
+              .maybeSingle();
+
+          if (profileData != null) {
+            final plantingData = PlantingData(
+              farmerName: profileData['name'] ?? '',
+              crop: profileData['crop'] ?? 'Wheat',
+              date: profileData['planting_date'] ?? '',
+              latitude: (profileData['latitude'] as num).toDouble(),
+              longitude: (profileData['longitude'] as num).toDouble(),
+              isExact: profileData['is_exact'] ?? true,
+              notes: profileData['notes'] ?? '',
+            );
+
+            // 💾 Restore Local State
+            await prefs.setBool('isCropPlanted', true);
+            await prefs.setString('plantingData', jsonEncode(plantingData.toJson()));
+          }
+        } else {
+          await prefs.setBool('isCropPlanted', false);
+        }
 
         if (mounted) {
           Navigator.pushReplacement(
@@ -97,8 +146,8 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       }
     } on AuthException catch (e) {
       _toast(e.message);
-    } catch (_) {
-      _toast("Login failed");
+    } catch (e) {
+      _toast("Login failed: $e");
     }
 
     setState(() => loading = false);

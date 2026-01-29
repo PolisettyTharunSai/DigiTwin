@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/location_service.dart';
 import 'get_started_screen.dart';
@@ -12,18 +13,15 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  // Controllers
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmPassCtrl = TextEditingController();
 
-  // Location
   double? lat;
   double? lng;
 
-  // UI state
   bool loading = false;
   bool locationFetched = false;
   bool locationLoading = false;
@@ -35,7 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
   String safeText(TextEditingController c) =>
       c.text.replaceAll(RegExp(r'\s+'), '').trim();
 
-  // 📍 Get live location
   Future<void> getLocation() async {
     setState(() => locationLoading = true);
     try {
@@ -51,54 +48,70 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => locationLoading = false);
   }
 
-  // 📝 SIGN UP
   Future<void> signup() async {
+    final supabase = Supabase.instance.client;
+
     final name = safeText(nameCtrl);
     final email = safeText(emailCtrl);
     final phone = safeText(phoneCtrl);
     final password = safeText(passCtrl);
-    final confirmPassword = safeText(confirmPassCtrl);
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      _toast("Please fill all required fields");
-      return;
-    }
-
-    if (!locationFetched) {
-      _toast("Please get live location");
-      return;
-    }
-
-    if (password != confirmPassword) {
-      _toast("Passwords do not match");
+    if (password.isEmpty) {
+      _toast("Password cannot be empty");
       return;
     }
 
     setState(() => loading = true);
 
     try {
-      final res = await Supabase.instance.client.auth.signUp(
+      // ✅ 1. Create user in Supabase Auth
+      final res = await supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'name': name, 'phone': phone, 'lat': lat, 'lng': lng},
       );
 
-      if (res.user == null) {
-        throw const AuthException("User creation failed");
-      }
+      final user = res.user;
+      if (user == null) throw Exception("User not created");
 
-      _showVerifyDialog();
-    } on AuthException catch (e) {
-      _toast(e.message);
-    } catch (_) {
-      _toast("Signup failed");
+      // ✅ 2. Insert into public.users table
+      await supabase.from('users').upsert({
+        'id': user.id,
+        'email': email,
+        'password': password, // ⚠️ stored as you requested
+        'name': name,
+        'phone': phone,
+        'is_crop_planted': false,
+      });
+
+      if (res.session == null) {
+        _showVerifyDialog(email);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const GetStartedScreen()),
+        );
+      }
+    } catch (e) {
+      print("SIGNUP ERROR: $e");
+      _toast("Signup failed: $e");
     }
 
     setState(() => loading = false);
   }
 
-  // 📩 Email verification popup
-  void _showVerifyDialog() {
+  Future<void> _resendEmail(String email) async {
+    try {
+      await Supabase.instance.client.auth.resend(
+        type: OtpType.signup,
+        email: email,
+      );
+      _toast("Verification email resent!");
+    } catch (e) {
+      _toast("Failed to resend: $e");
+    }
+  }
+
+  void _showVerifyDialog(String email) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -108,10 +121,14 @@ class _SignupScreenState extends State<SignupScreen> {
           "Verify Your Email",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          "Please verify your email and then sign in to your account.",
+        content: Text(
+          "We sent a verification link to $email. Please check your inbox (and spam folder).",
         ),
         actions: [
+          TextButton(
+            onPressed: () => _resendEmail(email),
+            child: const Text("Resend Email", style: TextStyle(color: Colors.black)),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -121,7 +138,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 (_) => false,
               );
             },
-            child: const Text("OK", style: TextStyle(color: primaryColor)),
+            child: const Text("OK", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -154,7 +171,6 @@ class _SignupScreenState extends State<SignupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-
               const Text(
                 "Getting Started",
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
@@ -164,18 +180,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 "Create an account to continue",
                 style: TextStyle(color: Colors.grey),
               ),
-
               const SizedBox(height: 30),
-
               _inputField(nameCtrl, "Full Name", Icons.person_outline),
               const SizedBox(height: 16),
-
               _inputField(emailCtrl, "Email", Icons.email_outlined),
               const SizedBox(height: 16),
-
               _inputField(phoneCtrl, "Phone Number", Icons.phone_outlined),
               const SizedBox(height: 16),
-
               _passwordField(
                 passCtrl,
                 "Password",
@@ -183,7 +194,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 () => setState(() => showPassword = !showPassword),
               ),
               const SizedBox(height: 16),
-
               _passwordField(
                 confirmPassCtrl,
                 "Confirm Password",
@@ -191,9 +201,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 () =>
                     setState(() => showConfirmPassword = !showConfirmPassword),
               ),
-
               const SizedBox(height: 24),
-
               Center(
                 child: OutlinedButton.icon(
                   onPressed: locationLoading ? null : getLocation,
@@ -221,9 +229,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -243,9 +249,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
