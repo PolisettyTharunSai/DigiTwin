@@ -5,6 +5,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'instructions_screen.dart';
 import 'ar_view_page.dart';
@@ -45,6 +46,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadFarmerAndPlantation() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Load from local storage first
+    setState(() {
+      farmerName = prefs.getString('farmerName') ?? "Farmer";
+    });
+
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       try {
@@ -56,23 +64,37 @@ class _HomeScreenState extends State<HomeScreen> {
         
         if (res != null) {
           setState(() {
-            if (res['name'] != null) farmerName = res['name'];
+            if (res['name'] != null) {
+              farmerName = res['name'];
+              prefs.setString('farmerName', farmerName);
+            }
             if (res['planting_date'] != null) {
-              // Handle potential format differences (D/M/YYYY vs DD/MM/YYYY)
+              // Handle potential format differences
               String dateStr = res['planting_date'];
               try {
-                plantationDate = DateFormat("d/M/yyyy").parse(dateStr);
-              } catch (_) {
-                plantationDate = DateFormat("dd/MM/yyyy").parse(dateStr);
+                // Supabase might store as ISO string or D/M/YYYY
+                if (dateStr.contains('T')) {
+                  plantationDate = DateTime.parse(dateStr);
+                } else {
+                  try {
+                    plantationDate = DateFormat("d/M/yyyy").parse(dateStr);
+                  } catch (_) {
+                    plantationDate = DateFormat("dd/MM/yyyy").parse(dateStr);
+                  }
+                }
+              } catch (e) {
+                debugPrint("Date Parse Error: $e");
               }
               
-              // Calculate currentDay: today - plantationDate + 1
-              final now = DateTime.now();
-              final today = DateTime(now.year, now.month, now.day);
-              final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
-              
-              final diff = today.difference(start).inDays;
-              currentDay = (diff + 1).clamp(1, 100);
+              if (plantationDate != null) {
+                // Calculate currentDay: today - plantationDate + 1
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
+                
+                final diff = today.difference(start).inDays;
+                currentDay = (diff + 1).clamp(1, 100);
+              }
             }
           });
         }
@@ -132,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
               primary: primaryColor,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-              secondary: Colors.orange, // Color for the "today" highlight
+              secondary: Colors.orange,
             ),
           ),
           child: child!,
@@ -187,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha:0.1),
+                color: primaryColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
             ),
@@ -197,8 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 12),
-
-                // 🌿 HEADER SECTION
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -240,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha:0.05),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 10,
                             ),
                           ],
@@ -260,14 +280,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // 🌱 CONTENT AREA
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // View Switcher (2D/3D Slider)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 100),
                           child: GestureDetector(
@@ -276,9 +293,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               height: 45,
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha:0.5),
+                                color: Colors.white.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(25),
-                                border: Border.all(color: Colors.white.withValues(alpha:0.3)),
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
                               ),
                               child: Stack(
                                 children: [
@@ -293,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         borderRadius: BorderRadius.circular(20),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: primaryColor.withValues(alpha:0.3),
+                                            color: primaryColor.withOpacity(0.3),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
@@ -335,18 +352,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // Carousel or 3D Model
                         SizedBox(
                           height: imageHeight,
                           child: show3DModel
                               ? _buildTodayModel(modelUrl)
                               : _build2DCarousel(images, imageWidth, imageHeight),
                         ),
-
                         const SizedBox(height: 15),
-
-                        // Dot Indicators
                         if (!show3DModel)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -364,12 +376,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             }),
                           ),
-
                         const SizedBox(height: 24),
-
-                        // 📊 INSIGHTS SECTION
                         _buildModernInsights(),
-
                         const SizedBox(height: 120), 
                       ],
                     ),
@@ -379,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 🎮 MINIMALIST DAY NAVIGATION
           Positioned(
             bottom: 30,
             left: 30,
@@ -392,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(35),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -401,7 +408,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Prev Circle
                   _circleNav(
                     icon: Icons.chevron_left,
                     onTap: currentDay > 1 ? () {
@@ -409,12 +415,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _loadDayData();
                     } : null,
                   ),
-                  
-                  // Day Badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha:0.1),
+                      color: primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -426,8 +430,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-
-                  // Next Circle
                   _circleNav(
                     icon: Icons.chevron_right,
                     onTap: currentDay < 100 ? () {
@@ -459,7 +461,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📊 MODERN INSIGHTS UI
   Widget _buildModernInsights() {
     final lines = dayText.split('\n');
     String stage = "Emergence";
@@ -492,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.eco_outlined,
                 label: "Stage",
                 value: stage,
-                color: primaryColor.withValues(alpha:0.1),
+                color: primaryColor.withOpacity(0.1),
                 iconColor: primaryColor,
               ),
               const SizedBox(width: 12),
@@ -500,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.water_drop_outlined,
                 label: "Water",
                 value: water,
-                color: Colors.blue.withValues(alpha:0.1),
+                color: Colors.blue.withOpacity(0.1),
                 iconColor: Colors.blue,
               ),
             ],
@@ -510,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icons.science_outlined,
             label: "Nutrient Application",
             value: nutrients,
-            color: Colors.orange.withValues(alpha:0.1),
+            color: Colors.orange.withOpacity(0.1),
             iconColor: Colors.orange,
             fullWidth: true,
           ),
@@ -535,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -610,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha:0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -645,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),

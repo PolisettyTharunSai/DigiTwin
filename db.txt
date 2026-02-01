@@ -1,26 +1,16 @@
-create table public.users (
-  id uuid not null default gen_random_uuid (),
-  email text not null,
-  password text not null,
-  is_verified boolean null default false,
-  isCropPlanted boolean null default false,
-  created_at timestamp without time zone null default now(),
-  constraint users_pkey primary key (id),
-  constraint users_email_key unique (email)
-) TABLESPACE pg_default;
-
 create table public.profile (
-  id uuid not null default gen_random_uuid (),
+  id uuid not null,
   name text not null,
   email text not null,
-  crop text not null,
-  planting_date date not null,
+  crop text null,
+  planting_date date null,
   latitude double precision null,
   longitude double precision null,
-  is_exact boolean not null,
+  is_exact boolean null default false,
   notes text null,
   created_at timestamp without time zone null default now(),
+  is_crop_planted boolean not null default false,
   constraint profile_pkey primary key (id),
-  constraint profiles_email_key unique (email),
-  constraint profiles_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
+  constraint profile_email_key unique (email),
+  constraint profile_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;

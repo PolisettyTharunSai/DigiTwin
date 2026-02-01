@@ -76,63 +76,64 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
   }
 
   Future<void> login() async {
+    final email = emailCtrl.text.trim();
+    final password = passCtrl.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _toast("Please enter email and password");
+      return;
+    }
+
     setState(() => loading = true);
 
     try {
       final res = await Supabase.instance.client.auth.signInWithPassword(
-        email: emailCtrl.text.trim(),
-        password: passCtrl.text.trim(),
+        email: email,
+        password: password,
       );
 
       if (res.session != null && mounted) {
         final userId = res.user!.id;
         final prefs = await SharedPreferences.getInstance();
 
-        // 🔍 Use .maybeSingle() to avoid PGRST116 error if row doesn't exist
-        final userData = await Supabase.instance.client
-            .from('users')
-            .select('isCropPlanted')
+        // 🔍 Fetch user profile to check planting status
+        final profileData = await Supabase.instance.client
+            .from('profile')
+            .select()
             .eq('id', userId)
             .maybeSingle();
 
         bool isCropPlanted = false;
+        String? name = res.user!.userMetadata?['name'];
         
-        if (userData != null) {
-          isCropPlanted = userData['isCropPlanted'] ?? false;
-        } else {
-          // If no user row exists in 'users' table, create one
-          await Supabase.instance.client.from('users').insert({
-            'id': userId,
-            'email': emailCtrl.text.trim(),
-            'isCropPlanted': false,
-          });
-        }
-
-        if (isCropPlanted) {
-          // 🔍 Fetch 'profile' data from Supabase
-          final profileData = await Supabase.instance.client
-              .from('profile')
-              .select()
-              .eq('id', userId)
-              .maybeSingle();
-
-          if (profileData != null) {
+        if (profileData != null) {
+          isCropPlanted = profileData['is_crop_planted'] ?? false;
+          name = profileData['name'] ?? name;
+          
+          if (isCropPlanted) {
             final plantingData = PlantingData(
-              farmerName: profileData['name'] ?? '',
+              farmerName: name ?? '',
               crop: profileData['crop'] ?? 'Wheat',
               date: profileData['planting_date'] ?? '',
-              latitude: (profileData['latitude'] as num).toDouble(),
-              longitude: (profileData['longitude'] as num).toDouble(),
+              latitude: (profileData['latitude'] as num?)?.toDouble() ?? 0.0,
+              longitude: (profileData['longitude'] as num?)?.toDouble() ?? 0.0,
               isExact: profileData['is_exact'] ?? true,
               notes: profileData['notes'] ?? '',
             );
 
-            // 💾 Restore Local State
+            // 💾 Sync Local State
             await prefs.setBool('isCropPlanted', true);
             await prefs.setString('plantingData', jsonEncode(plantingData.toJson()));
+          } else {
+            await prefs.setBool('isCropPlanted', false);
           }
         } else {
-          await prefs.setBool('isCropPlanted', false);
+           await prefs.setBool('isCropPlanted', false);
+        }
+
+        // Save name to local storage
+        if (name != null) {
+          await prefs.setString('farmerName', name);
         }
 
         if (mounted) {
@@ -145,12 +146,18 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
         }
       }
     } on AuthException catch (e) {
-      _toast(e.message);
+      if (e.message.toLowerCase().contains("invalid login credentials")) {
+        _toast("Invalid email or password");
+      } else if (e.message.toLowerCase().contains("email not confirmed")) {
+        _toast("Please verify your email before signing in.");
+      } else {
+        _toast(e.message);
+      }
     } catch (e) {
       _toast("Login failed: $e");
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
-
-    setState(() => loading = false);
   }
 
   void _toast(String msg) {
@@ -227,7 +234,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
             flex: 2,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: showLogin ? _loginUI() : _welcomeUI(),
@@ -260,7 +266,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
           height: 54,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromRGBO(127, 61, 255, 1),
+              backgroundColor: primaryColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -294,7 +300,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       key: const ValueKey("login"),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _inputField(emailCtrl, "Email", Icons.email_outlined),
+        _inputField(emailCtrl, "Email", Icons.email_outlined, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 16),
         _passwordField(),
         const SizedBox(height: 30),
@@ -329,9 +335,10 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
     );
   }
 
-  Widget _inputField(TextEditingController ctrl, String label, IconData icon) {
+  Widget _inputField(TextEditingController ctrl, String label, IconData icon, {TextInputType? keyboardType}) {
     return TextField(
       controller: ctrl,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

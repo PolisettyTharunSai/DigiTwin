@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
 import '../models/planting_data.dart';
 
-// Ensure these files exist in your project structure
 import 'steps/step1.dart';
 import 'steps/step2.dart';
 import 'steps/step3.dart';
@@ -39,22 +38,31 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   bool isExact = true;
   bool isCapturing = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('farmerName');
+    if (savedName != null && mounted) {
+      setState(() {
+        _nameController.text = savedName;
+      });
+    }
+  }
+
   Widget _getStepContent() {
     switch (currentActiveStage) {
-      case 1:
-        return const Step1Content();
-      case 2:
-        return const Step2Content();
-      case 3:
-        return const Step3Content();
-      case 4:
-        return const Step4Content();
-      case 5:
-        return const Step5Content();
-      case 6:
-        return const Step6Content();
-      default:
-        return const Step1Content();
+      case 1: return const Step1Content();
+      case 2: return const Step2Content();
+      case 3: return const Step3Content();
+      case 4: return const Step4Content();
+      case 5: return const Step5Content();
+      case 6: return const Step6Content();
+      default: return const Step1Content();
     }
   }
 
@@ -71,16 +79,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       setSheetState(() {
         _lat = position.latitude;
         _lng = position.longitude;
-        _currentPosition =
-        "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+        _currentPosition = "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
         isCapturing = false;
       });
     } catch (e) {
       setSheetState(() => isCapturing = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Could not fetch location")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not fetch location")));
       }
     }
   }
@@ -115,11 +120,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                 const SizedBox(height: 15),
                 const Text(
                   "Plant Your Crop",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: primaryPurple,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryPurple),
                 ),
                 const SizedBox(height: 15),
                 Expanded(
@@ -127,11 +128,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: Column(
                       children: [
-                        _buildField(
-                          Icons.person_outline,
-                          "Farmer Name",
-                          _nameController,
-                        ),
+                        _buildField(Icons.person_outline, "Farmer Name", _nameController),
                         _buildCropField(),
                         _buildField(
                           Icons.calendar_today_outlined,
@@ -142,11 +139,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                           isPlaceholder: selectedDate == "DD/MM/YYYY",
                         ),
                         _buildToggleSwitch(setSheetState),
-                        _buildField(
-                          Icons.notes_outlined,
-                          "Notes (optional)",
-                          _notesController,
-                        ),
+                        _buildField(Icons.notes_outlined, "Notes (optional)", _notesController),
                         _buildLocationButton(setSheetState),
                         const SizedBox(height: 20),
                         SizedBox(
@@ -154,33 +147,21 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                           height: 40,
                           child: ElevatedButton(
                             onPressed: () {
-                              if (_nameController.text.isNotEmpty &&
+                              if (_nameController.text.trim().isNotEmpty &&
                                   selectedDate != "DD/MM/YYYY" &&
                                   _currentPosition != null) {
                                 _showReviewDialog();
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Please fill all details and capture location",
-                                    ),
-                                  ),
+                                  const SnackBar(content: Text("Please fill all details and capture location")),
                                 );
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryPurple,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                            child: const Text(
-                              "Confirm Planting",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                              ),
-                            ),
+                            child: const Text("Confirm Planting", style: TextStyle(color: Colors.white, fontSize: 13)),
                           ),
                         ),
                       ],
@@ -195,14 +176,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
-  Widget _buildField(
-      IconData icon,
-      String hint,
-      TextEditingController? controller, {
-        bool isReadOnly = false,
-        VoidCallback? onTap,
-        bool isPlaceholder = false,
-      }) {
+  Widget _buildField(IconData icon, String hint, TextEditingController? controller, {bool isReadOnly = false, VoidCallback? onTap, bool isPlaceholder = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: SizedBox(
@@ -211,19 +185,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           controller: controller,
           readOnly: isReadOnly,
           onTap: onTap,
-          style: TextStyle(
-            fontSize: 12,
-            color: isPlaceholder ? Colors.grey : Colors.black,
-          ),
+          style: TextStyle(fontSize: 12, color: isPlaceholder ? Colors.grey : Colors.black),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: primaryPurple, size: 16),
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 12),
             contentPadding: const EdgeInsets.symmetric(vertical: 0),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade200)),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -259,10 +227,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       child: Container(
         height: 34,
         width: 180,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F2),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(8)),
         child: Row(
           children: [
             _toggleItem("Exact", isExact, setSheetState),
@@ -279,18 +244,9 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         onTap: () => setSheetState(() => isExact = (label == "Exact")),
         child: Container(
           margin: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: active ? primaryPurple : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
+          decoration: BoxDecoration(color: active ? primaryPurple : Colors.transparent, borderRadius: BorderRadius.circular(6)),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: active ? Colors.white : Colors.grey,
-              fontSize: 11,
-            ),
-          ),
+          child: Text(label, style: TextStyle(color: active ? Colors.white : Colors.grey, fontSize: 11)),
         ),
       ),
     );
@@ -302,36 +258,16 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       child: Container(
         height: 38,
         width: 180,
-        decoration: BoxDecoration(
-          border: Border.all(color: primaryPurple.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(border: Border.all(color: primaryPurple.withOpacity(0.3)), borderRadius: BorderRadius.circular(8)),
         child: Center(
           child: isCapturing
-              ? const SizedBox(
-            width: 12,
-            height: 12,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: primaryPurple,
-            ),
-          )
+              ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: primaryPurple))
               : Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.my_location,
-                color: primaryPurple,
-                size: 14,
-              ),
+              const Icon(Icons.my_location, color: primaryPurple, size: 14),
               const SizedBox(width: 6),
-              Text(
-                _currentPosition ?? "Capture Location",
-                style: const TextStyle(
-                  color: primaryPurple,
-                  fontSize: 11,
-                ),
-              ),
+              Text(_currentPosition ?? "Capture Location", style: const TextStyle(color: primaryPurple, fontSize: 11)),
             ],
           ),
         ),
@@ -346,14 +282,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 60),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: const Center(
-          child: Text(
-            "Review Details",
-            style: TextStyle(
-              fontSize: 16,
-              color: primaryPurple,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: Text("Review Details", style: TextStyle(fontSize: 16, color: primaryPurple, fontWeight: FontWeight.bold)),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -365,23 +294,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Edit",
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Edit", style: TextStyle(fontSize: 12, color: Colors.grey))),
           ElevatedButton(
             onPressed: _handleFinalConfirm,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryPurple,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-            child: const Text(
-              "Confirm",
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: primaryPurple, padding: const EdgeInsets.symmetric(horizontal: 20)),
+            child: const Text("Confirm", style: TextStyle(color: Colors.white, fontSize: 12)),
           ),
         ],
       ),
@@ -393,17 +310,8 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Text(
-            "$label: ",
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -414,23 +322,19 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User not logged in")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User not logged in")));
       return;
     }
 
+    final name = _nameController.text.trim();
+
     // Convert date
     final parts = selectedDate.split('/');
-    final parsedDate = DateTime(
-      int.parse(parts[2]),
-      int.parse(parts[1]),
-      int.parse(parts[0]),
-    );
+    final parsedDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
 
     final plantingData = {
       'id': user.id,
-      'name': _nameController.text.trim(),
+      'name': name,
       'email': user.email,
       'crop': "Wheat",
       'planting_date': parsedDate.toIso8601String(),
@@ -438,46 +342,27 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'longitude': _lng ?? 0.0,
       'is_exact': isExact,
       'notes': _notesController.text.trim(),
+      'is_crop_planted': true,
     };
 
-    print("DATA SENDING TO SUPABASE: $plantingData");
-
     try {
-      // ✅ FIX 1: Safe upsert (no Bad state error)
-      await supabase.from('profile').upsert(
-        plantingData,
-        onConflict: 'id',
-      );
-
-      // optional update
-      await supabase
-          .from('users')
-          .update({'isCropPlanted': true})
-          .eq('id', user.id);
+      // Use profile table for all crop and user data. 
+      // users table is removed from schema.
+      await supabase.from('profile').update(plantingData).eq('id', user.id);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isCropPlanted', true);
+      await prefs.setString('farmerName', name);
       await prefs.setString('plantingData', jsonEncode(plantingData));
 
       if (!mounted) return;
-
-      // ✅ FIX 2: Safe navigation (no navigator crash)
-      Navigator.pop(context);
-      await Future.delayed(const Duration(milliseconds: 200));
-      Navigator.pop(context);
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      Navigator.pop(context); // Dialog
+      Navigator.pop(context); // Bottom Sheet
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
 
     } catch (e) {
-      print("❌ SUPABASE ERROR: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save data: $e")),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save data: $e")));
       }
     }
   }
@@ -490,9 +375,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       lastDate: DateTime(2027),
     );
     if (picked != null) {
-      setSheetState(
-            () => selectedDate = "${picked.day}/${picked.month}/${picked.year}",
-      );
+      setSheetState(() => selectedDate = "${picked.day}/${picked.month}/${picked.year}");
     }
   }
 
@@ -505,27 +388,14 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         backgroundColor: primaryPurple,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "Agricultural Guide",
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
+        title: const Text("Agricultural Guide", style: TextStyle(color: Colors.white, fontSize: 16)),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20))),
       ),
       body: Column(
         children: [
           const SizedBox(height: 20),
           _buildTimeline(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: _getStepContent(),
-            ),
-          ),
+          Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: _getStepContent())),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -548,26 +418,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                   duration: const Duration(milliseconds: 200),
                   height: 30,
                   width: 30,
-                  decoration: BoxDecoration(
-                    color: done ? primaryPurple : unselectedPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    stageNumber < currentActiveStage
-                        ? Icons.check
-                        : _getIconForStage(stageNumber),
-                    size: 14,
-                    color: done ? Colors.white : inactiveIconColor,
-                  ),
+                  decoration: BoxDecoration(color: done ? primaryPurple : unselectedPurple, shape: BoxShape.circle),
+                  child: Icon(stageNumber < currentActiveStage ? Icons.check : _getIconForStage(stageNumber), size: 14, color: done ? Colors.white : inactiveIconColor),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  "STEP $stageNumber",
-                  style: TextStyle(
-                    fontSize: 6,
-                    color: done ? primaryPurple : Colors.grey,
-                  ),
-                ),
+                Text("STEP $stageNumber", style: TextStyle(fontSize: 6, color: done ? primaryPurple : Colors.grey)),
               ],
             ),
           );
@@ -582,21 +437,14 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Previous Button
           if (currentActiveStage > 1)
-            _navCircleButton(
-              icon: Icons.arrow_back,
-              onPressed: () => setState(() => currentActiveStage--),
-            )
+            _navCircleButton(icon: Icons.arrow_back, onPressed: () => setState(() => currentActiveStage--))
           else
-            const SizedBox(width: 45), // Maintain layout balance
-          // Next / Plant Button
+            const SizedBox(width: 45),
           _navCircleButton(
             label: isLastStep ? "Plant" : null,
             icon: isLastStep ? null : Icons.arrow_forward,
-            onPressed: () => isLastStep
-                ? _showPlantingForm()
-                : setState(() => currentActiveStage++),
+            onPressed: () => isLastStep ? _showPlantingForm() : setState(() => currentActiveStage++),
             isPrimary: isLastStep,
           ),
         ],
@@ -604,12 +452,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
-  Widget _navCircleButton({
-    IconData? icon,
-    String? label,
-    required VoidCallback onPressed,
-    bool isPrimary = false,
-  }) {
+  Widget _navCircleButton({IconData? icon, String? label, required VoidCallback onPressed, bool isPrimary = false}) {
     return SizedBox(
       height: 45,
       width: label != null ? 80 : 45,
@@ -620,14 +463,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         backgroundColor: unselectedPurple,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         child: label != null
-            ? Text(
-          label,
-          style: const TextStyle(
-            color: primaryPurple,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-          ),
-        )
+            ? Text(label, style: const TextStyle(color: primaryPurple, fontSize: 13, fontWeight: FontWeight.bold))
             : Icon(icon, color: primaryPurple, size: 20),
       ),
     );
@@ -635,20 +471,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
 
   IconData _getIconForStage(int stage) {
     switch (stage) {
-      case 1:
-        return Icons.menu_book;
-      case 2:
-        return Icons.wb_sunny;
-      case 3:
-        return Icons.settings;
-      case 4:
-        return Icons.grain;
-      case 5:
-        return Icons.biotech;
-      case 6:
-        return Icons.water_drop;
-      default:
-        return Icons.circle;
+      case 1: return Icons.menu_book;
+      case 2: return Icons.wb_sunny;
+      case 3: return Icons.settings;
+      case 4: return Icons.grain;
+      case 5: return Icons.biotech;
+      case 6: return Icons.water_drop;
+      default: return Icons.circle;
     }
   }
 
