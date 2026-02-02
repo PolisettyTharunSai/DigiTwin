@@ -28,123 +28,113 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
-    - assets/Data/day1/images/
-    - assets/Data/day2/images/
-    - assets/Data/day3/images/
-    - assets/Data/day4/images/
-    - assets/Data/day5/images/
-    - assets/Data/day6/images/
-    - assets/Data/day7/images/
-    - assets/Data/day8/images/
-    - assets/Data/day9/images/
-    - assets/Data/day10/images/
-    - assets/Data/day11/images/
-    - assets/Data/day12/images/
-    - assets/Data/day13/images/
-    - assets/Data/day14/images/
-    - assets/Data/day15/images/
-    - assets/Data/day16/images/
-    - assets/Data/day17/images/
-    - assets/Data/day18/images/
-    - assets/Data/day19/images/
-    - assets/Data/day20/images/
-    - assets/Data/day21/images/
-    - assets/Data/day22/images/
-    - assets/Data/day23/images/
-    - assets/Data/day24/images/
-    - assets/Data/day25/images/
-    - assets/Data/day26/images/
-    - assets/Data/day27/images/
-    - assets/Data/day28/images/
-    - assets/Data/day29/images/
-    - assets/Data/day30/images/
-    - assets/Data/day31/images/
-    - assets/Data/day32/images/
-    - assets/Data/day33/images/
-    - assets/Data/day34/images/
-    - assets/Data/day35/images/
-    - assets/Data/day36/images/
-    - assets/Data/day37/images/
-    - assets/Data/day38/images/
-    - assets/Data/day39/images/
-    - assets/Data/day40/images/
-    - assets/Data/day41/images/
-    - assets/Data/day42/images/
-    - assets/Data/day43/images/
-    - assets/Data/day44/images/
-    - assets/Data/day45/images/
-    - assets/Data/day46/images/
-    - assets/Data/day47/images/
-    - assets/Data/day48/images/
-    - assets/Data/day49/images/
-    - assets/Data/day50/images/
-    - assets/Data/day51/images/
-    - assets/Data/day52/images/
-    - assets/Data/day53/images/
-    - assets/Data/day54/images/
-    - assets/Data/day55/images/
-    - assets/Data/day56/images/
-    - assets/Data/day57/images/
-    - assets/Data/day58/images/
-    - assets/Data/day59/images/
-    - assets/Data/day60/images/
-    - assets/Data/day61/images/
-    - assets/Data/day62/images/
-    - assets/Data/day63/images/
-    - assets/Data/day64/images/
-    - assets/Data/day65/images/
-    - assets/Data/day66/images/
-    - assets/Data/day67/images/
-    - assets/Data/day68/images/
-    - assets/Data/day69/images/
-    - assets/Data/day70/images/
-    - assets/Data/day71/images/
-    - assets/Data/day72/images/
-    - assets/Data/day73/images/
-    - assets/Data/day74/images/
-    - assets/Data/day75/images/
-    - assets/Data/day76/images/
-    - assets/Data/day77/images/
-    - assets/Data/day78/images/
-    - assets/Data/day79/images/
-    - assets/Data/day80/images/
-    - assets/Data/day81/images/
-    - assets/Data/day82/images/
-    - assets/Data/day83/images/
-    - assets/Data/day84/images/
-    - assets/Data/day85/images/
-    - assets/Data/day86/images/
-    - assets/Data/day87/images/
-    - assets/Data/day88/images/
-    - assets/Data/day89/images/
-    - assets/Data/day90/images/
-    - assets/Data/day91/images/
-    - assets/Data/day92/images/
-    - assets/Data/day93/images/
-    - assets/Data/day94/images/
-    - assets/Data/day95/images/
-    - assets/Data/day96/images/
-    - assets/Data/day97/images/
-    - assets/Data/day98/images/
-    - assets/Data/day99/images/
-    - assets/Data/day100/images/
-    - assets/requirements/
+    # Onboarding screens
     - assets/onboarding/
+
+    # Agricultural guide images
+    - assets/requirements/
+
+    # Step-by-step planting flow
     - assets/images/
-    - assets/extracted_frames_comp/6th jan/1/
-    - assets/extracted_frames_comp/7th jan/1/
-    - assets/extracted_frames_comp/8th jan/1/
-    - assets/extracted_frames_comp/9th jan/1/
-    - assets/extracted_frames_comp/10th jan/1/
-    - assets/extracted_frames_comp/11th jan/1/
-    - assets/extracted_frames_comp/12th jan/1/
-    - assets/extracted_frames_comp/13th jan/1/
-    - assets/extracted_frames_comp/14th jan/1/
-    - assets/extracted_frames_comp/15th jan/1/
-    - assets/extracted_frames_comp/16th jan/1/
-    - assets/extracted_frames_comp/17th jan/1/
-    - assets/extracted_frames_comp/18th jan/1/
-    - assets/extracted_frames_comp/19th jan/1/
-    - assets/extracted_frames_comp/20th jan/1/
-    - assets/extracted_frames_comp/21th jan/1/
+
+    # Daily text-based crop data (day1.txt → day100.txt)
+    - assets/Data/day1/
+    - assets/Data/day2/
+    - assets/Data/day3/
+    - assets/Data/day4/
+    - assets/Data/day5/
+    - assets/Data/day6/
+    - assets/Data/day7/
+    - assets/Data/day8/
+    - assets/Data/day9/
+    - assets/Data/day10/
+    - assets/Data/day11/
+    - assets/Data/day12/
+    - assets/Data/day13/
+    - assets/Data/day14/
+    - assets/Data/day15/
+    - assets/Data/day16/
+    - assets/Data/day17/
+    - assets/Data/day18/
+    - assets/Data/day19/
+    - assets/Data/day20/
+    - assets/Data/day21/
+    - assets/Data/day22/
+    - assets/Data/day23/
+    - assets/Data/day24/
+    - assets/Data/day25/
+    - assets/Data/day26/
+    - assets/Data/day27/
+    - assets/Data/day28/
+    - assets/Data/day29/
+    - assets/Data/day30/
+    - assets/Data/day31/
+    - assets/Data/day32/
+    - assets/Data/day33/
+    - assets/Data/day34/
+    - assets/Data/day35/
+    - assets/Data/day36/
+    - assets/Data/day37/
+    - assets/Data/day38/
+    - assets/Data/day39/
+    - assets/Data/day40/
+    - assets/Data/day41/
+    - assets/Data/day42/
+    - assets/Data/day43/
+    - assets/Data/day44/
+    - assets/Data/day45/
+    - assets/Data/day46/
+    - assets/Data/day47/
+    - assets/Data/day48/
+    - assets/Data/day49/
+    - assets/Data/day50/
+    - assets/Data/day51/
+    - assets/Data/day52/
+    - assets/Data/day53/
+    - assets/Data/day54/
+    - assets/Data/day55/
+    - assets/Data/day56/
+    - assets/Data/day57/
+    - assets/Data/day58/
+    - assets/Data/day59/
+    - assets/Data/day60/
+    - assets/Data/day61/
+    - assets/Data/day62/
+    - assets/Data/day63/
+    - assets/Data/day64/
+    - assets/Data/day65/
+    - assets/Data/day66/
+    - assets/Data/day67/
+    - assets/Data/day68/
+    - assets/Data/day69/
+    - assets/Data/day70/
+    - assets/Data/day71/
+    - assets/Data/day72/
+    - assets/Data/day73/
+    - assets/Data/day74/
+    - assets/Data/day75/
+    - assets/Data/day76/
+    - assets/Data/day77/
+    - assets/Data/day78/
+    - assets/Data/day79/
+    - assets/Data/day80/
+    - assets/Data/day81/
+    - assets/Data/day82/
+    - assets/Data/day83/
+    - assets/Data/day84/
+    - assets/Data/day85/
+    - assets/Data/day86/
+    - assets/Data/day87/
+    - assets/Data/day88/
+    - assets/Data/day89/
+    - assets/Data/day90/
+    - assets/Data/day91/
+    - assets/Data/day92/
+    - assets/Data/day93/
+    - assets/Data/day94/
+    - assets/Data/day95/
+    - assets/Data/day96/
+    - assets/Data/day97/
+    - assets/Data/day98/
+    - assets/Data/day99/
+    - assets/Data/day100/
