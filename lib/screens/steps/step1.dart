@@ -53,7 +53,7 @@ class Step1Content extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "(Triticum vulgare / Triticum aestivum)",
+                    "(Triticum aestivum)",
                     style: TextStyle(
                       fontSize: 14,
                       fontStyle: FontStyle.italic,

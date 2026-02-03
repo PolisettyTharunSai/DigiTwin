@@ -27,6 +27,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
 
   int currentActiveStage = 1;
   final int totalStages = 6;
+  final ScrollController _scrollController = ScrollController();
 
   // Form State
   final TextEditingController _nameController = TextEditingController();
@@ -395,7 +396,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         children: [
           const SizedBox(height: 20),
           _buildTimeline(),
-          Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: _getStepContent())),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(20),
+              child: _getStepContent(),
+            ),
+          ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -431,6 +438,12 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+  }
+
   Widget _buildNavigationButtons(bool isLastStep) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -438,13 +451,26 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (currentActiveStage > 1)
-            _navCircleButton(icon: Icons.arrow_back, onPressed: () => setState(() => currentActiveStage--))
+            _navCircleButton(
+              icon: Icons.arrow_back,
+              onPressed: () {
+                setState(() => currentActiveStage--);
+                _scrollToTop();
+              },
+            )
           else
             const SizedBox(width: 45),
           _navCircleButton(
             label: isLastStep ? "Plant" : null,
             icon: isLastStep ? null : Icons.arrow_forward,
-            onPressed: () => isLastStep ? _showPlantingForm() : setState(() => currentActiveStage++),
+            onPressed: () {
+              if (isLastStep) {
+                _showPlantingForm();
+              } else {
+                setState(() => currentActiveStage++);
+                _scrollToTop();
+              }
+            },
             isPrimary: isLastStep,
           ),
         ],
@@ -485,6 +511,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }
