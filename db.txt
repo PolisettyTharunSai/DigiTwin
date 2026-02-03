@@ -14,3 +14,20 @@ create table public.profile (
   constraint profile_email_key unique (email),
   constraint profile_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+create table public.plant_daily_log (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  log_date date not null,
+  watered boolean not null,
+  pests_observed boolean not null,
+  pest_notes text null,
+  feedback text null,
+  images text[] null,
+  created_at timestamp without time zone null default now(),
+  water_amount numeric null,
+  water_unit text null,
+  constraint plant_daily_log_pkey primary key (id),
+  constraint plant_daily_log_unique unique (user_id, log_date),
+  constraint plant_daily_log_user_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;

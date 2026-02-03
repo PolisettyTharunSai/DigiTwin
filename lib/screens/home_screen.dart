@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -6,6 +7,7 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'instructions_screen.dart';
 import 'ar_view_page.dart';
@@ -37,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadFarmerAndPlantation();
     _startAutoScroll();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkDailyPopup();
+    });
   }
 
   @override
@@ -45,12 +50,40 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  int get _calculatedTodayDay {
+    if (plantationDate == null) return 1;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
+    final diff = today.difference(start).inDays;
+    return (diff + 1).clamp(1, 100);
+  }
+
+  Future<void> _checkDailyPopup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final String? lastPopupDate = prefs.getString('last_daily_log_date');
+
+    if (lastPopupDate != today) {
+      if (mounted) {
+        _showDailyCheckPopup();
+      }
+    }
+  }
+
   Future<void> _loadFarmerAndPlantation() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Load from local storage first
+    // Load from local storage first for instant feedback
     setState(() {
       farmerName = prefs.getString('farmerName') ?? "Farmer";
+      String? savedDate = prefs.getString('plantingDate');
+      if (savedDate != null) {
+        plantationDate = DateTime.tryParse(savedDate);
+        if (plantationDate != null) {
+          currentDay = _calculatedTodayDay;
+        }
+      }
     });
 
     final user = Supabase.instance.client.auth.currentUser;
@@ -69,31 +102,23 @@ class _HomeScreenState extends State<HomeScreen> {
               prefs.setString('farmerName', farmerName);
             }
             if (res['planting_date'] != null) {
-              // Handle potential format differences
               String dateStr = res['planting_date'];
-              try {
-                // Supabase might store as ISO string or D/M/YYYY
-                if (dateStr.contains('T')) {
-                  plantationDate = DateTime.parse(dateStr);
-                } else {
+              DateTime? parsed = DateTime.tryParse(dateStr);
+              
+              if (parsed == null) {
+                try {
+                  parsed = DateFormat("d/M/yyyy").parse(dateStr);
+                } catch (_) {
                   try {
-                    plantationDate = DateFormat("d/M/yyyy").parse(dateStr);
-                  } catch (_) {
-                    plantationDate = DateFormat("dd/MM/yyyy").parse(dateStr);
-                  }
+                    parsed = DateFormat("dd/MM/yyyy").parse(dateStr);
+                  } catch (_) {}
                 }
-              } catch (e) {
-                debugPrint("Date Parse Error: $e");
               }
               
-              if (plantationDate != null) {
-                // Calculate currentDay: today - plantationDate + 1
-                final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-                final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
-                
-                final diff = today.difference(start).inDays;
-                currentDay = (diff + 1).clamp(1, 100);
+              if (parsed != null) {
+                plantationDate = parsed;
+                prefs.setString('plantingDate', parsed.toIso8601String());
+                currentDay = _calculatedTodayDay;
               }
             }
           });
@@ -102,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
         debugPrint("Error loading profile: $e");
       }
     }
-    _loadDayData(); // Load data after calculation
+    _loadDayData();
   }
 
   Future<void> _loadDayData() async {
@@ -140,13 +165,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _pickDate() async {
+  Future<void> _pickViewingDate() async {
+    if (plantationDate == null) return;
+    
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2024, 1, 1),
-      lastDate: DateTime(2026, 12, 31),
-      currentDate: DateTime.now(),
+      initialDate: plantationDate!.add(Duration(days: currentDay - 1)).isBefore(plantationDate!) 
+          ? plantationDate! 
+          : plantationDate!.add(Duration(days: currentDay - 1)),
+      firstDate: plantationDate!,
+      lastDate: plantationDate!.add(const Duration(days: 99)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -154,7 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
               primary: primaryColor,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-              secondary: Colors.orange,
             ),
           ),
           child: child!,
@@ -163,15 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (picked != null) {
+      final diff = picked.difference(plantationDate!).inDays;
       setState(() {
-        if (plantationDate != null) {
-          final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
-          final select = DateTime(picked.year, picked.month, picked.day);
-          final diff = select.difference(start).inDays;
-          currentDay = (diff + 1).clamp(1, 100);
-        } else {
-          currentDay = picked.day.clamp(1, 100);
-        }
+        currentDay = (diff + 1).clamp(1, 100);
         currentImageIndex = 0;
       });
       _loadDayData();
@@ -187,6 +208,15 @@ class _HomeScreenState extends State<HomeScreen> {
           initialIndex: index,
         ),
       ),
+    );
+  }
+
+  void _showDailyCheckPopup() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const DailyCheckModal(),
     );
   }
 
@@ -235,45 +265,74 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: _pickDate,
-                            behavior: HitTestBehavior.opaque,
-                            child: Row(
-                              children: [
-                                Text(
-                                  "Day $currentDay",
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
+                          const SizedBox(height: 4),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Planting Date",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const Icon(Icons.arrow_drop_down, color: primaryColor),
-                              ],
-                            ),
+                              ),
+                              Text(
+                                plantationDate != null
+                                    ? DateFormat('dd MMM yyyy').format(plantationDate!)
+                                    : "Not Set",
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.info_outline, color: primaryColor),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const InstructionsScreen()),
-                            );
-                          },
-                        ),
+                            child: IconButton(
+                              icon: const Icon(Icons.assignment_turned_in_outlined, color: primaryColor),
+                              onPressed: _showDailyCheckPopup,
+                              tooltip: "Today's Plant Check",
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.info_outline, color: primaryColor),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const InstructionsScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -416,18 +475,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     } : null,
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                     decoration: BoxDecoration(
                       color: primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      "Day $currentDay",
-                      style: const TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Day ${currentDay+30}",
+                          style: const TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _pickViewingDate,
+                          child: const Icon(Icons.calendar_month, color: primaryColor, size: 20),
+                        ),
+                      ],
                     ),
                   ),
                   _circleNav(
@@ -686,6 +755,343 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class DailyCheckModal extends StatefulWidget {
+  const DailyCheckModal({super.key});
+
+  @override
+  State<DailyCheckModal> createState() => _DailyCheckModalState();
+}
+
+class _DailyCheckModalState extends State<DailyCheckModal> {
+  bool? watered;
+  final TextEditingController _waterAmountController = TextEditingController();
+  String _selectedWaterUnit = "ml";
+  bool pestsObserved = false;
+  final TextEditingController _pestNotesController = TextEditingController();
+  final TextEditingController _feedbackController = TextEditingController();
+  List<XFile> _images = [];
+  bool _isSubmitting = false;
+  bool _alreadySubmittedToday = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSubmissionStatus();
+  }
+
+  Future<void> _checkSubmissionStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final String? lastLogDate = prefs.getString('last_daily_log_date');
+    if (lastLogDate == today) {
+      setState(() => _alreadySubmittedToday = true);
+    }
+  }
+
+  Future<void> _pickImages() async {
+    final picker = ImagePicker();
+    final List<XFile> pickedImages = await picker.pickMultiImage();
+    if (pickedImages.isNotEmpty) {
+      setState(() {
+        _images.addAll(pickedImages);
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (watered == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please answer if you watered the plant.")),
+      );
+      return;
+    }
+
+    if (watered == true && _waterAmountController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter the amount of water used.")),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final List<String> imageUrls = [];
+
+      for (var image in _images) {
+        final fileName = 'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+        await supabase.storage.from('daily_logs').upload(
+          fileName,
+          File(image.path),
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+        final publicUrl = supabase.storage.from('daily_logs').getPublicUrl(fileName);
+        imageUrls.add(publicUrl);
+      }
+
+      final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      final logData = {
+        'user_id': user.id,
+        'log_date': today,
+        'watered': watered,
+        'pests_observed': pestsObserved,
+        'pest_notes': _pestNotesController.text,
+        'feedback': _feedbackController.text,
+        'images': imageUrls,
+        'water_amount': watered == true ? double.tryParse(_waterAmountController.text) : null,
+        'water_unit': watered == true ? _selectedWaterUnit : null,
+      };
+
+      await supabase.from('plant_daily_log').upsert(logData, onConflict: 'user_id, log_date');
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_daily_log_date', today);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Daily log submitted successfully!")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _waterAmountController.dispose();
+    _pestNotesController.dispose();
+    _feedbackController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "Daily Plant Check",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _HomeScreenState.primaryColor),
+            ),
+            if (_alreadySubmittedToday)
+              Container(
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "You have already submitted a log for today. Submitting again will update your existing entry.",
+                        style: TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 20),
+            const Text("Did you water the plant today?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text("Yes"),
+                    value: true,
+                    groupValue: watered,
+                    activeColor: _HomeScreenState.primaryColor,
+                    onChanged: (v) => setState(() => watered = v),
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text("No"),
+                    value: false,
+                    groupValue: watered,
+                    activeColor: _HomeScreenState.primaryColor,
+                    onChanged: (v) => setState(() => watered = v),
+                  ),
+                ),
+              ],
+            ),
+            if (watered == true)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _waterAmountController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          hintText: "Amount",
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedWaterUnit,
+                            isExpanded: true,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedWaterUnit = newValue!;
+                              });
+                            },
+                            items: <String>['ml', 'liters'].map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Divider(),
+            SwitchListTile(
+              title: const Text("Did you observe any pests or problems?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              value: pestsObserved,
+              activeColor: _HomeScreenState.primaryColor,
+              onChanged: (v) => setState(() => pestsObserved = v),
+            ),
+            if (pestsObserved)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: TextField(
+                  controller: _pestNotesController,
+                  decoration: const InputDecoration(
+                    hintText: "Describe the pests or problems...",
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ),
+            const SizedBox(height: 20),
+            const Text("Feedback / Notes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _feedbackController,
+              decoration: const InputDecoration(
+                hintText: "How's your plant doing overall?",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 20),
+            const Text("Upload Photos", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                ..._images.map((img) => Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(File(img.path), width: 80, height: 80, fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _images.remove(img)),
+                        child: const CircleAvatar(radius: 10, backgroundColor: Colors.red, child: Icon(Icons.close, size: 12, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                )),
+                GestureDetector(
+                  onTap: _pickImages,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[400]!),
+                    ),
+                    child: const Icon(Icons.add_a_photo, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _HomeScreenState.primaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(_alreadySubmittedToday ? "Update Today's Log" : "Submit Today's Log", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
         ),
       ),
     );
