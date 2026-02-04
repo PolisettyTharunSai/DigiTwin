@@ -27,7 +27,259 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
 
   int currentActiveStage = 1;
   final int totalStages = 6;
-  final ScrollController _scrollController = ScrollController();
+
+  // --- LOCALIZATION STATE ---
+  String _currentLocale = 'en';
+
+  final Map<String, Map<String, String>> _localizedValues = {
+    'en': {
+      'title': 'Agricultural Guide',
+      'step': 'STEP',
+      'plant_crop': 'Plant Your Crop',
+      'f_name': 'Farmer Name',
+      'wheat': 'Wheat',
+      'notes': 'Notes (optional)',
+      'capture': 'Capture Location',
+      'confirm_p': 'Confirm Planting',
+      'review': 'Review Details',
+      'edit': 'Edit',
+      'confirm': 'Confirm',
+      'plant': 'Plant',
+      'err_loc': 'Could not fetch location',
+      'err_fill': 'Please fill all details and capture location',
+      'farmer': 'Farmer',
+      'crop': 'Crop',
+      'date': 'Date',
+      'loc': 'Location',
+      'exact': 'Exact',
+      'approx': 'Approx',
+    },
+    'hi': {
+      'title': 'कृषि मार्गदर्शिका',
+      'step': 'चरण',
+      'plant_crop': 'अपनी फसल लगाएं',
+      'f_name': 'किसान का नाम',
+      'wheat': 'गेहूं',
+      'notes': 'नोट्स (वैकल्पिक)',
+      'capture': 'स्थान प्राप्त करें',
+      'confirm_p': 'बुवाई की पुष्टि करें',
+      'review': 'विवरण की समीक्षा करें',
+      'edit': 'संपादन',
+      'confirm': 'पुष्टि',
+      'plant': 'लगाएं',
+      'err_loc': 'स्थान प्राप्त नहीं हो सका',
+      'err_fill': 'कृपया सभी विवरण भरें और स्थान प्राप्त करें',
+      'farmer': 'किसान',
+      'crop': 'फसल',
+      'date': 'तारीख',
+      'loc': 'स्थान',
+      'exact': 'सटीक',
+      'approx': 'लगभग',
+    },
+    'ta': {
+      'title': 'வேளாண் வழிகாட்டி',
+      'step': 'படி',
+      'plant_crop': 'பயிரை நடவும்',
+      'f_name': 'விவசாயி பெயர்',
+      'wheat': 'கோதுமை',
+      'notes': 'குறிப்புகள்',
+      'capture': 'இருப்பிடத்தைப் பிடிக்கவும்',
+      'confirm_p': 'நடவு உறுதிப்படுத்தவும்',
+      'review': 'விவரங்களை மதிப்பாய்வு செய்யவும்',
+      'edit': 'திருத்து',
+      'confirm': 'உறுதி',
+      'plant': 'நடவு',
+      'err_loc': 'இருப்பிடத்தைப் பெற முடியவில்லை',
+      'err_fill':
+          'அனைத்து விவரங்களையும் பூர்த்தி செய்து இருப்பிடத்தைப் பிடிக்கவும்',
+      'farmer': 'விவசாயி',
+      'crop': 'பயிர்',
+      'date': 'தேதி',
+      'loc': 'இருப்பிடம்',
+      'exact': 'சரியான',
+      'approx': 'தோராயமான',
+    },
+    'te': {
+      'title': 'వ్యవసాయ మార్గదర్శి',
+      'step': 'దశ',
+      'plant_crop': 'మీ పంటను నాటండి',
+      'f_name': 'రైతు పేరు',
+      'wheat': 'గోధుమ',
+      'notes': 'గమనికలు',
+      'capture': 'స్థానాన్ని గుర్తించండి',
+      'confirm_p': 'నాటడాన్ని ధృవీకరించండి',
+      'review': 'వివరాలను సమీక్షించండి',
+      'edit': 'సవరించు',
+      'confirm': 'ధృవీకరించు',
+      'plant': 'నాటండి',
+      'err_loc': 'స్థానాన్ని పొందలేకపోయాము',
+      'err_fill': 'దయచేసి అన్ని వివరాలను నింపి స్థానాన్ని గుర్తించండి',
+      'farmer': 'రైతు',
+      'crop': 'పంట',
+      'date': 'తేదీ',
+      'loc': 'స్థానం',
+      'exact': 'ఖచ్చితమైన',
+      'approx': 'సుమారు',
+    },
+    'kn': {
+      'title': 'ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ',
+      'step': 'ಹಂತ',
+      'plant_crop': 'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ನೆಡಿ',
+      'f_name': 'ರೈತರ ಹೆಸರು',
+      'wheat': 'ಗೋಧಿ',
+      'notes': 'ಟಿಪ್ಪಣಿಗಳು',
+      'capture': 'ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
+      'confirm_p': 'ನೆಡುವಿಕೆಯನ್ನು ದೃಢೀಕರಿಸಿ',
+      'review': 'ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ',
+      'edit': 'ತಿದ್ದುಪಡಿ',
+      'confirm': 'ದೃಢೀಕರಿಸಿ',
+      'plant': 'ನೆಡಿ',
+      'err_loc': 'ಸ್ಥಳವನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ',
+      'err_fill':
+          'ದಯವಿಟ್ಟು ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
+      'farmer': 'ರೈತ',
+      'crop': 'ಬೆಳೆ',
+      'date': 'ದಿನಾಂಕ',
+      'loc': 'ಸ್ಥಳ',
+      'exact': 'ನಿಖರ',
+      'approx': 'ಅಂದಾಜು',
+    },
+    'mr': {
+      'title': 'कृषी मार्गदर्शिका',
+      'step': 'टप्पा',
+      'plant_crop': 'पीक लावा',
+      'f_name': 'शेतकऱ्याचे नाव',
+      'wheat': 'गहू',
+      'notes': 'टिप्पणी',
+      'capture': 'स्थान मिळवा',
+      'confirm_p': 'लागवडीची पुष्टी करा',
+      'review': 'तपशील तपासा',
+      'edit': 'संपादन',
+      'confirm': 'पुष्टी',
+      'plant': 'लावा',
+      'err_loc': 'स्थान मिळू शकले नाही',
+      'err_fill': 'कृपया सर्व तपशील भरा आणि स्थान मिळवा',
+      'farmer': 'शेतकरी',
+      'crop': 'पीक',
+      'date': 'तारीख',
+      'loc': 'स्थान',
+      'exact': 'अचूक',
+      'approx': 'अंदाजे',
+    },
+    'pa': {
+      'title': 'ਖੇਤੀਬਾੜੀ ਗਾਈਡ',
+      'step': 'ਕਦਮ',
+      'plant_crop': 'ਫਸਲ ਲਗਾਓ',
+      'f_name': 'ਕਿਸਾਨ ਦਾ ਨਾਮ',
+      'wheat': 'ਕਣਕ',
+      'notes': 'ਨੋਟਸ',
+      'capture': 'ਲੋਕੇਸ਼ਨ ਲਓ',
+      'confirm_p': 'ਬਿਜਾਈ ਦੀ ਪੁਸ਼ਟੀ',
+      'review': 'ਵੇਰਵਿਆਂ ਦੀ ਸਮੀਖਿਆ',
+      'edit': 'ਸੋਧੋ',
+      'confirm': 'ਪੁਸ਼ਟੀ',
+      'plant': 'ਬੀਜੋ',
+      'err_loc': 'ਲੋਕੇਸ਼ਨ ਨਹੀਂ ਮਿਲੀ',
+      'err_fill': 'ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੇ ਵੇਰਵੇ ਭਰੋ ਅਤੇ ਲੋਕੇਸ਼ਨ ਲਓ',
+      'farmer': 'ਕਿਸਾਨ',
+      'crop': 'ਫਸਲ',
+      'date': 'ਤਾਰੀਖ',
+      'loc': 'ਲੋਕੇਸ਼ਨ',
+      'exact': 'ਸਹੀ',
+      'approx': 'ਲਗਭਗ',
+    },
+    'bn': {
+      'title': 'কৃষি নির্দেশিকা',
+      'step': 'ধাপ',
+      'plant_crop': 'আপনার ফসল রোপণ করুন',
+      'f_name': 'কৃষকের নাম',
+      'wheat': 'গম',
+      'notes': 'নোট',
+      'capture': 'অবস্থান নিন',
+      'confirm_p': 'রোপণ নিশ্চিত করুন',
+      'review': 'বিবরণ পর্যালোচনা',
+      'edit': 'সম্পাদনা',
+      'confirm': 'নিশ্চিত',
+      'plant': 'রোপণ',
+      'err_loc': 'অবস্থান পাওয়া যায়নি',
+      'err_fill': 'সব তথ্য পূরণ করুন এবং অবস্থান নিন',
+      'farmer': 'কৃষক',
+      'crop': 'ফসল',
+      'date': 'তারিখ',
+      'loc': 'অবস্থান',
+      'exact': 'সঠিক',
+      'approx': 'আনুমানিক',
+    },
+    'gu': {
+      'title': 'કૃષિ માર્ગદર્શિકા',
+      'step': 'તબક્કો',
+      'plant_crop': 'પાક રોપો',
+      'f_name': 'ખેડૂતનું નામ',
+      'wheat': 'ઘઉં',
+      'notes': 'નોંધ',
+      'capture': 'સ્થાન મેળવો',
+      'confirm_p': 'વાવેતરની પુષ્ટિ કરો',
+      'review': 'વિગતોની સમીક્ષા',
+      'edit': 'ફેરફાર',
+      'confirm': 'પુષ્ટિ',
+      'plant': 'રોપો',
+      'err_loc': 'સ્થાન મળ્યું નથી',
+      'err_fill': 'બધી વિગતો ભરો અને સ્થાન મેળવો',
+      'farmer': 'ખેડૂત',
+      'crop': 'પાક',
+      'date': 'તારીખ',
+      'loc': 'સ્થાન',
+      'exact': 'ચોક્કસ',
+      'approx': 'આશરે',
+    },
+    'ml': {
+      'title': 'കാർഷിക ഗൈഡ്',
+      'step': 'ഘട്ടം',
+      'plant_crop': 'വിള ഇറക്കുക',
+      'f_name': 'കർഷകന്റെ പേര്',
+      'wheat': 'ഗോതമ്പ്',
+      'notes': 'കുറിപ്പുകൾ',
+      'capture': 'ലൊക്കേഷൻ എടുക്കുക',
+      'confirm_p': 'ഉറപ്പാക്കുക',
+      'review': 'വിവരങ്ങൾ പരിശോധിക്കുക',
+      'edit': 'തിരുത്തുക',
+      'confirm': 'സ്ഥിരീകരിക്കുക',
+      'plant': 'വിള',
+      'err_loc': 'ലൊക്കേഷൻ ലഭ്യമല്ല',
+      'err_fill': 'വിവരങ്ങൾ പൂരിപ്പിച്ച് ലൊക്കേഷൻ എടുക്കുക',
+      'farmer': 'കർഷകൻ',
+      'crop': 'വിള',
+      'date': 'തീയതി',
+      'loc': 'ലൊക്കേഷൻ',
+      'exact': 'കൃത്യമായ',
+      'approx': 'ഏകദേശ',
+    },
+    'ur': {
+      'title': 'زرعی گائیڈ',
+      'step': 'مرحلہ',
+      'plant_crop': 'اپنی فصل لگائیں',
+      'f_name': 'کسان کا نام',
+      'wheat': 'گندم',
+      'notes': 'نوٹس',
+      'capture': 'مقام حاصل کریں',
+      'confirm_p': 'کاشت کی تصدیق کریں',
+      'review': 'تفصیلات کا جائزہ',
+      'edit': 'ترمیم',
+      'confirm': 'تصدیق',
+      'plant': 'کاشت',
+      'err_loc': 'مقام نہیں ملا',
+      'err_fill': 'تمام تفصیلات بھریں اور مقام حاصل کریں',
+      'farmer': 'کسان',
+      'crop': 'فصل',
+      'date': 'تاریخ',
+      'loc': 'مقام',
+      'exact': 'درست',
+      'approx': 'تقریباً',
+    },
+  };
+
+  String _t(String key) => _localizedValues[_currentLocale]?[key] ?? key;
+  bool get _isRTL => _currentLocale == 'ur';
 
   // Form State
   final TextEditingController _nameController = TextEditingController();
@@ -48,22 +300,32 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   Future<void> _loadInitialData() async {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('farmerName');
-    if (savedName != null && mounted) {
+    final savedLang = prefs.getString('appLanguage');
+    if (mounted) {
       setState(() {
-        _nameController.text = savedName;
+        if (savedName != null) _nameController.text = savedName;
+        if (savedLang != null) _currentLocale = savedLang;
       });
     }
   }
 
   Widget _getStepContent() {
     switch (currentActiveStage) {
-      case 1: return const Step1Content();
-      case 2: return const Step2Content();
-      case 3: return const Step3Content();
-      case 4: return const Step4Content();
-      case 5: return const Step5Content();
-      case 6: return const Step6Content();
-      default: return const Step1Content();
+      case 1:
+        return Step1Content(locale: _currentLocale);
+      case 2:
+        return Step2Content(locale: _currentLocale);
+      case 3:
+        return Step3Content(locale: _currentLocale);
+      case 4:
+        return Step4Content(locale: _currentLocale);
+      case 5:
+        // return Step5Content(locale: _currentLocale);
+        return Step5Content();
+      case 6:
+        return Step6Content();
+      default:
+        return Step1Content(locale: _currentLocale);
     }
   }
 
@@ -80,13 +342,16 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       setSheetState(() {
         _lat = position.latitude;
         _lng = position.longitude;
-        _currentPosition = "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+        _currentPosition =
+            "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
         isCapturing = false;
       });
     } catch (e) {
       setSheetState(() => isCapturing = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not fetch location")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_t('err_loc'))));
       }
     }
   }
@@ -98,78 +363,101 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.75,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
+          return Directionality(
+            textDirection: _isRTL ? TextDirection.rtl : TextDirection.ltr,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.75,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 35,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                const Text(
-                  "Plant Your Crop",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryPurple),
-                ),
-                const SizedBox(height: 15),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Column(
-                      children: [
-                        _buildField(Icons.person_outline, "Farmer Name", _nameController),
-                        _buildCropField(),
-                        _buildField(
-                          Icons.calendar_today_outlined,
-                          selectedDate,
-                          null,
-                          isReadOnly: true,
-                          onTap: () => _selectDate(setSheetState),
-                          isPlaceholder: selectedDate == "DD/MM/YYYY",
-                        ),
-                        _buildToggleSwitch(setSheetState),
-                        _buildField(Icons.notes_outlined, "Notes (optional)", _notesController),
-                        _buildLocationButton(setSheetState),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: 160,
-                          height: 40,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_nameController.text.trim().isNotEmpty &&
-                                  selectedDate != "DD/MM/YYYY" &&
-                                  _currentPosition != null) {
-                                _showReviewDialog();
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Please fill all details and capture location")),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryPurple,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            child: const Text("Confirm Planting", style: TextStyle(color: Colors.white, fontSize: 13)),
-                          ),
-                        ),
-                      ],
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 35,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 15),
+                  Text(
+                    _t('plant_crop'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: primaryPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: Column(
+                        children: [
+                          _buildField(
+                            Icons.person_outline,
+                            _t('f_name'),
+                            _nameController,
+                          ),
+                          _buildCropField(),
+                          _buildField(
+                            Icons.calendar_today_outlined,
+                            selectedDate,
+                            null,
+                            isReadOnly: true,
+                            onTap: () => _selectDate(setSheetState),
+                            isPlaceholder: selectedDate == "DD/MM/YYYY",
+                          ),
+                          _buildToggleSwitch(setSheetState),
+                          _buildField(
+                            Icons.notes_outlined,
+                            _t('notes'),
+                            _notesController,
+                          ),
+                          _buildLocationButton(setSheetState),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: 200,
+                            height: 40,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (_nameController.text.trim().isNotEmpty &&
+                                    selectedDate != "DD/MM/YYYY" &&
+                                    _currentPosition != null) {
+                                  _showReviewDialog();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(_t('err_fill'))),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryPurple,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Text(
+                                _t('confirm_p'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -177,7 +465,14 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
-  Widget _buildField(IconData icon, String hint, TextEditingController? controller, {bool isReadOnly = false, VoidCallback? onTap, bool isPlaceholder = false}) {
+  Widget _buildField(
+    IconData icon,
+    String hint,
+    TextEditingController? controller, {
+    bool isReadOnly = false,
+    VoidCallback? onTap,
+    bool isPlaceholder = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: SizedBox(
@@ -186,13 +481,22 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           controller: controller,
           readOnly: isReadOnly,
           onTap: onTap,
-          style: TextStyle(fontSize: 12, color: isPlaceholder ? Colors.grey : Colors.black),
+          style: TextStyle(
+            fontSize: 12,
+            color: isPlaceholder ? Colors.grey : Colors.black,
+          ),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: primaryPurple, size: 16),
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 12),
-            contentPadding: const EdgeInsets.symmetric(vertical: 0),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade200)),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 0,
+              horizontal: 10,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -211,11 +515,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.grass, color: primaryPurple, size: 16),
-            SizedBox(width: 10),
-            Text("Wheat", style: TextStyle(fontSize: 12)),
+            const Icon(Icons.grass, color: primaryPurple, size: 16),
+            const SizedBox(width: 10),
+            Text(_t('wheat'), style: const TextStyle(fontSize: 12)),
           ],
         ),
       ),
@@ -227,12 +531,15 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         height: 34,
-        width: 180,
-        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(8)),
+        width: 200,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F2F2),
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           children: [
-            _toggleItem("Exact", isExact, setSheetState),
-            _toggleItem("Approx", !isExact, setSheetState),
+            _toggleItem(_t('exact'), isExact, setSheetState),
+            _toggleItem(_t('approx'), !isExact, setSheetState),
           ],
         ),
       ),
@@ -242,12 +549,21 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   Widget _toggleItem(String label, bool active, StateSetter setSheetState) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => setSheetState(() => isExact = (label == "Exact")),
+        onTap: () => setSheetState(() => isExact = (label == _t('exact'))),
         child: Container(
           margin: const EdgeInsets.all(2),
-          decoration: BoxDecoration(color: active ? primaryPurple : Colors.transparent, borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(
+            color: active ? primaryPurple : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
           alignment: Alignment.center,
-          child: Text(label, style: TextStyle(color: active ? Colors.white : Colors.grey, fontSize: 11)),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: active ? Colors.white : Colors.grey,
+              fontSize: 11,
+            ),
+          ),
         ),
       ),
     );
@@ -258,19 +574,39 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       onTap: () => _determinePosition(setSheetState),
       child: Container(
         height: 38,
-        width: 180,
-        decoration: BoxDecoration(border: Border.all(color: primaryPurple.withOpacity(0.3)), borderRadius: BorderRadius.circular(8)),
+        width: 220,
+        decoration: BoxDecoration(
+          border: Border.all(color: primaryPurple.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Center(
           child: isCapturing
-              ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: primaryPurple))
+              ? const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: primaryPurple,
+                  ),
+                )
               : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.my_location, color: primaryPurple, size: 14),
-              const SizedBox(width: 6),
-              Text(_currentPosition ?? "Capture Location", style: const TextStyle(color: primaryPurple, fontSize: 11)),
-            ],
-          ),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.my_location,
+                      color: primaryPurple,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _currentPosition ?? _t('capture'),
+                      style: const TextStyle(
+                        color: primaryPurple,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -279,29 +615,53 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   void _showReviewDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 60),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Center(
-          child: Text("Review Details", style: TextStyle(fontSize: 16, color: primaryPurple, fontWeight: FontWeight.bold)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _reviewRow("Farmer", _nameController.text),
-            _reviewRow("Crop", "Wheat"),
-            _reviewRow("Date", selectedDate),
-            _reviewRow("Location", _currentPosition ?? ""),
+      builder: (context) => Directionality(
+        textDirection: _isRTL ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Center(
+            child: Text(
+              _t('review'),
+              style: const TextStyle(
+                fontSize: 16,
+                color: primaryPurple,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _reviewRow(_t('farmer'), _nameController.text),
+              _reviewRow(_t('crop'), _t('wheat')),
+              _reviewRow(_t('date'), selectedDate),
+              _reviewRow(_t('loc'), _currentPosition ?? ""),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                _t('edit'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _handleFinalConfirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+              child: Text(
+                _t('confirm'),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Edit", style: TextStyle(fontSize: 12, color: Colors.grey))),
-          ElevatedButton(
-            onPressed: _handleFinalConfirm,
-            style: ElevatedButton.styleFrom(backgroundColor: primaryPurple, padding: const EdgeInsets.symmetric(horizontal: 20)),
-            child: const Text("Confirm", style: TextStyle(color: Colors.white, fontSize: 12)),
-          ),
-        ],
       ),
     );
   }
@@ -311,8 +671,17 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
+          Text(
+            "$label: ",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -321,17 +690,15 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   void _handleFinalConfirm() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
-
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User not logged in")));
-      return;
-    }
+    if (user == null) return;
 
     final name = _nameController.text.trim();
-
-    // Convert date
     final parts = selectedDate.split('/');
-    final parsedDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+    final parsedDate = DateTime(
+      int.parse(parts[2]),
+      int.parse(parts[1]),
+      int.parse(parts[0]),
+    );
 
     final plantingData = {
       'id': user.id,
@@ -347,24 +714,24 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     };
 
     try {
-      // Use profile table for all crop and user data. 
-      // users table is removed from schema.
       await supabase.from('profile').update(plantingData).eq('id', user.id);
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isCropPlanted', true);
       await prefs.setString('farmerName', name);
       await prefs.setString('plantingData', jsonEncode(plantingData));
 
       if (!mounted) return;
-      Navigator.pop(context); // Dialog
-      Navigator.pop(context); // Bottom Sheet
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-
+      Navigator.pop(context);
+      Navigator.pop(context);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save data: $e")));
-      }
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -375,38 +742,73 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       firstDate: DateTime(2024),
       lastDate: DateTime(2027),
     );
-    if (picked != null) {
-      setSheetState(() => selectedDate = "${picked.day}/${picked.month}/${picked.year}");
-    }
+    if (picked != null)
+      setSheetState(
+        () => selectedDate = "${picked.day}/${picked.month}/${picked.year}",
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     bool isLastStep = currentActiveStage == totalStages;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: primaryPurple,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text("Agricultural Guide", style: TextStyle(color: Colors.white, fontSize: 16)),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20))),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          _buildTimeline(),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(20),
-              child: _getStepContent(),
+    return Directionality(
+      textDirection: _isRTL ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: primaryPurple,
+          centerTitle: true,
+          title: Text(
+            _t('title'),
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          actions: [_buildLanguagePicker()],
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
             ),
           ),
-        ],
+        ),
+        body: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildTimeline(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: _getStepContent(),
+              ),
+            ),
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: _buildNavigationButtons(isLastStep),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildNavigationButtons(isLastStep),
+    );
+  }
+
+  Widget _buildLanguagePicker() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.language, color: Colors.white, size: 20),
+      onSelected: (String code) async {
+        setState(() => _currentLocale = code);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('appLanguage', code);
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'en', child: Text("English")),
+        const PopupMenuItem(value: 'hi', child: Text("हिन्दी (Hindi)")),
+        const PopupMenuItem(value: 'ta', child: Text("தமிழ் (Tamil)")),
+        const PopupMenuItem(value: 'te', child: Text("తెలుగు (Telugu)")),
+        const PopupMenuItem(value: 'kn', child: Text("ಕನ್ನಡ (Kannada)")),
+        const PopupMenuItem(value: 'mr', child: Text("मराठी (Marathi)")),
+        const PopupMenuItem(value: 'pa', child: Text("ਪੰਜਾਬੀ (Punjabi)")),
+        const PopupMenuItem(value: 'gu', child: Text("ગુજરાતી (Gujarati)")),
+        const PopupMenuItem(value: 'bn', child: Text("বাংলা (Bengali)")),
+        const PopupMenuItem(value: 'ml', child: Text("മലയാളം (Malayalam)")),
+        const PopupMenuItem(value: 'ur', child: Text("اردو (Urdu)")),
+      ],
     );
   }
 
@@ -425,23 +827,33 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                   duration: const Duration(milliseconds: 200),
                   height: 30,
                   width: 30,
-                  decoration: BoxDecoration(color: done ? primaryPurple : unselectedPurple, shape: BoxShape.circle),
-                  child: Icon(stageNumber < currentActiveStage ? Icons.check : _getIconForStage(stageNumber), size: 14, color: done ? Colors.white : inactiveIconColor),
+                  decoration: BoxDecoration(
+                    color: done ? primaryPurple : unselectedPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    stageNumber < currentActiveStage
+                        ? Icons.check
+                        : _getIconForStage(stageNumber),
+                    size: 14,
+                    color: done ? Colors.white : inactiveIconColor,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text("STEP $stageNumber", style: TextStyle(fontSize: 6, color: done ? primaryPurple : Colors.grey)),
+                Text(
+                  "${_t('step')} $stageNumber",
+                  style: TextStyle(
+                    fontSize: 6,
+                    color: done ? primaryPurple : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           );
         }),
       ),
     );
-  }
-
-  void _scrollToTop() {
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(0);
-    }
   }
 
   Widget _buildNavigationButtons(bool isLastStep) {
@@ -453,24 +865,16 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           if (currentActiveStage > 1)
             _navCircleButton(
               icon: Icons.arrow_back,
-              onPressed: () {
-                setState(() => currentActiveStage--);
-                _scrollToTop();
-              },
+              onPressed: () => setState(() => currentActiveStage--),
             )
           else
             const SizedBox(width: 45),
           _navCircleButton(
-            label: isLastStep ? "Plant" : null,
+            label: isLastStep ? _t('plant') : null,
             icon: isLastStep ? null : Icons.arrow_forward,
-            onPressed: () {
-              if (isLastStep) {
-                _showPlantingForm();
-              } else {
-                setState(() => currentActiveStage++);
-                _scrollToTop();
-              }
-            },
+            onPressed: () => isLastStep
+                ? _showPlantingForm()
+                : setState(() => currentActiveStage++),
             isPrimary: isLastStep,
           ),
         ],
@@ -478,7 +882,12 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
-  Widget _navCircleButton({IconData? icon, String? label, required VoidCallback onPressed, bool isPrimary = false}) {
+  Widget _navCircleButton({
+    IconData? icon,
+    String? label,
+    required VoidCallback onPressed,
+    bool isPrimary = false,
+  }) {
     return SizedBox(
       height: 45,
       width: label != null ? 80 : 45,
@@ -489,7 +898,14 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         backgroundColor: unselectedPurple,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         child: label != null
-            ? Text(label, style: const TextStyle(color: primaryPurple, fontSize: 13, fontWeight: FontWeight.bold))
+            ? Text(
+                label,
+                style: const TextStyle(
+                  color: primaryPurple,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
             : Icon(icon, color: primaryPurple, size: 20),
       ),
     );
@@ -497,13 +913,20 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
 
   IconData _getIconForStage(int stage) {
     switch (stage) {
-      case 1: return Icons.menu_book;
-      case 2: return Icons.wb_sunny;
-      case 3: return Icons.settings;
-      case 4: return Icons.grain;
-      case 5: return Icons.biotech;
-      case 6: return Icons.water_drop;
-      default: return Icons.circle;
+      case 1:
+        return Icons.menu_book;
+      case 2:
+        return Icons.wb_sunny;
+      case 3:
+        return Icons.settings;
+      case 4:
+        return Icons.grain;
+      case 5:
+        return Icons.biotech;
+      case 6:
+        return Icons.water_drop;
+      default:
+        return Icons.circle;
     }
   }
 
@@ -511,7 +934,6 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 }
