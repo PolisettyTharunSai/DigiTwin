@@ -320,10 +320,9 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       case 4:
         return Step4Content(locale: _currentLocale);
       case 5:
-        // return Step5Content(locale: _currentLocale);
-        return Step5Content();
+        return Step5Content(locale: _currentLocale);
       case 6:
-        return Step6Content();
+        return Step6Content(locale: _currentLocale);
       default:
         return Step1Content(locale: _currentLocale);
     }
