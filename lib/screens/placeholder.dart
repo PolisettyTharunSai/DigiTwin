@@ -320,9 +320,14 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       case 4:
         return Step4Content(locale: _currentLocale);
       case 5:
+        // return Step5Content(locale: _currentLocale);
         return Step5Content(locale: _currentLocale);
       case 6:
-        return Step6Content(locale: _currentLocale);
+        debugPrint("Placeholder building Step6 with locale: $_currentLocale");
+        return Step6Content(
+          key: ValueKey('step6_$_currentLocale'),
+          locale: _currentLocale,
+        );
       default:
         return Step1Content(locale: _currentLocale);
     }
@@ -791,6 +796,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.language, color: Colors.white, size: 20),
       onSelected: (String code) async {
+        debugPrint("Language selected: $code");
         setState(() => _currentLocale = code);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('appLanguage', code);
