@@ -1,0 +1,798 @@
+import 'package:flutter/material.dart';
+
+class Step3Content extends StatelessWidget {
+  final String locale; // Added locale parameter
+
+  const Step3Content({super.key, required this.locale});
+
+  @override
+  Widget build(BuildContext context) {
+    const Color primaryPurple = Color(0xFF7F3DFF);
+    final double imageHeight = MediaQuery.of(context).size.height / 4;
+
+    // --- LOCALIZATION DATA ---
+    final Map<String, Map<String, String>> _texts = {
+      'en': {
+        'title': "Temperature & Growth Stages",
+        'subtitle':
+            "Understanding how heat affects each stage helps you manage water and nutrients at the right time.",
+        'sec_temp': "Temperature Effects",
+        'p1': "Vegetative Phase",
+        't1': "16°C – 22°C",
+        'd1':
+            "Ideal for leaves and roots. Above 22°C, plants become shorter and yield drops.",
+        'p2': "Grain Filling",
+        't2': "25°C",
+        'd2':
+            "Best for 4-5 weeks. High heat (>25°C) leads to lighter, shriveled grains.",
+        'sec_time': "Growth Timeline (North India)",
+        'phase_veg': "VEGETATIVE PHASE",
+        'step1': "Germination",
+        'day1': "5–7 Days",
+        'desc1': "Seeds sprout and establish.",
+        'step2': "CRI (Crown Root Initiation)",
+        'day2': "20–25 Days",
+        'desc2': "MOST CRITICAL STAGE. Must irrigate and apply nutrients now.",
+        'step3': "Tillering",
+        'day3': "15–45 Days",
+        'desc3': "Side shoots develop for extra yield.",
+        'step4': "Jointing",
+        'day4': "45–60 Days",
+        'desc4': "Rapid height growth starts.",
+        'phase_rep': "REPRODUCTIVE PHASE",
+        'step5': "Boot Leaf",
+        'day5': "70–75 Days",
+        'desc5': "The ear is about to emerge.",
+        'step6': "Flowering",
+        'day6': "85–90 Days",
+        'desc6': "Pollination occurs.",
+        'step7': "Milking & Dough",
+        'day7': "100–110 Days",
+        'desc7': "Grains turn from milky fluid to soft solids.",
+        'step8': "Maturity",
+        'day8': "115–120 Days",
+        'desc8': "Crop turns golden and ready to harvest.",
+        'takeaway': "Key Takeaways",
+        'tip1': "Cool weather helps early growth",
+        'tip2': "Moderate warmth is for grain filling",
+        'tip3': "Very high temperature reduces yield",
+        'tip4': "Time actions by DAS (Days After Sowing)",
+      },
+      'hi': {
+        'title': "तापमान और विकास के चरण",
+        'subtitle':
+            "यह समझना कि गर्मी प्रत्येक चरण को कैसे प्रभावित करती है, आपको सही समय पर पानी और पोषक तत्वों का प्रबंधन करने में मदद करता है।",
+        'sec_temp': "तापमान का प्रभाव",
+        'p1': "वानस्पतिक अवस्था",
+        't1': "16°C – 22°C",
+        'd1':
+            "पत्तियों और जड़ों के लिए आदर्श। 22°C से ऊपर, पौधे छोटे हो जाते हैं और उपज गिर जाती है।",
+        'p2': "दाना भरना",
+        't2': "25°C",
+        'd2':
+            "4-5 सप्ताह के लिए सर्वोत्तम। अधिक गर्मी (>25°C) से दाने हल्के और सिकुड़े हुए हो जाते हैं।",
+        'sec_time': "विकास समयरेखा (उत्तर भारत)",
+        'phase_veg': "वानस्पतिक अवस्था",
+        'step1': "अंकुरण",
+        'day1': "5-7 दिन",
+        'desc1': "बीज अंकुरित होते हैं और स्थापित होते हैं।",
+        'step2': "सीआरआई (शीर्ष जड़ दीक्षा)",
+        'day2': "20-25 दिन",
+        'desc2': "सबसे महत्वपूर्ण चरण। अभी सिंचाई करें और पोषक तत्व डालें।",
+        'step3': "कल्ले निकलना (Tillering)",
+        'day3': "15-45 दिन",
+        'desc3': "अतिरिक्त उपज के लिए साइड शूट विकसित होते हैं।",
+        'step4': "गांठ बनना (Jointing)",
+        'day4': "45-60 दिन",
+        'desc4': "तेजी से ऊंचाई बढ़ना शुरू होती है।",
+        'phase_rep': "प्रजनन अवस्था",
+        'step5': "बूट लीफ",
+        'day5': "70-75 दिन",
+        'desc5': "बाली निकलने वाली होती है।",
+        'step6': "फूल आना",
+        'day6': "85-90 दिन",
+        'desc6': "परागण होता है।",
+        'step7': "दूधिया और सख्त अवस्था",
+        'day7': "100-110 दिन",
+        'desc7': "दाने दूधिया तरल से नरम ठोस में बदल जाते हैं।",
+        'step8': "परिपक्वता",
+        'day8': "115-120 दिन",
+        'desc8': "फसल सुनहरी हो जाती है और कटाई के लिए तैयार हो जाती है।",
+        'takeaway': "मुख्य बातें",
+        'tip1': "ठंडा मौसम शुरुआती विकास में मदद करता है",
+        'tip2': "दाना भरने के लिए मध्यम गर्मी जरूरी है",
+        'tip3': "बहुत अधिक तापमान उपज कम कर देता है",
+        'tip4': "बुआई के बाद के दिनों (DAS) के अनुसार कार्य करें",
+      },
+      'ta': {
+        'title': "வெப்பநிலை மற்றும் வளர்ச்சி நிலைகள்",
+        'subtitle':
+            "வெப்பம் ஒவ்வொரு நிலையையும் எவ்வாறு பாதிக்கிறது என்பதைப் புரிந்துகொள்வது சரியான நேரத்தில் நீர் மற்றும் ஊட்டச்சத்துக்களை நிர்வகிக்க உதவும்.",
+        'sec_temp': "வெப்பநிலை விளைவுகள்",
+        'p1': "வளர்ச்சி நிலை",
+        't1': "16°C – 22°C",
+        'd1':
+            "இலைகள் மற்றும் வேர்களுக்கு ஏற்றது. 22°C க்கு மேல் இருந்தால் செடிகள் குட்டையாகி விளைச்சல் குறையும்.",
+        'p2': "தானியம் நிரம்புதல்",
+        't2': "25°C",
+        'd2':
+            "4-5 வாரங்களுக்குச் சிறந்தது. அதிக வெப்பம் (>25°C) தானியங்களைச் சுருங்கச் செய்யும்.",
+        'sec_time': "வளர்ச்சி காலவரிசை (வட இந்தியா)",
+        'phase_veg': "வளர்ச்சி நிலை",
+        'step1': "முளைத்தல்",
+        'day1': "5-7 நாட்கள்",
+        'desc1': "விதைகள் முளைத்து நிலைபெறுகின்றன.",
+        'step2': "CRI நிலை",
+        'day2': "20-25 நாட்கள்",
+        'desc2': "மிக முக்கியமான நிலை. இப்போது நீர் பாய்ச்சி உரமிட வேண்டும்.",
+        'step3': "தூர் கட்டுதல்",
+        'day3': "15-45 நாட்கள்",
+        'desc3': "கூடுதல் விளைச்சலுக்கு கிளைகள் உருவாகின்றன.",
+        'step4': "கணு நிலை",
+        'day4': "45-60 நாட்கள்",
+        'desc4': "வேகமான வளர்ச்சி தொடங்குகிறது.",
+        'phase_rep': "இனப்பெருக்க நிலை",
+        'step5': "பூட்டைப் பருவம்",
+        'day5': "70-75 நாட்கள்",
+        'desc5': "கதிர் வெளிவரத் தயாராக உள்ளது.",
+        'step6': "பூத்தல்",
+        'day6': "85-90 நாட்கள்",
+        'desc6': "மகரந்தச் சேர்க்கை நடைபெறுகிறது.",
+        'step7': "பால் மற்றும் மாவுப் பருவம்",
+        'day7': "100-110 நாட்கள்",
+        'desc7':
+            "தானியங்கள் பால் போன்ற திரவத்திலிருந்து திட நிலைக்கு மாறுகின்றன.",
+        'step8': "முதிர்ச்சி",
+        'day8': "115-120 நாட்கள்",
+        'desc8': "பயிர் பொன்னிறமாகி அறுவடைக்குத் தயாராகிறது.",
+        'takeaway': "முக்கிய குறிப்புகள்",
+        'tip1': "குளிர் காலநிலை ஆரம்ப வளர்ச்சிக்கு உதவுகிறது",
+        'tip2': "தானியம் நிரம்ப மிதமான வெப்பம் தேவை",
+        'tip3': "அதிக வெப்பநிலை விளைச்சலைக் குறைக்கும்",
+        'tip4': "விதைத்த பின் நாட்களைக் (DAS) கொண்டு திட்டமிடுங்கள்",
+      },
+      'te': {
+        'title': "ఉష్ణోగ్రత & పెరుగుదల దశలు",
+        'subtitle':
+            "ఉష్ణోగ్రత ప్రతి దశను ఎలా ప్రభావితం చేస్తుందో అర్థం చేసుకోవడం ద్వారా సరైన సమయంలో నీరు మరియు పోషకాలను అందించవచ్చు.",
+        'sec_temp': "ఉష్ణోగ్రత ప్రభావాలు",
+        'p1': "శాఖీయ దశ",
+        't1': "16°C – 22°C",
+        'd1':
+            "ఆకులు మరియు వేర్లకు అనుకూలం. 22°C కంటే ఎక్కువ ఉంటే దిగుబడి తగ్గుతుంది.",
+        'p2': "గింజ నిండు దశ",
+        't2': "25°C",
+        'd2':
+            "4-5 వారాల పాటు ఉత్తమం. అధిక వేడి (>25°C) గింజలు ముడుచుకుపోయేలా చేస్తుంది.",
+        'sec_time': "పెరుగుదల కాలక్రమం (ఉత్తర భారతం)",
+        'phase_veg': "శాఖీయ దశ (Vegetative)",
+        'step1': "మొలక దశ",
+        'day1': "5–7 రోజులు",
+        'desc1': "విత్తనాలు మొలకెత్తి స్థిరపడతాయి.",
+        'step2': "CRI దశ",
+        'day2': "20–25 రోజులు",
+        'desc2':
+            "అత్యంత కీలక దశ. ఈ సమయంలో తప్పనిసరిగా నీరు మరియు ఎరువులు అందించాలి.",
+        'step3': "పిలకల దశ",
+        'day3': "15–45 రోజులు",
+        'desc3': "అదనపు దిగుబడి కోసం పిలకలు వస్తాయి.",
+        'step4': "జాయింటింగ్ దశ",
+        'day4': "45–60 రోజులు",
+        'desc4': "ఎత్తు వేగంగా పెరుగుతుంది.",
+        'phase_rep': "ప్రజనన దశ (Reproductive)",
+        'step5': "బూట్ లీఫ్ దశ",
+        'day5': "70–75 రోజులు",
+        'desc5': "వెన్ను బయటకు వచ్చే సమయం.",
+        'step6': "పూత దశ",
+        'day6': "85–90 రోజులు",
+        'desc6': "పరాగసంపర్కం జరుగుతుంది.",
+        'step7': "పాలు & పిండి దశ",
+        'day7': "100–110 రోజులు",
+        'desc7': "గింజలు పాలు వంటి ద్రవం నుండి గట్టి పడతాయి.",
+        'step8': "కోత దశ",
+        'day8': "115–120 రోజులు",
+        'desc8': "పంట బంగారు రంగులోకి వచ్చి కోతకు సిద్ధమవుతుంది.",
+        'takeaway': "ముఖ్య అంశాలు",
+        'tip1': "చల్లని వాతావరణం ప్రారంభ ఎదుగుదలకు మేలు",
+        'tip2': "గింజ నిండటానికి ఓ మోస్తరు వేడి అవసరం",
+        'tip3': "అధిక ఉష్ణోగ్రత దిగుబడిని తగ్గిస్తుంది",
+        'tip4': "విత్తిన తర్వాత రోజులను (DAS) బట్టి పనులు చేపట్టండి",
+      },
+      'kn': {
+        'title': "ತಾಪಮಾನ ಮತ್ತು ಬೆಳವಣಿಗೆಯ ಹಂತಗಳು",
+        'subtitle':
+            "ತಾಪಮಾನವು ಪ್ರತಿ ಹಂತದ ಮೇಲೆ ಹೇಗೆ ಪರಿಣಾಮ ಬೀರುತ್ತದೆ ಎಂಬುದನ್ನು ತಿಳಿಯುವುದು ಸರಿಯಾದ ಸಮಯದಲ್ಲಿ ನೀರು ಮತ್ತು ಪೋಷಕಾಂಶಗಳ ನಿರ್ವಹಣೆಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ.",
+        'sec_temp': "ತಾಪಮಾನದ ಪರಿಣಾಮಗಳು",
+        'p1': "ಸಸ್ಯಕ ಹಂತ",
+        't1': "16°C – 22°C",
+        'd1':
+            "ಎಲೆ ಮತ್ತು ಬೇರುಗಳಿಗೆ ಸೂಕ್ತ. 22°C ಗಿಂತ ಹೆಚ್ಚಾದರೆ ಇಳುವರಿ ಕುಂಠಿತವಾಗುತ್ತದೆ.",
+        'p2': "ಕಾಳು ತುಂಬುವ ಹಂತ",
+        't2': "25°C",
+        'd2':
+            "4-5 ವಾರಗಳ ಕಾಲ ಉತ್ತಮ. ಅತಿಯಾದ ಶಾಖವು (>25°C) ಕಾಳುಗಳು ಸುಕ್ಕುಗಟ್ಟಲು ಕಾರಣವಾಗುತ್ತದೆ.",
+        'sec_time': "ಬೆಳವಣಿಗೆಯ ಕಾಲಸೂಚಿ (ಉತ್ತರ ಭಾರತ)",
+        'phase_veg': "ಸಸ್ಯಕ ಹಂತ",
+        'step1': "ಮೊಳಕೆಯೊಡೆಯುವಿಕೆ",
+        'day1': "5-7 ದಿನಗಳು",
+        'desc1': "ಬೀಜಗಳು ಮೊಳಕೆಯೊಡೆಯುತ್ತವೆ.",
+        'step2': "CRI ಹಂತ",
+        'day2': "20-25 ದಿನಗಳು",
+        'desc2':
+            "ಅತ್ಯಂತ ನಿರ್ಣಾಯಕ ಹಂತ. ಈಗ ನೀರಾವರಿ ಮತ್ತು ಪೋಷಕಾಂಶಗಳನ್ನು ನೀಡಲೇಬೇಕು.",
+        'step3': "ಪಿಳ್ಳೆ ಒಡೆಯುವಿಕೆ",
+        'day3': "15-45 ದಿನಗಳು",
+        'desc3': "ಹೆಚ್ಚುವರಿ ಇಳುವರಿಗಾಗಿ ರೆಂಬೆಗಳು ಬೆಳೆಯುತ್ತವೆ.",
+        'step4': "ಜಾಯಿಂಟಿಂಗ್ ಹಂತ",
+        'day4': "45-60 ದಿನಗಳು",
+        'desc4': "ವೇಗವಾಗಿ ಎತ್ತರ ಬೆಳೆಯಲು ಪ್ರಾರಂಭಿಸುತ್ತದೆ.",
+        'phase_rep': "ಸಂತಾನೋತ್ಪತ್ತಿ ಹಂತ",
+        'step5': "ಬೂಟ್ ಲೀಫ್",
+        'day5': "70-75 ದಿನಗಳು",
+        'desc5': "ತೆನೆ ಹೊರಬರುವ ಹಂತ.",
+        'step6': "ಹೂಬಿಡುವಿಕೆ",
+        'day6': "85-90 ದಿನಗಳು",
+        'desc6': "ಪರಾಗಸ್ಪರ್ಶ ನಡೆಯುತ್ತದೆ.",
+        'step7': "ಹಾಲು ಮತ್ತು ಹಿಟ್ಟಿನ ಹಂತ",
+        'day7': "100-110 ದಿನಗಳು",
+        'desc7': "ಕಾಳುಗಳು ಹಾಲಿನ ದ್ರವದಿಂದ ಗಟ್ಟಿಯಾಗುತ್ತವೆ.",
+        'step8': "ಪಕ್ವತೆ",
+        'day8': "115-120 ದಿನಗಳು",
+        'desc8': "ಬೆಳೆ ಬಂಗಾರ ಬಣ್ಣಕ್ಕೆ ಬಂದು ಕೊಯ್ಲಿಗೆ ಸಿದ್ಧವಾಗುತ್ತದೆ.",
+        'takeaway': "ಮುಖ್ಯ ಅಂಶಗಳು",
+        'tip1': "ತಂಪಾದ ಹವಾಮಾನವು ಆರಂಭಿಕ ಬೆಳವಣಿಗೆಗೆ ಸಹಕಾರಿ",
+        'tip2': "ಕಾಳು ತುಂಬಲು ಸಾಧಾರಣ ಉಷ್ಣತೆ ಅವಶ್ಯಕ",
+        'tip3': "ಹೆಚ್ಚಿನ ತಾಪಮಾನವು ಇಳುವರಿಯನ್ನು ಕಡಿಮೆ ಮಾಡುತ್ತದೆ",
+        'tip4': "ಬಿತ್ತನೆಯ ನಂತರದ ದಿನಗಳ (DAS) ಆಧಾರದ ಮೇಲೆ ಕೆಲಸ ಮಾಡಿ",
+      },
+      'mr': {
+        'title': "तापमान आणि वाढीचे टप्पे",
+        'subtitle':
+            "उष्णतेचा प्रत्येक टप्प्यावर कसा परिणाम होतो हे समजून घेतल्यास योग्य वेळी खत आणि पाणी व्यवस्थापन करण्यास मदत होते.",
+        'sec_temp': "तापमानाचे परिणाम",
+        'p1': "शाकीय वाढीचा टप्पा",
+        't1': "16°C – 22°C",
+        'd1':
+            "पाने आणि मुळांसाठी आदर्श. 22°C च्या वर तापमान गेल्यास उत्पादनात घट होते.",
+        'p2': "दाणे भरण्याचा टप्पा",
+        't2': "25°C",
+        'd2':
+            "4-5 आठवड्यांसाठी सर्वोत्तम. जास्त उष्णतेमुळे (>25°C) दाणे बारीक आणि सुरकुतलेले होतात.",
+        'sec_time': "वाढीचे वेळापत्रक (उत्तर भारत)",
+        'phase_veg': "शाकीय वाढीचा टप्पा",
+        'step1': "अंकुरण",
+        'day1': "5-7 दिवस",
+        'desc1': "बियाणे रुजतात आणि स्थिरावतात.",
+        'step2': "सीआरआय (CRI) टप्पा",
+        'day2': "20-25 दिवस",
+        'desc2': "अत्यंत कठीण टप्पा. या वेळी पाणी आणि खते देणे अनिवार्य आहे.",
+        'step3': "फुटवे फुटणे (Tillering)",
+        'day3': "15-45 दिवस",
+        'desc3': "जास्त उत्पादनासाठी फुटवे फुटतात.",
+        'step4': "कांडी धरण्याचा टप्पा",
+        'day4': "45-60 दिवस",
+        'desc4': "उंची झपाट्याने वाढू लागते.",
+        'phase_rep': "पुनरुत्पादक टप्पा",
+        'step5': "बूट लीफ",
+        'day5': "70-75 दिवस",
+        'desc5': "ओंबी बाहेर येण्याची वेळ.",
+        'step6': "फुलोरा",
+        'day6': "85-90 दिवस",
+        'desc6': "परागणीकरण होते.",
+        'step7': "दूधिया आणि चिकाची अवस्था",
+        'day7': "100-110 दिवस",
+        'desc7': "दाणे दुधाळ स्वरूपातून घट्ट होऊ लागतात.",
+        'step8': "परिपक्वता",
+        'day8': "115-120 दिवस",
+        'desc8': "पीक सोनेरी होते आणि कापणीसाठी तयार होते.",
+        'takeaway': "महत्त्वाचे मुद्दे",
+        'tip1': "थंड हवामान सुरुवातीच्या वाढीसाठी चांगले असते",
+        'tip2': "दाणे भरण्यासाठी मध्यम उबदारपणा आवश्यक",
+        'tip3': "खूप उच्च तापमानामुळे उत्पादनात घट होते",
+        'tip4': "पेरणीनंतरच्या दिवसांनुसार (DAS) नियोजन करा",
+      },
+      'pa': {
+        'title': "ਤਾਪਮਾਨ ਅਤੇ ਵਾਧੇ ਦੇ ਪੜਾਅ",
+        'subtitle':
+            "ਤਾਪਮਾਨ ਫਸਲ ਦੇ ਹਰ ਪੜਾਅ ਨੂੰ ਕਿਵੇਂ ਪ੍ਰਭਾਵਿਤ ਕਰਦਾ ਹੈ, ਇਹ ਜਾਣ ਕੇ ਤੁਸੀਂ ਸਹੀ ਸਮੇਂ 'ਤੇ ਖਾਦ ਅਤੇ ਪਾਣੀ ਦਾ ਪ੍ਰਬੰਧ ਕਰ ਸਕਦੇ ਹੋ।",
+        'sec_temp': "ਤਾਪਮਾਨ ਦਾ ਪ੍ਰਭਾਵ",
+        'p1': "ਵਾਨਸਪਤਿਕ ਪੜਾਅ",
+        't1': "16°C – 22°C",
+        'd1':
+            "ਪੱਤਿਆਂ ਅਤੇ ਜੜ੍ਹਾਂ ਲਈ ਵਧੀਆ। 22°C ਤੋਂ ਉੱਪਰ ਪੌਦੇ ਛੋਟੇ ਰਹਿ ਜਾਂਦੇ ਹਨ।",
+        'p2': "ਦਾਣਾ ਭਰਨ ਦਾ ਸਮਾਂ",
+        't2': "25°C",
+        'd2': "4-5 ਹਫ਼ਤਿਆਂ ਲਈ ਵਧੀਆ। ਜ਼ਿਆਦਾ ਗਰਮੀ ਨਾਲ ਦਾਣੇ ਪਤਲੇ ਰਹਿ ਜਾਂਦੇ ਹਨ।",
+        'sec_time': "ਵਾਧੇ ਦਾ ਸਮਾਂ (ਉੱਤਰ ਭਾਰਤ)",
+        'phase_veg': "ਵਾਨਸਪਤਿਕ ਪੜਾਅ",
+        'step1': "ਪੁੰਗਰਨਾ",
+        'day1': "5–7 ਦਿਨ",
+        'desc1': "ਬੀਜ ਪੁੰਗਰਦੇ ਹਨ।",
+        'step2': "ਸੀ.ਆਰ.ਆਈ. (CRI) ਪੜਾਅ",
+        'day2': "20–25 ਦਿਨ",
+        'desc2': "ਸਭ ਤੋਂ ਨਾਜ਼ੁਕ ਸਮਾਂ। ਪਾਣੀ ਅਤੇ ਖਾਦ ਜ਼ਰੂਰ ਦਿਓ।",
+        'step3': "ਸ਼ਾਖਾਵਾਂ ਨਿਕਲਣਾ",
+        'day3': "15–45 ਦਿਨ",
+        'desc3': "ਵੱਧ ਝਾੜ ਲਈ ਨਵੀਆਂ ਸ਼ਾਖਾਵਾਂ ਬਣਦੀਆਂ ਹਨ।",
+        'step4': "ਗੰਢਾਂ ਬਣਨਾ",
+        'day4': "45–60 ਦਿਨ",
+        'desc4': "ਕੱਦ ਤੇਜ਼ੀ ਨਾਲ ਵਧਦਾ ਹੈ।",
+        'phase_rep': "ਪ੍ਰਜਨਨ ਪੜਾਅ",
+        'step5': "ਬੂਟ ਲੀਫ",
+        'day5': "70–75 ਦਿਨ",
+        'desc5': "ਸਿੱਟਾ ਨਿਕਲਣ ਵਾਲਾ ਹੁੰਦਾ ਹੈ।",
+        'step6': "ਫੁੱਲ ਨਿਕਲਣਾ",
+        'day6': "85–90 ਦਿਨ",
+        'desc6': "ਪਰਾਗਣ ਹੁੰਦਾ ਹੈ।",
+        'step7': "ਦੁੱਧ ਅਤੇ ਗੁੰਧਵੀਂ ਅਵਸਥਾ",
+        'day7': "100–110 ਦਿਨ",
+        'desc7': "ਦਾਣੇ ਦੁੱਧ ਤੋਂ ਸਖ਼ਤ ਹੋਣੇ ਸ਼ੁਰੂ ਹੁੰਦੇ ਹਨ।",
+        'step8': "ਪੱਕਣਾ",
+        'day8': "115–120 ਦਿਨ",
+        'desc8': "ਫਸਲ ਸੁਨਹਿਰੀ ਹੋ ਕੇ ਕਟਾਈ ਲਈ ਤਿਆਰ ਹੋ ਜਾਂਦੀ ਹੈ।",
+        'takeaway': "ਖਾਸ ਗੱਲਾਂ",
+        'tip1': "ਠੰਢਾ ਮੌਸਮ ਸ਼ੁਰੂਆਤੀ ਵਾਧੇ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ",
+        'tip2': "ਦਾਣਾ ਭਰਨ ਲਈ ਦਰਮਿਆਨੀ ਗਰਮੀ ਚਾਹੀਦੀ ਹੈ",
+        'tip3': "ਬਹੁਤ ਜ਼ਿਆਦਾ ਤਾਪਮਾਨ ਝਾੜ ਘਟਾਉਂਦਾ ਹੈ",
+        'tip4': "ਬਿਜਾਈ ਤੋਂ ਬਾਅਦ ਦੇ ਦਿਨਾਂ (DAS) ਅਨੁਸਾਰ ਕੰਮ ਕਰੋ",
+      },
+      'ur': {
+        'title': "درجہ حرارت اور نشوونما کے مراحل",
+        'subtitle':
+            "یہ سمجھنا کہ گرمی ہر مرحلے کو کیسے متاثر کرتی ہے، صحیح وقت پر پانی اور کھاد کے انتظام میں مدد دیتا ہے۔",
+        'sec_temp': "درجہ حرارت کے اثرات",
+        'p1': "نشوونما کا مرحلہ",
+        't1': "16°C – 22°C",
+        'd1':
+            "پتوں اور جڑوں کے لیے بہترین۔ 22°C سے اوپر پیداوار کم ہو جاتی ہے۔",
+        'p2': "دانہ بھرنے کا وقت",
+        't2': "25°C",
+        'd2': "4-5 ہفتوں کے لیے بہترین۔ زیادہ گرمی سے دانہ سکڑ جاتا ہے۔",
+        'sec_time': "نشوونما کا ٹائم لائن (شمالی ہند)",
+        'phase_veg': "ابتدائی نشوونما کا مرحلہ",
+        'step1': "اگاؤ",
+        'day1': "5-7 دن",
+        'desc1': "بیج اگنا شروع ہوتے ہیں۔",
+        'step2': "سی آر آئی مرحلہ",
+        'day2': "20-25 دن",
+        'desc2': "انتہائی نازک مرحلہ۔ اس وقت پانی اور کھاد لازمی دیں۔",
+        'step3': "شاخیں نکلنا",
+        'day3': "15-45 دن",
+        'desc3': "زیادہ پیداوار کے لیے ٹیلر بنتے ہیں۔",
+        'step4': "گرہ بننا",
+        'day4': "45-60 دن",
+        'desc4': "قد تیزی سے بڑھتا ہے۔",
+        'phase_rep': "تولیدی مرحلہ",
+        'step5': "بوٹ لیف",
+        'day5': "70-75 دن",
+        'desc5': "سٹہ نکلنے والا ہوتا ہے۔",
+        'step6': "پھول آنا",
+        'day6': "85-90 دن",
+        'desc6': "بار آوری کا عمل ہوتا ہے۔",
+        'step7': "دودھیا اور سخت حالت",
+        'day7': "100-110 دن",
+        'desc7': "دانے دودھ سے سخت ہونا شروع ہوتے ہیں۔",
+        'step8': "پختگی",
+        'day8': "115-120 دن",
+        'desc8': "فصل سنہری ہو کر کٹائی کے لیے تیار ہو جاتی ہے۔",
+        'takeaway': "اہم نکات",
+        'tip1': "ٹھنڈا موسم شروع کی نشوونما میں مددگار ہے",
+        'tip2': "دانہ بھرنے کے لیے درمیانی گرمی ضروری ہے",
+        'tip3': "زیادہ درجہ حرارت پیداوار گھٹاتا ہے",
+        'tip4': "بوائی کے بعد کے دنوں (DAS) کے حساب سے کام کریں",
+      },
+      'gu': {
+        'title': "તાપમાન અને વિકાસના તબક્કા",
+        'subtitle':
+            "ગરમી દરેક તબક્કાને કેવી રીતે અસર કરે છે તે સમજવાથી તમને યોગ્ય સમયે પાણી અને પોષક તત્વોનું સંચાલન કરવામાં મદદ મળે છે.",
+        'sec_temp': "તાપમાનની અસરો",
+        'p1': "વાનસ્પતિક તબક્કો",
+        't1': "16°C – 22°C",
+        'd1':
+            "પાંદડા અને મૂળ માટે આદર્શ. 22°C થી ઉપર છોડ ટૂંકા થાય છે અને ઉપજ ઘટે છે.",
+        'p2': "દાણા ભરાવવાનો તબક્કો",
+        't2': "25°C",
+        'd2':
+            "4-5 અઠવાડિયા માટે શ્રેષ્ઠ. વધુ ગરમી (>25°C) થી દાણા હલકા અને કરચલીવાળા થાય છે.",
+        'sec_time': "વિકાસ સમયરેખા (ઉત્તર ભારત)",
+        'phase_veg': "વાનસ્પતિક તબક્કો",
+        'step1': "અંકુરણ",
+        'day1': "5–7 દિવસ",
+        'desc1': "બીજ અંકુરિત થાય છે.",
+        'step2': "સીઆરઆઈ (CRI) તબક્કો",
+        'day2': "20–25 દિવસ",
+        'desc2': "સૌથી કટોકટીનો તબક્કો. અત્યારે પિયત અને ખાતર આપવું જ જોઈએ.",
+        'step3': "ફણગા ફૂટવા (Tillering)",
+        'day3': "15–45 દિવસ",
+        'desc3': "વધુ ઉપજ માટે શાખાઓ વિકસે છે.",
+        'step4': "ગાંઠ પડવી (Jointing)",
+        'day4': "45–60 દિવસ",
+        'desc4': "ઝડપી ઊંચાઈ વધવાનું શરૂ થાય છે.",
+        'phase_rep': "પ્રજનન તબક્કો",
+        'step5': "બૂટ લીફ",
+        'day5': "70–75 દિવસ",
+        'desc5': "ડૂંડી બહાર આવવાની તૈયારીમાં છે.",
+        'step6': "ફૂલ આવવા",
+        'day6': "85–90 દિવસ",
+        'desc6': "પરાગનયન થાય છે.",
+        'step7': "દૂધિયા અને સખત અવસ્થા",
+        'day7': "100–110 દિવસ",
+        'desc7': "દાણા દૂધ જેવા પ્રવાહીમાંથી નરમ ઘન બને છે.",
+        'step8': "પરિપક્વતા",
+        'day8': "115–120 દિવસ",
+        'desc8': "પાક સુવર્ણ રંગનો અને લણણી માટે તૈયાર થાય છે.",
+        'takeaway': "મુખ્ય મુદ્દાઓ",
+        'tip1': "ઠંડુ વાતાવરણ શરૂઆતના વિકાસમાં મદદ કરે છે",
+        'tip2': "દાણા ભરાવા માટે મધ્યમ ગરમી જરૂરી છે",
+        'tip3': "ખૂબ ઊંચું તાપમાન ઉપજ ઘટાડે છે",
+        'tip4': "વાવણી પછીના દિવસો (DAS) મુજબ આયોજન કરો",
+      },
+      'bn': {
+        'title': "তাপমাত্রা ও বৃদ্ধির পর্যায়",
+        'subtitle':
+            "তাপমাত্রা প্রতিটি পর্যায়কে কীভাবে প্রভাবিত করে তা জানলে সঠিক সময়ে জল ও সারের ব্যবস্থা করা সহজ হয়।",
+        'sec_temp': "তাপমাত্রার প্রভাব",
+        'p1': "অঙ্গজ বৃদ্ধি পর্যায়",
+        't1': "১৬°C – ২২°C",
+        'd1':
+            "পাতা ও মূলের জন্য আদর্শ। ২২°C-এর উপরে গাছ খাটো হয়ে যায় এবং ফলন কমে।",
+        'p2': "দানা ভরাট হওয়া",
+        't2': "২৫°C",
+        'd2':
+            "৪-৫ সপ্তাহের জন্য সেরা। অতিরিক্ত গরমে (>২৫°C) দানা হালকা ও কুঁচকে যায়।",
+        'sec_time': "বৃদ্ধির সময়রেখা (উত্তর ভারত)",
+        'phase_veg': "অঙ্গজ বৃদ্ধি পর্যায়",
+        'step1': "অঙ্কুরোদগম",
+        'day1': "৫–৭ দিন",
+        'desc1': "বীজ অঙ্কুরিত হয় ও শিকড় ছড়ায়।",
+        'step2': "সিআরআই (CRI) পর্যায়",
+        'day2': "২০–২৫ দিন",
+        'desc2': "সবচেয়ে গুরুত্বপূর্ণ পর্যায়। এখন সেচ ও সার অবশ্যই দিতে হবে।",
+        'step3': "কুশি গজানো",
+        'day3': "১৫–৪৫ দিন",
+        'desc3': "অতিরিক্ত ফলনের জন্য কুশি তৈরি হয়।",
+        'step4': "গাঁট আসা",
+        'day4': "৪৫–৬০ দিন",
+        'desc4': "গাছ দ্রুত লম্বা হতে শুরু করে।",
+        'phase_rep': "প্রজনন পর্যায়",
+        'step5': "বুট লিফ",
+        'day5': "৭০–৭৫ দিন",
+        'desc5': "শীষ বের হওয়ার ঠিক আগের সময়।",
+        'step6': "ফুল আসা",
+        'day6': "৮৫–৯০ দিন",
+        'desc6': "পরাগায়ন ঘটে।",
+        'step7': "দুধ ও দানা অবস্থা",
+        'day7': "১০০–১১০ দিন",
+        'desc7': "দানা তরল থেকে ধীরে ধীরে শক্ত হতে থাকে।",
+        'step8': "পরিপক্কতা",
+        'day8': "১১৫–১২০ দিন",
+        'desc8': "ফসল সোনালী বর্ণ ধারণ করে ও কাটার উপযোগী হয়।",
+        'takeaway': "মূল কথা",
+        'tip1': "ঠান্ডা আবহাওয়া প্রাথমিক বৃদ্ধিতে সহায়ক",
+        'tip2': "দানা ভরাটের জন্য মাঝারি তাপমাত্রা প্রয়োজন",
+        'tip3': "অত্যধিক উচ্চ তাপমাত্রা ফলন কমায়",
+        'tip4': "বপনের পরের দিন (DAS) অনুযায়ী কাজ করুন",
+      },
+      'ml': {
+        'title': "താപനിലയും വളർച്ചാ ഘട്ടങ്ങളും",
+        'subtitle':
+            "താപനില ഓരോ ഘട്ടത്തെയും എങ്ങനെ ബാധിക്കുന്നു എന്ന് മനസ്സിലാക്കുന്നത് വളവും വെള്ളവും കൃത്യസമയത്ത് നൽകാൻ സഹായിക്കും.",
+        'sec_temp': "താപനിലയുടെ സ്വാധീനം",
+        'p1': "വളർച്ചാ ഘട്ടം",
+        't1': "16°C – 22°C",
+        'd1':
+            "ഇലകൾക്കും വേരുകൾക്കും അനുയോജ്യം. 22°C ന് മുകളിലായാൽ വിളവ് കുറയും.",
+        'p2': "മണി നിറയുന്ന ഘട്ടം",
+        't2': "25°C",
+        'd2':
+            "4-5 ആഴ്ചത്തേക്ക് നല്ലതാണ്. കൂടുതൽ ചൂട് (>25°C) ധാന്യങ്ങൾ ചുരുങ്ങാൻ കാരണമാകും.",
+        'sec_time': "വളർച്ചാ കാലഘട്ടം (ഉത്തരേന്ത്യ)",
+        'phase_veg': "വളർച്ചാ ഘട്ടം",
+        'step1': "മുളയ്ക്കൽ",
+        'day1': "5–7 ദിവസം",
+        'desc1': "വിത്തുകൾ മുളച്ചു തുടങ്ങുന്നു.",
+        'step2': "സി.ആർ.ഐ ഘട്ടം",
+        'day2': "20–25 ദിവസം",
+        'desc2': "ഏറ്റവും പ്രധാന ഘട്ടം. ഇപ്പോൾ നനയ്ക്കുകയും വളം നൽകുകയും വേണം.",
+        'step3': "കവരകൾ വരുന്നത്",
+        'day3': "15–45 ദിവസം",
+        'desc3': "കൂടുതൽ വിളവിനായി വശങ്ങളിലേക്ക് ശാഖകൾ വളരുന്നു.",
+        'step4': "ജോയിന്റിംഗ്",
+        'day4': "45–60 ദിവസം",
+        'desc4': "വേഗത്തിൽ ഉയരം വയ്ക്കുന്നു.",
+        'phase_rep': "പ്രത്യുല്പാദന ഘട്ടം",
+        'step5': "ബൂട്ട് ലീഫ്",
+        'day5': "70–75 ദിവസം",
+        'desc5': "കതിർ വരാൻ തുടങ്ങുന്നു.",
+        'step6': "പൂവിടൽ",
+        'day6': "85–90 ദിവസം",
+        'desc6': "പരാഗണം നടക്കുന്നു.",
+        'step7': "മിൽക്കിംഗ് & ഡോ",
+        'day7': "100–110 ദിവസം",
+        'desc7': "മണികൾ പാലുപോലെ വെളുത്ത അവസ്ഥയിൽ നിന്നും ഉറയ്ക്കുന്നു.",
+        'step8': "വിളവെടുപ്പ് പക്വത",
+        'day8': "115–120 ദിവസം",
+        'desc8': "വിളവ് പൊൻനിറമാവുകയും വിളവെടുപ്പിന് തയ്യാറാവുകയും ചെയ്യുന്നു.",
+        'takeaway': "പ്രധാന കാര്യങ്ങൾ",
+        'tip1': "തണുത്ത കാലാവസ്ഥ ആദ്യകാല വളർച്ചയെ സഹായിക്കുന്നു",
+        'tip2': "മണി നിറയാൻ മിതമായ ചൂട് ആവശ്യമാണ്",
+        'tip3': "ഉയർന്ന താപനില വിളവ് കുറയ്ക്കുന്നു",
+        'tip4':
+            "വിത്ത് വിതച്ചതിന് ശേഷമുള്ള ദിവസങ്ങൾ (DAS) കണക്കാക്കി പ്രവർത്തിക്കുക",
+      },
+    };
+
+    String t(String key) => _texts[locale]?[key] ?? _texts['en']![key]!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.asset(
+              'assets/images/step3.png',
+              height: imageHeight,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: imageHeight,
+                color: Colors.grey[200],
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 40,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          t('title'),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          t('subtitle'),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black54,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 25),
+        _buildSectionHeader(t('sec_temp'), Icons.thermostat, Colors.orange),
+        const SizedBox(height: 12),
+        _buildTemperatureMetric(t('p1'), t('t1'), t('d1'), Colors.teal),
+        const SizedBox(height: 10),
+        _buildTemperatureMetric(t('p2'), t('t2'), t('d2'), Colors.deepOrange),
+        const SizedBox(height: 30),
+        _buildSectionHeader(t('sec_time'), Icons.speed, primaryPurple),
+        const SizedBox(height: 15),
+        _buildPhaseLabel(t('phase_veg')),
+        _buildTimelineStep(t('step1'), t('day1'), t('desc1')),
+        _buildTimelineStep(t('step2'), t('day2'), t('desc2'), isCritical: true),
+        _buildTimelineStep(t('step3'), t('day3'), t('desc3')),
+        _buildTimelineStep(t('step4'), t('day4'), t('desc4')),
+        const SizedBox(height: 15),
+        _buildPhaseLabel(t('phase_rep')),
+        _buildTimelineStep(t('step5'), t('day5'), t('desc5')),
+        _buildTimelineStep(t('step6'), t('day6'), t('desc6')),
+        _buildTimelineStep(t('step7'), t('day7'), t('desc7')),
+        _buildTimelineStep(t('step8'), t('day8'), t('desc8'), isLast: true),
+        const SizedBox(height: 30),
+        const Divider(height: 40, thickness: 1),
+        Text(
+          t('takeaway'),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _TipRow(
+          icon: Icons.ac_unit_rounded,
+          text: t('tip1'),
+          color: Colors.blue,
+        ),
+        _TipRow(
+          icon: Icons.wb_sunny_rounded,
+          text: t('tip2'),
+          color: Colors.orange,
+        ),
+        _TipRow(
+          icon: Icons.trending_down_rounded,
+          text: t('tip3'),
+          color: Colors.red,
+        ),
+        _TipRow(
+          icon: Icons.event_available_rounded,
+          text: t('tip4'),
+          color: primaryPurple,
+        ),
+        const SizedBox(height: 100),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTemperatureMetric(
+    String phase,
+    String temp,
+    String desc,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                phase,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                temp,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            desc,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineStep(
+    String title,
+    String days,
+    String desc, {
+    bool isCritical = false,
+    bool isLast = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: isCritical ? Colors.red : Colors.grey.shade400,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              if (!isLast)
+                Container(width: 2, height: 50, color: Colors.grey.shade200),
+            ],
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: isCritical ? Colors.red : Colors.black87,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        days,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhaseLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: Colors.grey,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _TipRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _TipRow({required this.icon, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: color),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

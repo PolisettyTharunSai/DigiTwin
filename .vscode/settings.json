@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/Users/tharun/AppDev/first_app/linux/flutter"
+    "cmake.sourceDirectory": "/Users/tharun/AppDev/first_app/linux/flutter",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -1,6 +1,6 @@
-# first_app
+# wheat
 
-A new Flutter project.'first project'
+A new Flutter project.
 
 ## Getting Started
 

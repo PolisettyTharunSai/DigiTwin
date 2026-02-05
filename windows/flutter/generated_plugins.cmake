@@ -3,7 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_inappwebview_windows
+  app_links
+  file_selector_windows
   geolocator_windows
   url_launcher_windows
 )

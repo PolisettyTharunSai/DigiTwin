@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
-import 'navigation_wrapper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+import 'screens/splash_screen.dart';
+import 'theme/app_theme.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://dmttaxboppfkgwjrjmjv.supabase.co',
+    anonKey: 'sb_publishable_ym-0DfmWA2Wyjn-6aXDAIQ_Wbw3-bOB',
+  );
+
   runApp(const MyApp());
 }
 
@@ -12,28 +21,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Di Twin 🌾',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.green.shade600,
-        scaffoldBackgroundColor: const Color(0xFFF0F8F3),
-        textTheme: const TextTheme(
-          headlineMedium: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-          bodyMedium: TextStyle(fontSize: 16, color: Colors.black87),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.green.shade700,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-          ),
-        ),
-      ),
+      theme: AppTheme.theme,
       home: const SplashScreen(),
     );
   }

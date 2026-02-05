@@ -1,23 +1,40 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.wheat">
 
-    <!-- Location -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Camera (required for AR) -->
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- ================= PERMISSIONS ================= -->
 
+    <!-- Internet access (needed for GitHub raw URL models) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Camera access (needed for AR) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Location access (if you use geolocator) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ================= FEATURES ================= -->
+
+    <!-- AR camera feature (optional so all devices can install) -->
     <uses-feature
         android:name="android.hardware.camera.ar"
-        android:required="false"/>
-    <application
-        android:hardwareAccelerated="true"
-        android:usesCleartextTraffic="true"
-        android:label="first_app"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:required="false" />
 
-        <!-- ARCore (optional to avoid device filtering) -->
+    <!-- Camera hardware feature (fixes "permission exists without corresponding hardware") -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- ================= APPLICATION ================= -->
+
+    <application
+        android:label="wheat"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
+
+        <!-- ARCore support (optional so it does not block non-AR phones) -->
         <meta-data
             android:name="com.google.ar.core"
             android:value="optional" />
@@ -26,6 +43,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -33,24 +51,27 @@
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"/>
+                android:resource="@style/NormalTheme" />
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
         </activity>
 
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2"/>
+            android:value="2" />
+
     </application>
+
+    <!-- ================= QUERIES ================= -->
 
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
         </intent>
     </queries>
 

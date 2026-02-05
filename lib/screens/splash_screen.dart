@@ -1,0 +1,254 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'home_screen.dart';
+import 'get_started_screen.dart';
+import 'placeholder.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  // Brand Colors
+  static const primaryColor = Color(0xFF7F3DFF);
+  static const accentColor = Color(0xFFFDFDF0); // Your requested color
+
+  late AnimationController _moveController;
+  late AnimationController _expandController;
+  late AnimationController _iconFadeController;
+  late AnimationController _textMoveController;
+
+  late Animation<Alignment> _positionAnim;
+  late Animation<double> _ballSizeAnim;
+  late Animation<double> _expandSizeAnim;
+  late Animation<double> _iconFadeAnim;
+  late Animation<double> _textTranslateAnim;
+
+  bool expanding = false;
+  bool showIcon = false;
+  bool showText = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _moveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+
+    _expandController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _iconFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _textMoveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _iconFadeAnim = CurvedAnimation(
+      parent: _iconFadeController,
+      curve: Curves.easeIn,
+    );
+
+    _positionAnim =
+        TweenSequence<Alignment>([
+          TweenSequenceItem(
+            tween: AlignmentTween(
+              begin: Alignment.topRight,
+              end: Alignment.centerLeft,
+            ),
+            weight: 1,
+          ),
+          TweenSequenceItem(
+            tween: AlignmentTween(
+              begin: Alignment.centerLeft,
+              end: Alignment.bottomCenter,
+            ),
+            weight: 1,
+          ),
+          TweenSequenceItem(
+            tween: AlignmentTween(
+              begin: Alignment.bottomCenter,
+              end: Alignment.centerRight,
+            ),
+            weight: 1,
+          ),
+          TweenSequenceItem(
+            tween: AlignmentTween(
+              begin: Alignment.centerRight,
+              end: Alignment.center,
+            ),
+            weight: 1,
+          ),
+        ]).animate(
+          CurvedAnimation(parent: _moveController, curve: Curves.easeInOut),
+        );
+
+    _ballSizeAnim = Tween<double>(
+      begin: 24,
+      end: 120,
+    ).animate(CurvedAnimation(parent: _moveController, curve: Curves.linear));
+
+    _start();
+  }
+
+  void _start() {
+    _moveController.forward().then((_) {
+      if (!mounted) return;
+
+      setState(() {
+        expanding = true;
+        showIcon = true;
+      });
+
+      _expandController.forward();
+      _iconFadeController.forward();
+
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (!mounted) return;
+        setState(() => showText = true);
+        _textMoveController.forward();
+      });
+
+      Future.delayed(const Duration(milliseconds: 1800), _navigate);
+    });
+  }
+
+  Future<void> _navigate() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (!mounted) return;
+
+    if (session == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const GetStartedScreen()),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final isCropPlanted = prefs.getBool('isCropPlanted') ?? false;
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+        isCropPlanted ? const HomeScreen() : const PlaceholderScreen(),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _moveController.dispose();
+    _expandController.dispose();
+    _iconFadeController.dispose();
+    _textMoveController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final maxCircleDiameter = size.width * 0.88;
+
+    _expandSizeAnim =
+        Tween<double>(
+          begin: _ballSizeAnim.value,
+          end: maxCircleDiameter,
+        ).animate(
+          CurvedAnimation(parent: _expandController, curve: Curves.easeInOut),
+        );
+
+    _textTranslateAnim = Tween<double>(begin: size.height / 2, end: 0).animate(
+      CurvedAnimation(parent: _textMoveController, curve: Curves.linear),
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: Listenable.merge([
+              _moveController,
+              _expandController,
+              _iconFadeController,
+              _textMoveController,
+            ]),
+            builder: (_, __) {
+              final ballSize = expanding
+                  ? _expandSizeAnim.value
+                  : _ballSizeAnim.value;
+
+              return Align(
+                alignment: expanding ? Alignment.center : _positionAnim.value,
+                child: Container(
+                  width: ballSize,
+                  height: ballSize,
+                  decoration: const BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (showIcon)
+                          FadeTransition(
+                            opacity: _iconFadeAnim,
+                            child: const Padding(
+                              // Increased bottom padding to move icon UP
+                              padding: EdgeInsets.only(bottom: 80),
+                              child: Icon(
+                                Icons.agriculture,
+                                size: 120,
+                                color: accentColor,
+                              ),
+                            ),
+                          ),
+                        if (showText)
+                          Transform.translate(
+                            offset: Offset(0, _textTranslateAnim.value),
+                            child: const Padding(
+                              // Reduced top padding to move text UP
+                              padding: EdgeInsets.only(top: 100),
+                              child: Text(
+                                "Digital Twin",
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentColor,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
