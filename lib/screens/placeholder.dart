@@ -33,11 +33,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
 
   final Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'title': 'Agricultural Guide',
+      'title': 'Potato Farming Guide',
       'step': 'STEP',
-      'plant_crop': 'Plant Your Crop',
+      'plant_crop': 'Plant Your Potatoes',
       'f_name': 'Farmer Name',
-      'wheat': 'Wheat',
+      'potato': 'Potato',
       'notes': 'Notes (optional)',
       'capture': 'Capture Location',
       'confirm_p': 'Confirm Planting',
@@ -55,11 +55,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'Approx',
     },
     'hi': {
-      'title': 'कृषि मार्गदर्शिका',
+      'title': 'आलू कृषि मार्गदर्शिका',
       'step': 'चरण',
-      'plant_crop': 'अपनी फसल लगाएं',
+      'plant_crop': 'अपने आलू लगाएं',
       'f_name': 'किसान का नाम',
-      'wheat': 'गेहूं',
+      'potato': 'आलू',
       'notes': 'नोट्स (वैकल्पिक)',
       'capture': 'स्थान प्राप्त करें',
       'confirm_p': 'बुवाई की पुष्टि करें',
@@ -77,11 +77,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'लगभग',
     },
     'ta': {
-      'title': 'வேளாண் வழிகாட்டி',
+      'title': 'உருளைக்கிழங்கு வேளாண் வழிகாட்டி',
       'step': 'படி',
-      'plant_crop': 'பயிரை நடவும்',
+      'plant_crop': 'உருளைக்கிழங்கை நடவும்',
       'f_name': 'விவசாயி பெயர்',
-      'wheat': 'கோதுமை',
+      'potato': 'உருளைக்கிழங்கு',
       'notes': 'குறிப்புகள்',
       'capture': 'இருப்பிடத்தைப் பிடிக்கவும்',
       'confirm_p': 'நடவு உறுதிப்படுத்தவும்',
@@ -90,8 +90,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'confirm': 'உறுதி',
       'plant': 'நடவு',
       'err_loc': 'இருப்பிடத்தைப் பெற முடியவில்லை',
-      'err_fill':
-          'அனைத்து விவரங்களையும் பூர்த்தி செய்து இருப்பிடத்தைப் பிடிக்கவும்',
+      'err_fill': 'அனைத்து விவரங்களையும் பூர்த்தி செய்து இருப்பிடத்தைப் பிடிக்கவும்',
       'farmer': 'விவசாயி',
       'crop': 'பயிர்',
       'date': 'தேதி',
@@ -100,11 +99,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'தோராயமான',
     },
     'te': {
-      'title': 'వ్యవసాయ మార్గదర్శి',
+      'title': 'బంగాళదుంప వ్యవసాయ మార్గదర్శి',
       'step': 'దశ',
-      'plant_crop': 'మీ పంటను నాటండి',
+      'plant_crop': 'మీ బంగాళదుంపలను నాటండి',
       'f_name': 'రైతు పేరు',
-      'wheat': 'గోధుమ',
+      'potato': 'బంగాళదుంప',
       'notes': 'గమనికలు',
       'capture': 'స్థానాన్ని గుర్తించండి',
       'confirm_p': 'నాటడాన్ని ధృవీకరించండి',
@@ -122,11 +121,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'సుమారు',
     },
     'kn': {
-      'title': 'ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ',
+      'title': 'ಆಲೂಗಡ್ಡೆ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ',
       'step': 'ಹಂತ',
-      'plant_crop': 'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ನೆಡಿ',
+      'plant_crop': 'ನಿಮ್ಮ ಆಲೂಗಡ್ಡೆಯನ್ನು ನೆಡಿ',
       'f_name': 'ರೈತರ ಹೆಸರು',
-      'wheat': 'ಗೋಧಿ',
+      'potato': 'ಆಲೂಗಡ್ಡೆ',
       'notes': 'ಟಿಪ್ಪಣಿಗಳು',
       'capture': 'ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
       'confirm_p': 'ನೆಡುವಿಕೆಯನ್ನು ದೃಢೀಕರಿಸಿ',
@@ -135,21 +134,20 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'confirm': 'ದೃಢೀಕರಿಸಿ',
       'plant': 'ನೆಡಿ',
       'err_loc': 'ಸ್ಥಳವನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ',
-      'err_fill':
-          'ದಯವಿಟ್ಟು ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
+      'err_fill': 'ದಯವಿಟ್ಟು ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
       'farmer': 'ರೈತ',
       'crop': 'ಬೆಳೆ',
-      'date': 'ದಿನಾಂಕ',
+      'date': 'ದಿನಾಂక',
       'loc': 'ಸ್ಥಳ',
       'exact': 'ನಿಖರ',
       'approx': 'ಅಂದಾಜು',
     },
     'mr': {
-      'title': 'कृषी मार्गदर्शिका',
+      'title': 'बटाटा कृषी मार्गदर्शिका',
       'step': 'टप्पा',
-      'plant_crop': 'पीक लावा',
+      'plant_crop': 'बटाटे लावा',
       'f_name': 'शेतकऱ्याचे नाव',
-      'wheat': 'गहू',
+      'potato': 'बटाटा',
       'notes': 'टिप्पणी',
       'capture': 'स्थान मिळवा',
       'confirm_p': 'लागवडीची पुष्टी करा',
@@ -167,11 +165,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'अंदाजे',
     },
     'pa': {
-      'title': 'ਖੇਤੀਬਾੜੀ ਗਾਈਡ',
+      'title': 'ਆਲੂ ਖੇਤੀਬਾੜੀ ਗਾਈਡ',
       'step': 'ਕਦਮ',
-      'plant_crop': 'ਫਸਲ ਲਗਾਓ',
+      'plant_crop': 'ਆਲੂ ਲਗਾਓ',
       'f_name': 'ਕਿਸਾਨ ਦਾ ਨਾਮ',
-      'wheat': 'ਕਣਕ',
+      'potato': 'ਆਲੂ',
       'notes': 'ਨੋਟਸ',
       'capture': 'ਲੋਕੇਸ਼ਨ ਲਓ',
       'confirm_p': 'ਬਿਜਾਈ ਦੀ ਪੁਸ਼ਟੀ',
@@ -189,11 +187,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'ਲਗਭਗ',
     },
     'bn': {
-      'title': 'কৃষি নির্দেশিকা',
+      'title': 'আলু কৃষি নির্দেশিকা',
       'step': 'ধাপ',
-      'plant_crop': 'আপনার ফসল রোপণ করুন',
+      'plant_crop': 'আপনার আলু রোপণ করুন',
       'f_name': 'কৃষকের নাম',
-      'wheat': 'গম',
+      'potato': 'আলু',
       'notes': 'নোট',
       'capture': 'অবস্থান নিন',
       'confirm_p': 'রোপণ নিশ্চিত করুন',
@@ -211,11 +209,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'আনুমানিক',
     },
     'gu': {
-      'title': 'કૃષિ માર્ગદર્શિકા',
+      'title': 'બટાટા કૃષિ માર્ગદર્શિકા',
       'step': 'તબક્કો',
-      'plant_crop': 'પાક રોપો',
+      'plant_crop': 'બટાટા રોપો',
       'f_name': 'ખેડૂતનું નામ',
-      'wheat': 'ઘઉં',
+      'potato': 'બટાટા',
       'notes': 'નોંધ',
       'capture': 'સ્થાન મેળવો',
       'confirm_p': 'વાવેતરની પુષ્ટિ કરો',
@@ -233,11 +231,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'આશરે',
     },
     'ml': {
-      'title': 'കാർഷിക ഗൈഡ്',
+      'title': 'ഉരുളക്കിഴങ്ങ് കാർഷിക ഗൈഡ്',
       'step': 'ഘട്ടം',
-      'plant_crop': 'വിള ഇറക്കുക',
+      'plant_crop': 'ഉരുളക്കിഴങ്ങ് ഇറക്കുക',
       'f_name': 'കർഷകന്റെ പേര്',
-      'wheat': 'ഗോതമ്പ്',
+      'potato': 'ഉരുളക്കിഴങ്ങ്',
       'notes': 'കുറിപ്പുകൾ',
       'capture': 'ലൊക്കേഷൻ എടുക്കുക',
       'confirm_p': 'ഉറപ്പാക്കുക',
@@ -255,11 +253,11 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'ഏകദേശ',
     },
     'ur': {
-      'title': 'زرعی گائیڈ',
+      'title': 'آلو کی زرعی گائیڈ',
       'step': 'مرحلہ',
-      'plant_crop': 'اپنی فصل لگائیں',
+      'plant_crop': 'اپنے آلو لگائیں',
       'f_name': 'کسان کا نام',
-      'wheat': 'گندم',
+      'potato': 'آلو',
       'notes': 'نوٹس',
       'capture': 'مقام حاصل کریں',
       'confirm_p': 'کاشت کی تصدیق کریں',
@@ -320,7 +318,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       case 4:
         return Step4Content(locale: _currentLocale);
       case 5:
-        // return Step5Content(locale: _currentLocale);
+      // return Step5Content(locale: _currentLocale);
         return Step5Content(locale: _currentLocale);
       case 6:
         debugPrint("Placeholder building Step6 with locale: $_currentLocale");
@@ -347,7 +345,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         _lat = position.latitude;
         _lng = position.longitude;
         _currentPosition =
-            "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+        "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
         isCapturing = false;
       });
     } catch (e) {
@@ -470,13 +468,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   }
 
   Widget _buildField(
-    IconData icon,
-    String hint,
-    TextEditingController? controller, {
-    bool isReadOnly = false,
-    VoidCallback? onTap,
-    bool isPlaceholder = false,
-  }) {
+      IconData icon,
+      String hint,
+      TextEditingController? controller, {
+        bool isReadOnly = false,
+        VoidCallback? onTap,
+        bool isPlaceholder = false,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: SizedBox(
@@ -523,7 +521,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           children: [
             const Icon(Icons.grass, color: primaryPurple, size: 16),
             const SizedBox(width: 10),
-            Text(_t('wheat'), style: const TextStyle(fontSize: 12)),
+            Text(_t('potato'), style: const TextStyle(fontSize: 12)),
           ],
         ),
       ),
@@ -586,31 +584,31 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         child: Center(
           child: isCapturing
               ? const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: primaryPurple,
-                  ),
-                )
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: primaryPurple,
+            ),
+          )
               : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.my_location,
-                      color: primaryPurple,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _currentPosition ?? _t('capture'),
-                      style: const TextStyle(
-                        color: primaryPurple,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.my_location,
+                color: primaryPurple,
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _currentPosition ?? _t('capture'),
+                style: const TextStyle(
+                  color: primaryPurple,
+                  fontSize: 11,
                 ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -748,7 +746,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
     if (picked != null)
       setSheetState(
-        () => selectedDate = "${picked.day}/${picked.month}/${picked.year}",
+            () => selectedDate = "${picked.day}/${picked.month}/${picked.year}",
       );
   }
 
@@ -904,13 +902,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         child: label != null
             ? Text(
-                label,
-                style: const TextStyle(
-                  color: primaryPurple,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
+          label,
+          style: const TextStyle(
+            color: primaryPurple,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        )
             : Icon(icon, color: primaryPurple, size: 20),
       ),
     );
