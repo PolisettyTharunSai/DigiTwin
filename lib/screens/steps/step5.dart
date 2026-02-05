@@ -6,8 +6,8 @@ class Step5Content extends StatelessWidget {
 
   const Step5Content({super.key, required this.locale});
 
-  static const Color primaryPurple = Color(0xFF7F3DFF);
-  static const Color accentGreen = Color(0xFF2D9373);
+  static const Color primaryPurple = Color(0xFFFF9644);
+  static const Color accentGreen = Color(0xFF562F00);
   static const Color warningRed = Color(0xFFFD3C4A);
 
   // --- UPDATED TRANSLATION HELPER ---
@@ -248,7 +248,7 @@ class Step5Content extends StatelessWidget {
           },
           children: [
             TableRow(
-              decoration: const BoxDecoration(color: Color(0xFFF8F9FE)),
+              decoration: const BoxDecoration(color: Color(0xFFFFCE99)),
               children: [
                 _buildCell(_t('col_disorder'), isTitle: true),
                 _buildCell(_t('col_cause'), isTitle: true),

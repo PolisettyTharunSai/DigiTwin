@@ -21,7 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool showPassword = false;
   bool showConfirmPassword = false;
 
-  static const primaryColor = Color(0xFF7F3DFF);
+  static const primaryColor = Color(0xFFFF9644);
 
   Future<void> signup() async {
     final name = nameCtrl.text.trim();
@@ -148,7 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F6FB),
+      backgroundColor: const Color(0xFFFFFDF1),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

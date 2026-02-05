@@ -21,9 +21,9 @@ class PlaceholderScreen extends StatefulWidget {
 }
 
 class _PlaceholderScreenState extends State<PlaceholderScreen> {
-  static const Color primaryPurple = Color(0xFF7F3DFF);
-  static const Color unselectedPurple = Color(0xFFF4EFFF);
-  static const Color inactiveIconColor = Color(0xFFB18BFF);
+  static const Color primaryPurple = Color(0xFFFF9644);
+  static const Color unselectedPurple = Color(0xFFFFCE99);
+  static const Color inactiveIconColor = Color(0xFF562F00);
 
   int currentActiveStage = 1;
   final int totalStages = 6;
@@ -370,7 +370,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
             child: Container(
               height: MediaQuery.of(context).size.height * 0.75,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: Color(0xFFFFFDF1),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -756,7 +756,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     return Directionality(
       textDirection: _isRTL ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFFFDF1),
         appBar: AppBar(
           backgroundColor: primaryPurple,
           centerTitle: true,

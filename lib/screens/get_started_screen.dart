@@ -17,7 +17,7 @@ class GetStartedScreen extends StatefulWidget {
 }
 
 class _GetStartedScreenState extends State<GetStartedScreen> {
-  static const primaryColor = Color(0xFF7F3DFF);
+  static const primaryColor = Color(0xFFFF9644);
 
   bool showLogin = false;
 

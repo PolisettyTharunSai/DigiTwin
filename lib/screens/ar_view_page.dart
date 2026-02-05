@@ -14,15 +14,16 @@ class ARViewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFDF1),
       appBar: AppBar(
         title: Text('$cropName AR View'),
-        backgroundColor: Color(0xFF7F3DFF),
+        backgroundColor: const Color(0xFFFF9644),
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFFFFFDF1),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -36,15 +37,12 @@ class ARViewPage extends StatelessWidget {
             child: ModelViewer(
               src: modelPath,
               alt: '$cropName AR model',
-
               ar: true,
               arModes: const ['scene-viewer'],
               arPlacement: ArPlacement.floor,
               arScale: ArScale.auto,
-
               cameraControls: true,
               autoRotate: false,
-              // 🔥 SAME FIXES HERE
               cameraOrbit: "0deg 75deg 2.5m",
               minCameraOrbit: "auto auto 1m",
               maxCameraOrbit: "auto auto 10m",
@@ -52,10 +50,8 @@ class ARViewPage extends StatelessWidget {
               exposure: 1,
               shadowIntensity: 1,
               interactionPrompt: InteractionPrompt.none,
-
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFFFFDF1),
             ),
-
           ),
         ),
       ),

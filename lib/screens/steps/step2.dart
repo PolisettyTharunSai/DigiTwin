@@ -6,8 +6,8 @@ class Step2Content extends StatelessWidget {
 
   const Step2Content({super.key, required this.locale});
 
-  static const Color primaryPurple = Color(0xFF7F3DFF);
-  static const Color accentGreen = Color(0xFF2D9373);
+  static const Color primaryPurple = Color(0xFFFF9644);
+  static const Color accentGreen = Color(0xFF562F00);
 
   // Helper method to fetch translated strings
   String _t(String key) {

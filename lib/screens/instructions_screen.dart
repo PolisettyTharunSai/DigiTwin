@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'section_detail_screen.dart';
+import 'step_detail_screen.dart';
 
 class _BottomCurveClipper extends CustomClipper<Path> {
   @override
@@ -84,269 +85,243 @@ class Section {
 
 final List<Section> sections = [
   Section(
-    title: 'Know What You Crop!',
-    description: 'Before going to plant understand the wheat crop based on your requirements',
-    thumbnailAsset: 'assets/requirements/img1_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img1_1.png'),
-      ContentBlock.heading('What is Wheat?'),
-      ContentBlock.paragraph(
-        'Wheat is a Rabi crop grown during winter and harvested in spring. '
-            'It is one of the most important cereal crops in India.',
-      ),
-      ContentBlock.heading('Types of Wheat'),
-      ContentBlock.bullets([
-        'Bread wheat',
-        'Most suited for chapati and bakery',
-        'Cultivated throughout India',
-        'Common wheat may be sub-divided',
-        'Hard red winter wheat – commercial class',
-        'Hard red spring wheat – grown where winter is too severe, high protein and excellent bread making characteristics',
-        'Soft red winter wheat – grown in humid conditions, grains are soft, low protein, flour suitable for cakes and cookies',
-        'White wheat – mainly for pastry purpose',
-      ]),
-    ],
+    title: 'Introduction',
+    description: 'Get to know about Potato',
+    thumbnailAsset: 'assets/images/step1.png',
+    content: [],
   ),
   Section(
-    title: 'Climatic Requirements',
-    description:
-    'Wheat growth and development are influenced by temperature, photoperiod, and climate. '
-        'The crop shows strong adaptability through hardening, photoperiod response, and temperature tolerance at different growth stages.',
-    thumbnailAsset: 'assets/requirements/img2_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img2_1.png'),
-      ContentBlock.heading('Climate and Cold Hardening'),
-      ContentBlock.bullets([
-        'Wheat has the ability to undergo hardening after germination',
-        'Germination can occur at temperatures just above 4°C',
-        'Normal physiological activity begins above 5°C in the presence of adequate sunlight',
-      ]),
-      ContentBlock.paragraph(
-        'After germination, wheat plants develop tolerance to freezing temperatures through the process of hardening.',
-      ),
-      ContentBlock.bullets([
-        'Spring wheat can tolerate freezing temperatures as low as −9.4°C',
-        'Winter wheat can tolerate freezing temperatures as low as −31.6°C',
-      ]),
-      ContentBlock.paragraph(
-        'During hardening, there is a gradual increase in dry matter, sugars, amide nitrogen, and amino nitrogen in plant tissues. '
-            'These changes enhance protein stability and increase tolerance to freezing stress.',
-      ),
-      ContentBlock.bullets([
-        'Hardened plants have lower moisture content in the leaves',
-        'Water is held more tightly within the cells',
-      ]),
-      ContentBlock.heading('Response to Photoperiod and Growth'),
-      ContentBlock.bullets([
-        'Wheat is a long-day plant',
-        'Long-day conditions hasten flowering',
-        'Short-day conditions prolong the vegetative phase',
-        'Most modern varieties are photo-insensitive',
-      ]),
-      ContentBlock.heading('Temperature and Growth'),
-      ContentBlock.paragraph(
-        'Wheat can tolerate low temperatures during the vegetative stage and higher temperatures along with long days during the reproductive phase.',
-      ),
-      ContentBlock.bullets([
-        'Optimum temperature for overall growth is 20–22°C',
-        'Optimum temperature for vegetative growth ranges from 16–22°C',
-        'Leaves attain maximum size at around 22°C',
-        'Temperatures above 22°C reduce plant height, root length, and tiller number',
-      ]),
-      ContentBlock.paragraph(
-        'Heading is accelerated as temperature increases from 22°C to 34°C but is delayed when temperatures exceed 34°C.',
-      ),
-      ContentBlock.bullets([
-        'During grain development, 25°C for 4–5 weeks is optimum',
-        'Temperatures above 25°C reduce grain weight',
-      ]),
-    ],
+    title: 'Climate & Soil',
+    description: 'Optimal Conditions',
+    thumbnailAsset: 'assets/images/step2.png',
+    content: [],
   ),
   Section(
-    title: 'Growth Stages of Wheat',
-    description:
-    'In North India, wheat growth progresses through distinct vegetative and reproductive stages. '
-        'Each stage occurs at a specific time after sowing and is critical for yield formation.',
-    thumbnailAsset: 'assets/requirements/img3_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img3_1.png'),
-      ContentBlock.heading('Vegetative Stage'),
-      ContentBlock.bullets([
-        'Germination occurs within 5–7 days after sowing',
-        'Crown Root Initiation (CRI) takes place at 20–25 days after sowing (DAS)',
-        'Tillering starts around 15 DAS and continues at 4–5 day intervals up to 45 DAS',
-        'Jointing stage occurs between 45–60 DAS and represents peak vegetative growth',
-      ]),
-      ContentBlock.paragraph(
-        'The jointing stage is characterized by rapid internode elongation and marks the transition towards reproductive development.',
-      ),
-      ContentBlock.heading('Reproductive Stage'),
-      ContentBlock.bullets([
-        'Boot leaf stage appears at 70–75 DAS',
-        'Flowering occurs between 85–90 DAS',
-        'Milking stage is observed at 100–105 DAS',
-        'Dough stage occurs around 105–110 DAS',
-        'Physiological maturity is attained between 115–120 DAS',
-      ]),
-    ],
-  ),
-  Section(
-    title: 'Season and Time of Sowing',
-    description:
-    'Timely sowing is the most critical factor influencing wheat yield. '
-        'Delay in sowing exposes the crop to terminal heat stress and reduces productivity.',
-    thumbnailAsset: 'assets/requirements/img4_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img4_1.png'),
-      ContentBlock.bullets([
-        'Time of sowing determines yield potential in wheat',
-        'Irrigated long-duration varieties (135–140 days) are sown from 10th to 30th November',
-        'Short-duration varieties (120–125 days) can be sown up to 15th December',
-        'Sowing after 15th December causes drastic reduction in yield',
-        'Slight variation in sowing time exists among agro-climatic zones',
-      ]),
-    ],
-  ),
-  Section(
-    title: 'Field Preparation for Wheat',
-    description:
-    'Proper field preparation ensures good soil tilth, seed–soil contact, '
-        'and uniform crop establishment.',
-    thumbnailAsset: 'assets/requirements/img5_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img5_1.png'),
-      ContentBlock.bullets([
-        'Field preparation is usually done after the harvest of Kharif crops',
-        'One disking followed by harrowing is commonly practiced',
-        'Moderate to fine tilth is ideal for wheat',
-        'Zero tillage is possible, especially after rice harvest',
-        'Dibbling in lines is a suitable option under zero tillage',
-      ]),
-    ],
-  ),
-  Section(
-    title: 'Methods of Sowing in Wheat',
-    description:
-    'Different sowing methods are adopted based on soil conditions, '
-        'availability of machinery, and irrigation practices.',
-    thumbnailAsset: 'assets/requirements/img6_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img6_1.png'),
-      ContentBlock.bullets([
-        'Broadcasting',
-        'Zero / No-tillage sowing',
-        'Sowing behind the plough',
-        'Drilling',
-        'Dibbling',
-        'FIRB – Furrow Irrigated Raised Bed system',
-      ]),
-    ],
-  ),
-  Section(
-    title: 'Seed Rate and Spacing',
-    description:
-    'Optimum seed rate and spacing ensure proper plant population, '
-        'better tillering, and efficient use of nutrients and water.',
-    thumbnailAsset: 'assets/requirements/img7_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img7_1.png'),
-      ContentBlock.bullets([
-        'Recommended seed rate is 100–125 kg per hectare',
-        'Seed rate should be increased by 25% under late sowing or low soil moisture',
-        'Broadcast sowing requires about 150 kg seed per hectare',
-        'For dibbling, 25–30 kg seed per hectare is sufficient',
-        'Tillering varieties require wider spacing',
-        'Irrigated wheat: 22.5 cm row spacing and 8–18 cm plant spacing',
-        'Rainfed wheat: 25–30 cm × 5–6 cm spacing',
-        'Late-sown wheat requires closer spacing of 15–16 cm',
-      ]),
-    ],
+    title: 'Seed & Sowing',
+    description: 'Prep & Planting',
+    thumbnailAsset: 'assets/images/step3.png',
+    content: [],
   ),
   Section(
     title: 'Nutrient Management',
-    description:
-    'Balanced application of macro and micronutrients is essential '
-        'for achieving higher yield and better grain quality in wheat.',
-    thumbnailAsset: 'assets/requirements/img8_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img8_1.png'),
-      ContentBlock.bullets([
-        'Nitrogen deficiency causes poor tillering and small ear heads',
-        'Recommended nitrogen dose is 120–150 kg/ha for irrigated and 40–60 kg/ha for rainfed wheat',
-        'Nitrogen is applied in 2–3 splits depending on soil type',
-        'Phosphorus is a critical nutrient, especially for dwarf varieties',
-        'Recommended phosphorus dose is 60 kg P₂O₅ per hectare as basal',
-        'Potassium requirement is generally low in Indo-Gangetic alluvial soils',
-        'Micronutrients like zinc are deficient in many wheat-growing soils',
-        'Recommended zinc application is 25 kg ZnSO₄ per hectare',
-        'Integrated nutrient management includes FYM, green manuring, and biofertilizers',
-      ]),
-    ],
+    description: 'Best Fertilization',
+    thumbnailAsset: 'assets/images/step4.png',
+    content: [],
   ),
   Section(
-    title: 'Irrigation Management in Wheat',
-    description:
-    'Wheat is highly responsive to irrigation, and timely water application '
-        'at critical growth stages ensures maximum yield.',
-    thumbnailAsset: 'assets/requirements/img9_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img9_1.png'),
-      ContentBlock.bullets([
-        'Wheat requires 4–6 irrigations during the growing season',
-        'Irrigation is scheduled at 40–50% depletion of available soil moisture',
-        'IW:CPE ratio of 0.7–0.9 is suitable for wheat',
-        'CRI stage (20–25 DAS) is the most critical irrigation stage',
-        'Flowering is the second most critical stage',
-        'Jointing and milking stages are also important',
-      ]),
-    ],
+    title: 'Field Care',
+    description: 'Protection & Irrigation',
+    thumbnailAsset: 'assets/images/step5.png',
+    content: [],
   ),
   Section(
-    title: 'Weed Management in Wheat',
-    description:
-    'Weeds are severe competitors for nutrients, water, and light '
-        'and must be controlled during the early stages of crop growth.',
-    thumbnailAsset: 'assets/requirements/img10_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img10_1.png'),
-      ContentBlock.bullets([
-        'Weeds should be controlled at early stages of crop growth',
-        'Major monocot weeds include Phalaris minor and Avena fatua',
-        'Hand weeding is recommended at 20–25 DAS and again after two weeks',
-        'Dicot weeds are controlled using 2,4-D at 0.3–0.4 kg/ha',
-        'Monocot weeds are controlled using Isoproturon or Metoxuron',
-        'Pre-emergence application of Pendimethalin provides broad-spectrum control',
-      ]),
-    ],
+    title: 'Harvest & Storage',
+    description: 'End of Cycle',
+    thumbnailAsset: 'assets/images/step6.png',
+    content: [],
   ),
-  Section(
-    title: 'Harvesting and Threshing of Wheat',
-    description:
-    'Harvesting at the right stage ensures better grain quality, '
-        'reduced losses, and efficient threshing.',
-    thumbnailAsset: 'assets/requirements/img11_1.png',
-    content: [
-      ContentBlock.image('assets/requirements/img11_1.png'),
-      ContentBlock.bullets([
-        'Yellow and dry straw indicates crop maturity',
-        'Over-maturity causes shredding and breaking of spikes',
-        'Ideal harvesting stage is at 20–25% grain moisture',
-        'Combine harvester is the most efficient method',
-        'Manual harvesting or reapers are also used',
-        'Harvested crop is dried for 3–4 days before threshing',
-      ]),
-    ],
-  )
 ];
-
-// ... (imports and data classes remain the same)
 
 class InstructionsScreen extends StatelessWidget {
   const InstructionsScreen({super.key});
 
+  String _getTranslatedTitle(BuildContext context, int index) {
+    final String locale = Localizations.localeOf(context).languageCode;
+    final Map<String, List<String>> translations = {
+      'en': [
+        'Introduction',
+        'Climate & Soil',
+        'Seed & Sowing',
+        'Nutrient Management',
+        'Field Care',
+        'Harvest & Storage'
+      ],
+      'hi': [
+        'परिचय',
+        'जलवायु और मिट्टी',
+        'बीज और बुवाई',
+        'पोषक तत्व प्रबंधन',
+        'खेत की देखभाल',
+        'कटाई और भंडारण'
+      ],
+      'pa': [
+        'ਜਾਣ-ਪਛਾਣ',
+        'ਜਲਵਾਯੂ ਅਤੇ ਮਿੱਟੀ',
+        'ਬੀਜ এবং ਬਿਜਾਈ',
+        'ਪੌਸ਼ਟਿਕ ਤੱਤ ਪ੍ਰਬੰਧਨ',
+        'ਖੇਤ ਦੀ ਦੇਖਭਾਲ',
+        'ਕਟਾਈ ਅਤੇ ਭੰਡਾਰਨ'
+      ],
+      'ta': [
+        'அறிமுகம்',
+        'காலநிலை மற்றும் மண்',
+        'விதை மற்றும் விதைப்பு',
+        'ஊட்டச்சத்து மேலாண்மை',
+        'வயல் பராமரிப்பு',
+        'அறுவடை மற்றும் சேமிப்பு'
+      ],
+      'te': [
+        'పరిచయం',
+        'వాతావరణం & నేల',
+        'విత్తనాలు & నాటడం',
+        'పోషక నిర్వహణ',
+        'క్షేత్ర సంరక్షణ',
+        'కోత & నిల్వ'
+      ],
+      'kn': [
+        'ಪರಿಚಯ',
+        'ಹವಾಮಾನ ಮತ್ತು ಮಣ್ಣು',
+        'ಬೀಜ ಮತ್ತು ಬಿತ್ತನೆ',
+        'ಪೋಷಕಾಂಶ ನಿರ್ವಹಣೆ',
+        'ಕ್ಷೇತ್ರದ ಆರೈಕೆ',
+        'ಕೊಯ್ಲು ಮತ್ತು ಸಂಗ್ರಹಣೆ'
+      ],
+      'mr': [
+        'ओळख',
+        'हवामान आणि माती',
+        'बियाणे आणि पेरणी',
+        'पोषक तत्व व्यवस्थापन',
+        'शेत देखभाल',
+        'काढणी आणि साठवणूक'
+      ],
+      'gu': [
+        'પરિચય',
+        'આબોહવા અને જમીન',
+        'બીજ અને વાવણી',
+        'પોષક તત્વોનું સંચાલન',
+        'ખેતરની સંભાળ',
+        'કાપણી અને સંગ્રહ'
+      ],
+      'bn': [
+        'ভূমিকা',
+        'জলবায়ু ও মাটি',
+        'বীজ ও বপন',
+        'পুষ্টি ব্যবস্থাপনা',
+        'মাঠের যত্ন',
+        'সংগ্রহ ও সংরক্ষণ'
+      ],
+      'ml': [
+        'ആമുഖം',
+        'കാലാവസ്ഥയും മണ്ണും',
+        'വിത്തും വിതയ്ക്കലും',
+        'പോഷക മാനേജ്‌മെന്റ്',
+        'വയൽ പരിപാലനം',
+        'വിളവെടുപ്പും സംഭരണവും'
+      ],
+      'ur': [
+        'تعارف',
+        'آب و ہوا اور مٹی',
+        'بیج اور بوائی',
+        'غذائی اجزاء کا انتظام',
+        'کھیت کی دیکھ بھال',
+        'کٹائی اور ذخیرہ'
+      ],
+    };
+
+    final list = translations[locale] ?? translations['en']!;
+    return (index >= 0 && index < list.length) ? list[index] : list[0];
+  }
+
+  String _getTranslatedDescription(BuildContext context, int index) {
+    final String locale = Localizations.localeOf(context).languageCode;
+    final Map<String, List<String>> translations = {
+      'en': [
+        'Get to know about Potato',
+        'Optimal Conditions',
+        'Prep & Planting',
+        'Best Fertilization',
+        'Protection & Irrigation',
+        'End of Cycle'
+      ],
+      'hi': [
+        'आलू के बारे में जानें',
+        'इष्टतम स्थितियाँ',
+        'तैयारी और बुवाई',
+        'सर्वोत्तम उर्वरक',
+        'सुरक्षा और सिंचाई',
+        'चक्र का अंत'
+      ],
+      'pa': [
+        'ਆਲੂ ਬਾਰੇ ਜਾਣੋ',
+        'ਅਨੁਕੂਲ ਹਾਲਾਤ',
+        'ਤਿਆਰੀ ਅਤੇ ਬਿਜਾਈ',
+        'ਸਭ ਤੋਂ ਵਧੀਆ ਖਾਦ',
+        'ਸੁਰੱਖਿਆ ਅਤੇ ਸਿੰਚਾਈ',
+        'ਚੱਕਰ ਦਾ ਅੰਤ'
+      ],
+      'ta': [
+        'உருளைக்கிழங்கு பற்றி தெரிந்து கொள்ளுங்கள்',
+        'சிறந்த நிலைமைகள்',
+        'தயாரிப்பு மற்றும் நடவு',
+        'சிறந்த உரமிடுதல்',
+        'பாதுகாப்பு மற்றும் பாசனம்',
+        'சுழற்சியின் முடிவு'
+      ],
+      'te': [
+        'బంగాళదుంప గురించి తెలుసుకోండి',
+        'అనుకూల పరిస్థితులు',
+        'తయారీ & నాటడం',
+        'ఉత్తమ ఎరువులు',
+        'రక్షణ & నీటి పారుదల',
+        'పంట ముగింపు'
+      ],
+      'kn': [
+        'ಆಲೂಗಡ್ಡೆ ಬಗ್ಗೆ ತಿಳಿಯಿರಿ',
+        'ಸೂಕ್ತ ಪರಿಸ್ಥಿತಿಗಳು',
+        'ತಯಾರಿ ಮತ್ತು ಬಿತ್ತನೆ',
+        'ಅತ್ಯುತ್ತಮ ಗೊಬ್ಬರ',
+        'ರಕ್ಷಣೆ ಮತ್ತು ನೀರಾವರಿ',
+        'ಚಕ್ರದ ಅಂತ್ಯ'
+      ],
+      'mr': [
+        'बटाट्याबद्दल जाणून घ्या',
+        'इष्टतम परिस्थिती',
+        'तयारी आणि लागवड',
+        'सर्वोत्तम खत',
+        'संरक्षण आणि सिंचन',
+        'चक्राचा शेवट'
+      ],
+      'gu': [
+        'બટાટા વિશે જાણો',
+        'અનુકૂળ પરિસ્થિતિઓ',
+        'તૈયારી અને વાવણી',
+        'શ્રેષ્ઠ ખાતર',
+        'રક્ષણ અને સિંચાઈ',
+        'ચક્રનો અંત'
+      ],
+      'bn': [
+        'আলু সম্পর্কে জানুন',
+        'অনুকূল পরিস্থিতি',
+        'প্রস্তুতি ও বপন',
+        'সেরা সার প্রয়োগ',
+        'সুরক্ষা ও সেচ',
+        'চক্রের শেষ'
+      ],
+      'ml': [
+        'ഉരുളക്കിഴങ്ങിനെക്കുറിച്ച് അറിയുക',
+        'അഭികാമ്യമായ സാഹചര്യങ്ങൾ',
+        'തയ്യാറെടുപ്പും വിതയ്ക്കലും',
+        'മികച്ച വളപ്രയോഗം',
+        'സംരക്ഷണവും ജലസേചനവും',
+        'ചക്രത്തിന്റെ അവസാനം'
+      ],
+      'ur': [
+        'آلو کے بارے میں جانیں',
+        'بہترین حالات',
+        'تیاری اور بوائی',
+        'بہترین فرٹلائزیشن',
+        'تحفظ اور آب پاشی',
+        'سائیکل کا اختتام'
+      ],
+    };
+
+    final list = translations[locale] ?? translations['en']!;
+    return (index >= 0 && index < list.length) ? list[index] : list[0];
+  }
+
   @override
   Widget build(BuildContext context) {
-    const primaryPurple = Color.fromARGB(255, 127, 61, 255);
+    const primaryColor = Color(0xFFFF9644);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -364,7 +339,7 @@ class InstructionsScreen extends StatelessWidget {
                 bottom: 18,
               ),
               width: double.infinity,
-              color: primaryPurple,
+              color: primaryColor,
               child: Row(
                 children: [
                   IconButton(
@@ -392,33 +367,37 @@ class InstructionsScreen extends StatelessWidget {
           // ---------- STACKED CARDS ----------
           Expanded(
             child: Container(
-              color: const Color(0xFFF5F0FF), // same family as card color
+              color: const Color(0xFFFFFDF1),
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: CustomScrollView(
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                  for (int i = 0; i < sections.length; i++)
+                  for (int i = 0; i < 6; i++)
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _SectionCardDelegate(
-                        section: sections[i],
+                        section: Section(
+                          title: _getTranslatedTitle(context, i),
+                          description: _getTranslatedDescription(context, i),
+                          thumbnailAsset: 'assets/images/step${i + 1}.png',
+                          content: [],
+                        ),
                         index: i,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  SectionDetailScreen(sectionIndex: i),
+                              builder: (_) => StepDetailScreen(
+                                stepIndex: i + 1,
+                                title: _getTranslatedTitle(context, i),
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: SizedBox.shrink(),
-                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
             ),

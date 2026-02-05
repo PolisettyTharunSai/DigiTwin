@@ -17,8 +17,8 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   // Brand Colors
-  static const primaryColor = Color(0xFF7F3DFF);
-  static const accentColor = Color(0xFFFDFDF0); // Your requested color
+  static const primaryColor = Color(0xFFFF9644);
+  static const accentColor = Color(0xFFFFFDF1); // Your requested color
 
   late AnimationController _moveController;
   late AnimationController _expandController;
@@ -181,7 +181,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFFDF1),
       body: Stack(
         fit: StackFit.expand,
         children: [

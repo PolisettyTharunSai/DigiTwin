@@ -20,9 +20,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const primaryColor = Color.fromARGB(255, 127, 61, 255); // Primary Purple
-  static const accentColor = Color(0xFFB18BFF);
-  static const bgColor = Color(0xFFF7F6FB);
+  static const primaryColor = Color(0xFFFF9644); // Primary Orange
+  static const accentColor = Color(0xFFFFCE99);
+  static const bgColor = Color(0xFFFFFDF1);
 
   int currentDay = 1;
   int currentImageIndex = 0;
@@ -887,7 +887,7 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFFFFDF1),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
