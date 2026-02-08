@@ -234,14 +234,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getModelUrl() {
-    // Using jsDelivr CDN for 3D models from the version2 branch
-    return "https://cdn.jsdelivr.net/gh/PolisettyTharunSai/DigiTwin@version2/assets/Models/Day$currentDay.glb";
+    // Dynamically fetch models based on currentDay from the Data branch
+    return "https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/models/Day$currentDay.glb";
   }
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
+    if (show3DModel) return; // Don't start if in 3D mode
+
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _carouselController.nextPage();
+      if (!mounted || show3DModel) {
+        _autoScrollTimer?.cancel();
+        return;
+      }
+      
+      try {
+        _carouselController.nextPage();
+      } catch (e) {
+        // Silently skip if carousel is not ready
+      }
     });
   }
 
@@ -546,7 +557,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 100),
                           child: GestureDetector(
-                            onTap: () => setState(() => show3DModel = !show3DModel),
+                          onTap: () {
+                              setState(() {
+                                show3DModel = !show3DModel;
+                                if (!show3DModel) {
+                                  _startAutoScroll();
+                                } else {
+                                  _autoScrollTimer?.cancel();
+                                }
+                              });
+                            },
                             child: Container(
                               height: 45,
                               padding: const EdgeInsets.all(4),
@@ -669,7 +689,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   _circleNav(
                     icon: Icons.chevron_left,
                     onTap: currentDay > 1 ? () {
-                      setState(() => currentDay--);
+                      setState(() {
+                        currentDay--;
+                        currentImageIndex = 0;
+                      });
                       _loadDayData();
                     } : null,
                   ),
@@ -701,7 +724,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   _circleNav(
                     icon: Icons.chevron_right,
                     onTap: currentDay < 100 ? () {
-                      setState(() => currentDay++);
+                      setState(() {
+                        currentDay++;
+                        currentImageIndex = 0;
+                      });
                       _loadDayData();
                     } : null,
                   ),
@@ -1000,6 +1026,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       MaterialPageRoute(
                         builder: (_) => ARViewPage(
                           modelPath: modelUrl,
+                          // Example usage in your ModelViewer or ARViewPage
                           cropName: "Day $currentDay",
                         ),
                       ),
