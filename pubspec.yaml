@@ -38,6 +38,7 @@ flutter:
     # Step-by-step planting flow
     - assets/images/
 
+    - assets/Icons/
     # Daily text-based crop data (day1.txt → day100.txt)
     - assets/Data/day1/
     - assets/Data/day2/

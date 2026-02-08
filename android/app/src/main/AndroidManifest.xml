@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.wheat">
+    package="com.example.potato">
 
     <!-- ================= PERMISSIONS ================= -->
 
@@ -28,7 +28,7 @@
     <!-- ================= APPLICATION ================= -->
 
     <application
-        android:label="wheat"
+        android:label="Potato"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"

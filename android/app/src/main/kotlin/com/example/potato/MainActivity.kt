@@ -1,4 +1,4 @@
-package com.example.wheat
+package com.example.potato
 
 import io.flutter.embedding.android.FlutterActivity
 

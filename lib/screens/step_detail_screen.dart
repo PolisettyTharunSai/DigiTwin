@@ -38,6 +38,53 @@ class _BottomCurveClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
+class _ProgressLinePainter extends CustomPainter {
+  final int currentStep;
+  final int totalSteps;
+  final Color activeColor;
+  final Color inactiveColor;
+
+  _ProgressLinePainter({
+    required this.currentStep,
+    required this.totalSteps,
+    required this.activeColor,
+    required this.inactiveColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    final segmentWidth = size.width / (totalSteps - 1);
+
+    for (int i = 0; i < totalSteps - 1; i++) {
+      final startX = i * segmentWidth;
+      final endX = (i + 1) * segmentWidth;
+
+      // Draw active color from step 1 to current step
+      if (i < currentStep - 1) {
+        paint.color = activeColor;
+      } else {
+        paint.color = inactiveColor;
+      }
+
+      canvas.drawLine(
+        Offset(startX, 0),
+        Offset(endX, 0),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ProgressLinePainter oldDelegate) {
+    return oldDelegate.currentStep != currentStep;
+  }
+}
+
+
 class StepDetailScreen extends StatelessWidget {
   final int stepIndex;
   final String title;
@@ -100,6 +147,9 @@ class StepDetailScreen extends StatelessWidget {
             ),
           ),
 
+          // ---------- STEP PROGRESS INDICATOR ----------
+          _buildStepProgressIndicator(),
+
           // ---------- SCROLLABLE CONTENT ----------
           Expanded(
             child: SingleChildScrollView(
@@ -110,6 +160,146 @@ class StepDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildStepProgressIndicator() {
+    const primaryOrange = Color(0xFFFF9644);
+    const lightOrange = Color(0xFFFFCE99);
+    const background = Color(0xFFFFFDF1);
+
+    return Container(
+      color: background,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final iconSize = 44.0;
+          final spacing = (constraints.maxWidth - (6 * iconSize)) / 5;
+
+          return SizedBox(
+            height: 70,
+            child: Stack(
+              children: [
+                // Progress lines
+                Positioned(
+                  top: iconSize / 2 - 2,
+                  left: iconSize / 2,
+                  right: iconSize / 2,
+                  child: CustomPaint(
+                    painter: _ProgressLinePainter(
+                      currentStep: stepIndex,
+                      totalSteps: 6,
+                      activeColor: primaryOrange,
+                      inactiveColor: lightOrange.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+                // Step icons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(6, (index) {
+                    final stepNumber = index + 1;
+                    final isActive = stepNumber == stepIndex;
+                    final isCompleted = stepNumber < stepIndex;
+                    final isReachable = stepNumber <= stepIndex;
+
+                    return _buildStepIcon(
+                      stepNumber: stepNumber,
+                      isActive: isActive,
+                      isCompleted: isCompleted,
+                      isReachable: isReachable,
+                      iconSize: iconSize,
+                    );
+                  }),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStepIcon({
+    required int stepNumber,
+    required bool isActive,
+    required bool isCompleted,
+    required bool isReachable,
+    required double iconSize,
+  }) {
+    const primaryOrange = Color(0xFFFF9644);
+    const lightOrange = Color(0xFFFFCE99);
+    const darkBrown = Color(0xFF562F00);
+
+    Color backgroundColor;
+    Color iconColor;
+
+    if (isActive) {
+      backgroundColor = primaryOrange;
+      iconColor = Colors.white;
+    } else if (isCompleted) {
+      backgroundColor = lightOrange;
+      iconColor = darkBrown;
+    } else {
+      backgroundColor = lightOrange.withOpacity(0.3);
+      iconColor = darkBrown.withOpacity(0.4);
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: iconSize,
+          height: iconSize,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: primaryOrange.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Icon(
+            _getStepIcon(stepNumber),
+            color: iconColor,
+            size: 22,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'STEP $stepNumber',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            color: isReachable ? darkBrown : darkBrown.withOpacity(0.4),
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getStepIcon(int stepNumber) {
+    switch (stepNumber) {
+      case 1:
+        return Icons.menu_book_rounded;
+      case 2:
+        return Icons.wb_sunny_rounded;
+      case 3:
+        return Icons.settings_rounded;
+      case 4:
+        return Icons.grain_rounded;
+      case 5:
+        return Icons.science_rounded;
+      case 6:
+        return Icons.water_drop_rounded;
+      default:
+        return Icons.circle;
+    }
   }
 
   Widget _getStepContent(String locale) {

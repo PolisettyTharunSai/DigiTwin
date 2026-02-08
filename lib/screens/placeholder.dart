@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
 import '../models/planting_data.dart';
+import 'timeline_painter.dart';
 
 import 'steps/step1.dart';
 import 'steps/step2.dart';
@@ -282,6 +283,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   // Form State
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String selectedDate = "DD/MM/YYYY";
   String? _currentPosition;
   double? _lat;
@@ -778,6 +780,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
             _buildTimeline(),
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(20),
                 child: _getStepContent(),
               ),
@@ -818,43 +821,82 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   Widget _buildTimeline() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(totalStages, (index) {
-          int stageNumber = index + 1;
-          bool done = stageNumber <= currentActiveStage;
-          return Expanded(
-            child: Column(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    color: done ? primaryPurple : unselectedPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    stageNumber < currentActiveStage
-                        ? Icons.check
-                        : _getIconForStage(stageNumber),
-                    size: 14,
-                    color: done ? Colors.white : inactiveIconColor,
-                  ),
+      child: SizedBox(
+        height: 50,
+        child: Stack(
+          children: [
+            // Progress lines layer
+            Positioned(
+              top: 15,
+              left: 30,
+              right: 30,
+              child: CustomPaint(
+                painter: TimelineLinePainter(
+                  currentStep: currentActiveStage,
+                  totalSteps: totalStages,
+                  activeColor: primaryPurple,
+                  inactiveColor: unselectedPurple.withOpacity(0.4),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "${_t('step')} $stageNumber",
-                  style: TextStyle(
-                    fontSize: 6,
-                    color: done ? primaryPurple : Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        }),
+            // Step icons layer
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(totalStages, (index) {
+                int stageNumber = index + 1;
+                bool done = stageNumber <= currentActiveStage;
+                return Expanded(
+                  child: Column(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 30,
+                        width: 30,
+                        decoration: BoxDecoration(
+                          color: done ? primaryPurple : unselectedPurple,
+                          shape: BoxShape.circle,
+                          boxShadow: done
+                              ? [
+                                  BoxShadow(
+                                    color: primaryPurple.withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: stageNumber < currentActiveStage
+                            ? Icon(
+                                Icons.check,
+                                size: 18,
+                                color: done ? Colors.white : inactiveIconColor,
+                              )
+                            : Center(
+                                child: IconTheme(
+                                  data: IconThemeData(
+                                    size: 18,
+                                    color: done ? Colors.white : inactiveIconColor,
+                                  ),
+                                  child: _getIconForStage(stageNumber),
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${_t('step')} $stageNumber",
+                        style: TextStyle(
+                          fontSize: 6,
+                          color: done ? primaryPurple : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -868,16 +910,32 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
           if (currentActiveStage > 1)
             _navCircleButton(
               icon: Icons.arrow_back,
-              onPressed: () => setState(() => currentActiveStage--),
+              onPressed: () {
+                setState(() => currentActiveStage--);
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
             )
           else
             const SizedBox(width: 45),
           _navCircleButton(
             label: isLastStep ? _t('plant') : null,
             icon: isLastStep ? null : Icons.arrow_forward,
-            onPressed: () => isLastStep
-                ? _showPlantingForm()
-                : setState(() => currentActiveStage++),
+            onPressed: () {
+              if (isLastStep) {
+                _showPlantingForm();
+              } else {
+                setState(() => currentActiveStage++);
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            },
             isPrimary: isLastStep,
           ),
         ],
@@ -914,22 +972,28 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
-  IconData _getIconForStage(int stage) {
-    switch (stage) {
+  Widget _getIconForStage(int stage){
+    switch(stage){
       case 1:
-        return Icons.menu_book;
+        return const Icon(Icons.school);
       case 2:
-        return Icons.wb_sunny;
+        return const Icon(Icons.thermostat);
       case 3:
-        return Icons.settings;
+        return const Icon(Icons.eco);
       case 4:
-        return Icons.grain;
+        return const Icon(Icons.science);
       case 5:
-        return Icons.biotech;
+        return const ImageIcon(
+          AssetImage('assets/Icons/weed.png'),
+          size: 20,
+        );
       case 6:
-        return Icons.water_drop;
+        return const ImageIcon(
+          AssetImage('assets/Icons/harvest.png'),
+          size: 20,
+        );
       default:
-        return Icons.circle;
+        return const Icon(Icons.circle);
     }
   }
 
@@ -937,6 +1001,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

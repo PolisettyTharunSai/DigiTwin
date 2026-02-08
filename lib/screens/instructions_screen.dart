@@ -368,37 +368,117 @@ class InstructionsScreen extends StatelessWidget {
           Expanded(
             child: Container(
               color: const Color(0xFFFFFDF1),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: CustomScrollView(
-                slivers: [
-                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                itemCount: 6,
+                itemBuilder: (context, i) {
+                  final sectionTitle = _getTranslatedTitle(context, i);
+                  final sectionDesc = _getTranslatedDescription(context, i);
+                  final thumb = 'assets/images/step${i + 1}.png';
 
-                  for (int i = 0; i < 6; i++)
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _SectionCardDelegate(
-                        section: Section(
-                          title: _getTranslatedTitle(context, i),
-                          description: _getTranslatedDescription(context, i),
-                          thumbnailAsset: 'assets/images/step${i + 1}.png',
-                          content: [],
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
                         ),
-                        index: i,
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => StepDetailScreen(
                                 stepIndex: i + 1,
-                                title: _getTranslatedTitle(context, i),
+                                title: sectionTitle,
                               ),
                             ),
                           );
                         },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  color: primaryColor.withOpacity(0.1),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Image.asset(
+                                    thumb,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.eco_rounded,
+                                      color: primaryColor,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      sectionTitle,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      sectionDesc,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "View Guide",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: primaryColor.withOpacity(0.8),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.arrow_forward_rounded,
+                                          size: 14,
+                                          color: primaryColor.withOpacity(0.8),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                ],
+                  );
+                },
               ),
             ),
           ),

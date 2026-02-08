@@ -213,13 +213,14 @@ class _SplashScreenState extends State<SplashScreen>
                         if (showIcon)
                           FadeTransition(
                             opacity: _iconFadeAnim,
-                            child: const Padding(
-                              // Increased bottom padding to move icon UP
-                              padding: EdgeInsets.only(bottom: 80),
-                              child: Icon(
-                                Icons.agriculture,
-                                size: 120,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 80),
+                              child: Image.asset(
+                                'assets/Icons/splash.png',
+                                width: 120,
+                                height: 120,
                                 color: accentColor,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
