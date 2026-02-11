@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
     final diff = today.difference(start).inDays;
-    return (diff + 1).clamp(1, 100);
+    return (diff + 1).clamp(1, 109);
   }
 
   Future<void> _checkDailyPopup() async {
@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? plantationDate! 
           : plantationDate!.add(Duration(days: currentDay - 1)),
       firstDate: plantationDate!,
-      lastDate: plantationDate!.add(const Duration(days: 99)),
+      lastDate: plantationDate!.add(const Duration(days: 108)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -723,7 +723,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   _circleNav(
                     icon: Icons.chevron_right,
-                    onTap: currentDay < 100 ? () {
+                    onTap: currentDay < 109 ? () {
                       setState(() {
                         currentDay++;
                         currentImageIndex = 0;
