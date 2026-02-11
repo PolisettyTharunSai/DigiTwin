@@ -640,7 +640,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _reviewRow(_t('farmer'), _nameController.text),
-              _reviewRow(_t('crop'), _t('wheat')),
+              _reviewRow(_t('crop'), _t('potato')),
               _reviewRow(_t('date'), selectedDate),
               _reviewRow(_t('loc'), _currentPosition ?? ""),
             ],
@@ -708,7 +708,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'id': user.id,
       'name': name,
       'email': user.email,
-      'crop': "Wheat",
+      'crop': "Potato",
       'planting_date': parsedDate.toIso8601String(),
       'latitude': _lat ?? 0.0,
       'longitude': _lng ?? 0.0,

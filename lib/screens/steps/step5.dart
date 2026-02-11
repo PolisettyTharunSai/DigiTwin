@@ -10,15 +10,13 @@ class Step5Content extends StatelessWidget {
   static const Color accentGreen = Color(0xFF562F00);
   static const Color warningRed = Color(0xFFFD3C4A);
 
-  // --- UPDATED TRANSLATION HELPER ---
+  // Helper method to fetch translated strings
   String _t(String key) {
     // 1. Clean the locale string (extract 'hi' from 'hi_IN')
-    final String cleanCode = locale.split('_')[0].toLowerCase();
+    final String cleanCode = locale.split(RegExp('[-_]'))[0].toLowerCase();
 
     // 2. Fetch the data map for that code
-    final Map<String, String> translationMap = Step5Translations.getContent(
-      cleanCode,
-    );
+    final Map<String, String> translationMap = Step5Translations.getContent(cleanCode);
 
     // 3. Return the key or fallback to English
     return translationMap[key] ?? Step5Translations.getContent('en')[key] ?? '';

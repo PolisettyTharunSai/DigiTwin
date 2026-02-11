@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'section_detail_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'step_detail_screen.dart';
 
 class _BottomCurveClipper extends CustomClipper<Path> {
@@ -35,98 +35,32 @@ class _BottomCurveClipper extends CustomClipper<Path> {
 }
 
 
-enum ContentType {
-  heading,
-  paragraph,
-  bullets,
-  image,
-}
 
-class ContentBlock {
-  final ContentType type;
-  final String? text;
-  final List<String>? bullets;
-  final String? assetPath;
-
-  ContentBlock.heading(this.text)
-      : type = ContentType.heading,
-        bullets = null,
-        assetPath = null;
-
-  ContentBlock.paragraph(this.text)
-      : type = ContentType.paragraph,
-        bullets = null,
-        assetPath = null;
-
-  ContentBlock.bullets(this.bullets)
-      : type = ContentType.bullets,
-        text = null,
-        assetPath = null;
-
-  ContentBlock.image(this.assetPath)
-      : type = ContentType.image,
-        text = null,
-        bullets = null;
-}
-
-class Section {
-  final String title;
-  final String description;
-  final String thumbnailAsset;
-  final List<ContentBlock> content;
-
-  Section({
-    required this.title,
-    required this.description,
-    required this.thumbnailAsset,
-    required this.content,
-  });
-}
-
-final List<Section> sections = [
-  Section(
-    title: 'Introduction',
-    description: 'Get to know about Potato',
-    thumbnailAsset: 'assets/images/step1.png',
-    content: [],
-  ),
-  Section(
-    title: 'Climate & Soil',
-    description: 'Optimal Conditions',
-    thumbnailAsset: 'assets/images/step2.png',
-    content: [],
-  ),
-  Section(
-    title: 'Seed & Sowing',
-    description: 'Prep & Planting',
-    thumbnailAsset: 'assets/images/step3.png',
-    content: [],
-  ),
-  Section(
-    title: 'Nutrient Management',
-    description: 'Best Fertilization',
-    thumbnailAsset: 'assets/images/step4.png',
-    content: [],
-  ),
-  Section(
-    title: 'Field Care',
-    description: 'Protection & Irrigation',
-    thumbnailAsset: 'assets/images/step5.png',
-    content: [],
-  ),
-  Section(
-    title: 'Harvest & Storage',
-    description: 'End of Cycle',
-    thumbnailAsset: 'assets/images/step6.png',
-    content: [],
-  ),
-];
-
-class InstructionsScreen extends StatelessWidget {
+class InstructionsScreen extends StatefulWidget {
   const InstructionsScreen({super.key});
 
-  String _getTranslatedTitle(BuildContext context, int index) {
-    final String locale = Localizations.localeOf(context).languageCode;
+  @override
+  State<InstructionsScreen> createState() => _InstructionsScreenState();
+}
+
+class _InstructionsScreenState extends State<InstructionsScreen> {
+  String _currentLocale = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentLocale = prefs.getString('appLanguage') ?? 'en';
+    });
+  }
+
+  String _getTranslatedTitle(int index) {
+    final String locale = _currentLocale;
     final Map<String, List<String>> translations = {
       'en': [
         'Introduction',
@@ -222,8 +156,8 @@ class InstructionsScreen extends StatelessWidget {
     return (index >= 0 && index < list.length) ? list[index] : list[0];
   }
 
-  String _getTranslatedDescription(BuildContext context, int index) {
-    final String locale = Localizations.localeOf(context).languageCode;
+  String _getTranslatedDescription(int index) {
+    final String locale = _currentLocale;
     final Map<String, List<String>> translations = {
       'en': [
         'Get to know about Potato',
@@ -341,24 +275,32 @@ class InstructionsScreen extends StatelessWidget {
               width: double.infinity,
               color: primaryColor,
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                    onPressed: () => Navigator.pop(context),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          size: 22,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Instructions',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Instructions',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
+                  _buildLanguagePicker(),
                 ],
               ),
             ),
@@ -372,8 +314,8 @@ class InstructionsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                 itemCount: 6,
                 itemBuilder: (context, i) {
-                  final sectionTitle = _getTranslatedTitle(context, i);
-                  final sectionDesc = _getTranslatedDescription(context, i);
+                  final sectionTitle = _getTranslatedTitle(i);
+                  final sectionDesc = _getTranslatedDescription(i);
                   final thumb = 'assets/images/step${i + 1}.png';
 
                   return Container(
@@ -394,15 +336,16 @@ class InstructionsScreen extends StatelessWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(24),
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => StepDetailScreen(
-                                stepIndex: i + 1,
-                                title: sectionTitle,
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => StepDetailScreen(
+                                  stepIndex: i + 1,
+                                  title: sectionTitle,
+                                  locale: _currentLocale,
+                                ),
                               ),
-                            ),
-                          );
+                            );
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -486,117 +429,35 @@ class InstructionsScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionCardDelegate extends SliverPersistentHeaderDelegate {
-  final Section section;
-  final int index;
-  final VoidCallback onTap;
-
-  final double _maxExtent = 145.0;
-  final double _minExtent = 0.0;
-
-  _SectionCardDelegate({
-    required this.section,
-    required this.index,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: _maxExtent,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 15),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFFFF),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.asset(
-                        section.thumbnailAsset,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 80,
-                            height: 80,
-                            color: const Color(0xFFFFB3B3),
-                            child: const Center(
-                              child: Icon(Icons.broken_image,
-                                  color: Colors.white),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            section.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            section.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, size: 16),
-                  ],
-                ),
-              ),
-            ),
-          ),
+  Widget _buildLanguagePicker() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: PopupMenuButton<String>(
+        icon: const Icon(
+          Icons.translate,
+          color: Colors.white,
+          size: 26,
         ),
+        tooltip: 'Change Language',
+        onSelected: (String code) async {
+          setState(() => _currentLocale = code);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('appLanguage', code);
+        },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'en', child: Text("English")),
+        const PopupMenuItem(value: 'hi', child: Text("हिन्दी (Hindi)")),
+        const PopupMenuItem(value: 'ta', child: Text("தமிழ் (Tamil)")),
+        const PopupMenuItem(value: 'te', child: Text("తెలుగు (Telugu)")),
+        const PopupMenuItem(value: 'kn', child: Text("ಕನ್ನಡ (Kannada)")),
+        const PopupMenuItem(value: 'mr', child: Text("मराठी (Marathi)")),
+        const PopupMenuItem(value: 'pa', child: Text("ਪੰਜਾਬੀ (Punjabi)")),
+        const PopupMenuItem(value: 'gu', child: Text("ગુજરાતી (Gujarati)")),
+        const PopupMenuItem(value: 'bn', child: Text("বাংলা (Bengali)")),
+        const PopupMenuItem(value: 'ml', child: Text("മലയാളം (Malayalam)")),
+        const PopupMenuItem(value: 'ur', child: Text("اردو (Urdu)")),
       ],
+      ),
     );
-  }
-
-  @override
-  double get maxExtent => _maxExtent;
-
-  @override
-  double get minExtent => _minExtent;
-
-  @override
-  bool shouldRebuild(covariant _SectionCardDelegate oldDelegate) {
-    return oldDelegate.section != section;
   }
 }

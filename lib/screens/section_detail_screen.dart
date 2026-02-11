@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'instructions_screen.dart';
+import '../models/instruction_section.dart';
 
 class _BottomCurveClipper extends CustomClipper<Path> {
   @override
@@ -40,7 +40,7 @@ class SectionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryPurple = Color.fromARGB(255, 127, 61, 255);
+    const primaryOrange = Color(0xFFFF9644);
     final section = sections[sectionIndex];
     final nextSectionIndex =
     sectionIndex + 1 < sections.length ? sectionIndex + 1 : null;
@@ -63,7 +63,7 @@ class SectionDetailScreen extends StatelessWidget {
                 bottom: 18,
               ),
               width: double.infinity,
-              color: primaryPurple,
+              color: primaryOrange,
               child: Row(
                 children: [
                   IconButton(
@@ -235,7 +235,7 @@ class SectionDetailScreen extends StatelessWidget {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: primaryPurple.withOpacity(0.3),
+                                color: primaryOrange.withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               child: Row(

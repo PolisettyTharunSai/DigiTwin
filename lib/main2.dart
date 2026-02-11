@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const WheatApp());
+  runApp(const PotatoApp());
 }
 
-class WheatApp extends StatelessWidget {
-  const WheatApp({super.key});
+class PotatoApp extends StatelessWidget {
+  const PotatoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Wheat Planting Guide',
+      title: 'Potato Planting Guide',
       theme: ThemeData(
         primarySwatch: Colors.purple,
         useMaterial3: true,
@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: const Center(
-        child: Text('Welcome to Wheat Planting App\nClick the (i) button for instructions', textAlign: TextAlign.center),
+        child: Text('Welcome to Potato Planting App\nClick the (i) button for instructions', textAlign: TextAlign.center),
       ),
     );
   }
@@ -123,7 +123,7 @@ class InstructionsScreen extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(20.0),
             child: Text(
-              'Things to know before\nplanting wheat',
+              'Things to know before\nplanting potato',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
             ),
           ),

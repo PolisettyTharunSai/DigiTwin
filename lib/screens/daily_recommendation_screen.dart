@@ -25,15 +25,31 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
       final path = 'assets/Data/day$i/day$i.txt';
       try {
         final data = await rootBundle.loadString(path);
-        final lines = data.split('
-');
+        final lines = data.split('\n'); // FIX: Use '\n' to split lines
+        
         final recommendation = {
           'day': 'Day $i',
-          'crop_stage': lines[0].split(': ')[1],
-          'water_requirement': lines[1].split(': ')[1],
-          'nutrient_application': lines[2].split(': ')[1],
+          'crop_stage': 'Not available',
+          'water_requirement': 'Not available',
+          'nutrient_application': 'Not available',
         };
-        recommendations.add(recommendation);
+
+        for (final line in lines) {
+          if (line.startsWith('Crop stage:')) {
+            recommendation['crop_stage'] = line.substring('Crop stage: '.length).trim();
+          } else if (line.startsWith('Water requirement:')) {
+            recommendation['water_requirement'] = line.substring('Water requirement: '.length).trim();
+          } else if (line.startsWith('Nutrient application:')) {
+            recommendation['nutrient_application'] = line.substring('Nutrient application: '.length).trim();
+          }
+        }
+        
+        if (recommendation['crop_stage'] != 'Not available' ||
+            recommendation['water_requirement'] != 'Not available' ||
+            recommendation['nutrient_application'] != 'Not available') {
+          recommendations.add(recommendation);
+        }
+
       } catch (e) {
         // Handle file not found or other errors
         print('Error loading recommendation for day $i: $e');

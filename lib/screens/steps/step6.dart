@@ -10,16 +10,20 @@ class Step6Content extends StatelessWidget {
   static const Color accentGreen = Color(0xFF562F00);
   static const Color warningRed = Color(0xFFFD3C4A);
 
+  // Helper method to fetch translated strings
+  String _t(String key) {
+    // 1. Clean the locale string (extract 'hi' from 'hi_IN')
+    final String cleanCode = locale.split(RegExp('[-_]'))[0].toLowerCase();
+    // 2. Fetch the data map for that code
+    final Map<String, String> translationMap = Step6Translations.getContent(cleanCode);
+    // 3. Return the key or fallback to English
+    return translationMap[key] ?? Step6Translations.getContent('en')[key] ?? '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final double imageHeight = MediaQuery.of(context).size.height / 4;
-
-    // Use the locale passed down from parent (placeholder). Fallback to system locale if empty.
-    final String effectiveLocale = (locale.isNotEmpty)
-        ? locale
-        : Localizations.localeOf(context).languageCode;
-    debugPrint("Step6Content rebuilding with locale: $effectiveLocale");
-    final Map<String, String> t = Step6Translations.getContent(effectiveLocale);
+    debugPrint("Step6Content rebuilding with locale: $locale");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,25 +52,25 @@ class Step6Content extends StatelessWidget {
         const SizedBox(height: 20),
 
         // --- SECTION HEADER ---
-        _buildHeader(t['main_header'] ?? ""),
+        _buildHeader(_t('main_header')),
         const SizedBox(height: 20),
 
         // --- 6.1 HARVESTING ---
-        _buildSubHeading(t['harvest_title'] ?? ""),
+        _buildSubHeading(_t('harvest_title')),
         _buildInfoCard(
-          t['harvest_info'] ?? "",
+          _t('harvest_info'),
           icon: Icons.auto_awesome_rounded,
         ),
         const SizedBox(height: 12),
-        _buildWarningBox(t['harvest_warning'] ?? ""),
+        _buildWarningBox(_t('harvest_warning')),
         const SizedBox(height: 15),
 
         Row(
           children: [
             Expanded(
               child: _buildMiniCard(
-                t['manual_label'] ?? "",
-                t['manual_desc'] ?? "",
+                _t('manual_label'),
+                _t('manual_desc'),
                 Icons.front_hand,
                 Colors.orange,
               ),
@@ -74,8 +78,8 @@ class Step6Content extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _buildMiniCard(
-                t['mechanical_label'] ?? "",
-                t['mechanical_desc'] ?? "",
+                _t('mechanical_label'),
+                _t('mechanical_desc'),
                 Icons.agriculture,
                 Colors.blue,
               ),
@@ -84,8 +88,8 @@ class Step6Content extends StatelessWidget {
         ),
         const SizedBox(height: 15),
         _buildRequirementBox(
-          title: t['haulm_title'] ?? "",
-          desc: t['haulm_desc'] ?? "",
+          title: _t('haulm_title'),
+          desc: _t('haulm_desc'),
           icon: Icons.content_cut_rounded,
           color: Colors.teal,
         ),
@@ -94,76 +98,76 @@ class Step6Content extends StatelessWidget {
 
         // --- EXPECTED YIELD TABLE ---
         Text(
-          t['yield_table_title'] ?? "",
+          _t('yield_table_title'),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         _buildSimpleTable([
-          [t['yield_early_label'] ?? "", t['yield_early_val'] ?? ""],
-          [t['yield_main_label'] ?? "", t['yield_main_val'] ?? ""],
-          [t['yield_late_label'] ?? "", t['yield_late_val'] ?? ""],
+          [_t('yield_early_label'), _t('yield_early_val')],
+          [_t('yield_main_label'), _t('yield_main_val')],
+          [_t('yield_late_label'), _t('yield_late_val')],
         ]),
 
         const SizedBox(height: 25),
 
         // --- 6.2 GRADING ---
-        _buildSubHeading(t['grading_title'] ?? ""),
-        _buildGradeTable(t),
+        _buildSubHeading(_t('grading_title')),
+        _buildGradeTable(),
         const SizedBox(height: 8),
-        _buildInfoCard(t['grading_tip'] ?? "", icon: Icons.lightbulb_outline),
+        _buildInfoCard(_t('grading_tip'), icon: Icons.lightbulb_outline),
 
         const SizedBox(height: 25),
 
         // --- 6.3 & 6.4 CURING & STORAGE ---
-        _buildSubHeading(t['storage_title'] ?? ""),
+        _buildSubHeading(_t('storage_title')),
         _buildRequirementBox(
-          title: t['curing_title'] ?? "",
-          desc: t['curing_desc'] ?? "",
+          title: _t('curing_title'),
+          desc: _t('curing_desc'),
           icon: Icons.healing_rounded,
           color: Colors.blueAccent,
         ),
         const SizedBox(height: 10),
         _buildRequirementBox(
-          title: t['cold_storage_title'] ?? "",
-          desc: t['cold_storage_desc'] ?? "",
+          title: _t('cold_storage_title'),
+          desc: _t('cold_storage_desc'),
           icon: Icons.ac_unit_rounded,
           color: Colors.cyan,
         ),
         const SizedBox(height: 10),
-        _buildWarningBox(t['storage_problems'] ?? ""),
+        _buildWarningBox(_t('storage_problems')),
 
         const SizedBox(height: 25),
 
         // --- 6.6 MARKETING & VALUE ADDED ---
-        _buildSubHeading(t['marketing_title'] ?? ""),
+        _buildSubHeading(_t('marketing_title')),
         _buildPestRow(
-          t['channels_label'] ?? "",
-          t['channels_desc'] ?? "",
+          _t('channels_label'),
+          _t('channels_desc'),
           Icons.hub_rounded,
           Colors.indigo,
         ),
         _buildPestRow(
-          t['value_added_label'] ?? "",
-          t['value_added_desc'] ?? "",
+          _t('value_added_label'),
+          _t('value_added_desc'),
           Icons.fastfood_rounded,
           Colors.amber,
         ),
         const SizedBox(height: 10),
         _buildInfoCard(
-          t['economic_tip'] ?? "",
+          _t('economic_tip'),
           icon: Icons.attach_money_rounded,
         ),
 
         const SizedBox(height: 25),
 
         // --- 6.7 TRANSPORTATION ---
-        _buildSubHeading(t['transport_title'] ?? ""),
-        _buildTransportCard(t),
+        _buildSubHeading(_t('transport_title')),
+        _buildTransportCard(),
 
         const SizedBox(height: 30),
 
         // --- FINAL PRE-PLANTING CHECKLIST ---
-        _buildFinalChecklist(t),
+        _buildFinalChecklist(),
 
         const SizedBox(height: 100),
       ],
@@ -235,7 +239,7 @@ class Step6Content extends StatelessWidget {
     );
   }
 
-  Widget _buildGradeTable(Map<String, String> t) {
+  Widget _buildGradeTable() {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -254,22 +258,22 @@ class Step6Content extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    t['table_grade'] ?? "",
+                    _t('table_grade'),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    t['table_weight'] ?? "",
+                    _t('table_weight'),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
-            _buildTableRow(t['grade_a_label'] ?? "", t['grade_a_val'] ?? ""),
-            _buildTableRow(t['grade_b_label'] ?? "", t['grade_b_val'] ?? ""),
-            _buildTableRow(t['grade_c_label'] ?? "", t['grade_c_val'] ?? ""),
+            _buildTableRow(_t('grade_a_label'), _t('grade_a_val')),
+            _buildTableRow(_t('grade_b_label'), _t('grade_b_val')),
+            _buildTableRow(_t('grade_c_label'), _t('grade_c_val')),
           ],
         ),
       ),
@@ -294,7 +298,7 @@ class Step6Content extends StatelessWidget {
     );
   }
 
-  Widget _buildTransportCard(Map<String, String> t) {
+  Widget _buildTransportCard() {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -304,18 +308,18 @@ class Step6Content extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _TransportItem(icon: Icons.air, text: t['transport_vent'] ?? ""),
+          _TransportItem(icon: Icons.air, text: _t('transport_vent')),
           _TransportItem(
             icon: Icons.wb_twilight,
-            text: t['transport_hours'] ?? "",
+            text: _t('transport_hours'),
           ),
-          _TransportItem(icon: Icons.umbrella, text: t['transport_prot'] ?? ""),
+          _TransportItem(icon: Icons.umbrella, text: _t('transport_prot')),
         ],
       ),
     );
   }
 
-  Widget _buildFinalChecklist(Map<String, String> t) {
+  Widget _buildFinalChecklist() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -328,7 +332,7 @@ class Step6Content extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            t['checklist_title'] ?? "",
+            _t('checklist_title'),
             style: const TextStyle(
               color: primaryPurple,
               fontWeight: FontWeight.w900,
@@ -337,12 +341,12 @@ class Step6Content extends StatelessWidget {
             ),
           ),
           const Divider(height: 24, thickness: 1),
-          _buildCheckItem(t['check_1'] ?? ""),
-          _buildCheckItem(t['check_2'] ?? ""),
-          _buildCheckItem(t['check_3'] ?? ""),
-          _buildCheckItem(t['check_4'] ?? ""),
-          _buildCheckItem(t['check_5'] ?? ""),
-          _buildCheckItem(t['check_6'] ?? ""),
+          _buildCheckItem(_t('check_1')),
+          _buildCheckItem(_t('check_2')),
+          _buildCheckItem(_t('check_3')),
+          _buildCheckItem(_t('check_4')),
+          _buildCheckItem(_t('check_5')),
+          _buildCheckItem(_t('check_6')),
         ],
       ),
     );

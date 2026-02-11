@@ -217,8 +217,8 @@ class _SplashScreenState extends State<SplashScreen>
                               padding: const EdgeInsets.only(bottom: 80),
                               child: Image.asset(
                                 'assets/Icons/splash.png',
-                                width: 120,
-                                height: 120,
+                                width: 170,
+                                height: 170,
                                 color: accentColor,
                                 fit: BoxFit.contain,
                               ),
@@ -229,7 +229,7 @@ class _SplashScreenState extends State<SplashScreen>
                             offset: Offset(0, _textTranslateAnim.value),
                             child: const Padding(
                               // Reduced top padding to move text UP
-                              padding: EdgeInsets.only(top: 100),
+                              padding: EdgeInsets.only(top: 125),
                               child: Text(
                                 "Digital Twin",
                                 style: TextStyle(

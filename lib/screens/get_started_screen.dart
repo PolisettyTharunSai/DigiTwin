@@ -113,7 +113,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
           if (isCropPlanted) {
             final plantingData = PlantingData(
               farmerName: name ?? '',
-              crop: profileData['crop'] ?? 'Wheat',
+              crop: profileData['crop'] ?? 'Potato',
               date: profileData['planting_date'] ?? '',
               latitude: (profileData['latitude'] as num?)?.toDouble() ?? 0.0,
               longitude: (profileData['longitude'] as num?)?.toDouble() ?? 0.0,

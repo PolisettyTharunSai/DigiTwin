@@ -11,8 +11,14 @@ class Step1Content extends StatelessWidget {
 
   // Helper method to fetch translations
   String _t(String key) {
-    return Step1Translations.data[locale]?[key] ??
-        Step1Translations.data['en']![key]!; // Fallback to English
+    // 1. Clean the locale string (extract 'hi' from 'hi_IN')
+    final String cleanCode = locale.split(RegExp('[-_]'))[0].toLowerCase();
+
+    // 2. Fetch the data map for that code
+    final Map<String, String> translationMap = Step1Translations.getContent(cleanCode);
+
+    // 3. Return the key or fallback to English
+    return translationMap[key] ?? Step1Translations.getContent('en')[key] ?? '';
   }
 
   @override

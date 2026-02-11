@@ -34,7 +34,7 @@ class PlantingData {
   factory PlantingData.fromJson(Map<String, dynamic> json) {
     return PlantingData(
       farmerName: json['farmerName'] ?? '',
-      crop: json['crop'] ?? 'Wheat',
+      crop: json['crop'] ?? 'Potato',
       date: json['date'] ?? '',
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
