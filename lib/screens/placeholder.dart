@@ -124,7 +124,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     'kn': {
       'title': 'ಆಲೂಗಡ್ಡೆ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ',
       'step': 'ಹಂತ',
-      'plant_crop': 'ನಿಮ್ಮ ಆಲೂಗಡ್ಡೆಯನ್ನು ನೆಡಿ',
+      'plant_crop': 'ನಿಮ್ಮ ಆಲೂಗಡೆಯನ್ನು ನೆಡಿ',
       'f_name': 'ರೈತರ ಹೆಸರು',
       'potato': 'ಆಲೂಗಡ್ಡೆ',
       'notes': 'ಟಿಪ್ಪಣಿಗಳು',
@@ -135,10 +135,10 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'confirm': 'ದೃಢೀಕರಿಸಿ',
       'plant': 'ನೆಡಿ',
       'err_loc': 'ಸ್ಥಳವನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ',
-      'err_fill': 'ದಯವಿಟ್ಟು ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
+      'err_fill': 'ದಯವಿಟ್ಟು ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಭಭರ್ತಿ ಮಾಡಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ಸೆರೆಹಿಡಿಯಿರಿ',
       'farmer': 'ರೈತ',
       'crop': 'ಬೆಳೆ',
-      'date': 'ದಿನಾಂక',
+      'date': 'ದಿನಾಂಕ',
       'loc': 'ಸ್ಥಳ',
       'exact': 'ನಿಖರ',
       'approx': 'ಅಂದಾಜು',
@@ -184,7 +184,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'crop': 'ਫਸਲ',
       'date': 'ਤਾਰੀਖ',
       'loc': 'ਲੋਕੇਸ਼ਨ',
-      'exact': 'ਸਹੀ',
+      'exact': 'सही',
       'approx': 'ਲਗਭਗ',
     },
     'bn': {
@@ -232,7 +232,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'approx': 'આશરે',
     },
     'ml': {
-      'title': 'ഉരുളക്കിഴങ്ങ് കാർഷിക ഗൈഡ്',
+      'title': 'ഉരുളക്കിഴങ്ങ് കാർഷിക గైడ్',
       'step': 'ഘട്ടം',
       'plant_crop': 'ഉരുളക്കിഴങ്ങ് ഇറക്കുക',
       'f_name': 'കർഷകന്റെ പേര്',
@@ -240,7 +240,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'notes': 'കുറിപ്പുകൾ',
       'capture': 'ലൊക്കേഷൻ എടുക്കുക',
       'confirm_p': 'ഉറപ്പാക്കുക',
-      'review': 'വിവരങ്ങൾ പരിശോധിക്കുക',
+      'review': 'വിവരങ്ങൾ పరిశీలించండి',
       'edit': 'തിരുത്തുക',
       'confirm': 'സ്ഥിരീകരിക്കുക',
       'plant': 'വിള',
@@ -248,13 +248,13 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
       'err_fill': 'വിവരങ്ങൾ പൂരിപ്പിച്ച് ലൊക്കേഷൻ എടുക്കുക',
       'farmer': 'കർഷകൻ',
       'crop': 'വിള',
-      'date': 'തീയതി',
+      'date': 'తీయతి',
       'loc': 'ലൊക്കേഷൻ',
       'exact': 'കൃത്യമായ',
       'approx': 'ഏകദേശ',
     },
     'ur': {
-      'title': 'آلو کی زرعی گائیڈ',
+      'title': 'آلو کی زرعی గైడ్',
       'step': 'مرحلہ',
       'plant_crop': 'اپنے آلو لگائیں',
       'f_name': 'کسان کا نام',
@@ -301,11 +301,36 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('farmerName');
     final savedLang = prefs.getString('appLanguage');
+    
     if (mounted) {
       setState(() {
         if (savedName != null) _nameController.text = savedName;
         if (savedLang != null) _currentLocale = savedLang;
       });
+    }
+
+    // Always try to get the freshest name from Supabase profile table
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      try {
+        final data = await Supabase.instance.client
+            .from('profile')
+            .select('name')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+        if (data != null && data['name'] != null) {
+          final freshName = data['name'] as String;
+          if (mounted) {
+            setState(() {
+              _nameController.text = freshName;
+            });
+          }
+          await prefs.setString('farmerName', freshName);
+        }
+      } catch (e) {
+        debugPrint("Error fetching profile name: $e");
+      }
     }
   }
 
@@ -404,10 +429,10 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 30),
                       child: Column(
                         children: [
-                          _buildField(
+                          // Farmer Name Field (Read Only - using static display to prevent focus/edit)
+                          _buildReadOnlyDisplayField(
                             Icons.person_outline,
-                            _t('f_name'),
-                            _nameController,
+                            _nameController.text,
                           ),
                           _buildCropField(),
                           _buildField(
@@ -469,11 +494,39 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
     );
   }
 
+  Widget _buildReadOnlyDisplayField(IconData icon, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: primaryPurple, size: 16),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildField(
       IconData icon,
       String hint,
       TextEditingController? controller, {
         bool isReadOnly = false,
+        bool enabled = true,
         VoidCallback? onTap,
         bool isPlaceholder = false,
       }) {
@@ -484,6 +537,7 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
         child: TextField(
           controller: controller,
           readOnly: isReadOnly,
+          enabled: enabled,
           onTap: onTap,
           style: TextStyle(
             fontSize: 12,
@@ -496,6 +550,10 @@ class _PlaceholderScreenState extends State<PlaceholderScreen> {
             contentPadding: const EdgeInsets.symmetric(
               vertical: 0,
               horizontal: 10,
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
