@@ -34,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? plantationDate;
   bool show3DModel = false;
 
-  final CarouselSliderController _carouselController = CarouselSliderController();
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
   Timer? _autoScrollTimer;
   bool _hasTodayLogSubmitted = false;
 
@@ -58,7 +59,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (plantationDate == null) return 1;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final start = DateTime(plantationDate!.year, plantationDate!.month, plantationDate!.day);
+    final start = DateTime(
+      plantationDate!.year,
+      plantationDate!.month,
+      plantationDate!.day,
+    );
     final diff = today.difference(start).inDays;
     return (diff + 1).clamp(1, 109);
   }
@@ -66,11 +71,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkDailyPopup() async {
     final prefs = await SharedPreferences.getInstance();
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    
+
     // Get the last checked date from SharedPreferences
     final String? lastCheckedDate = prefs.getString('last_daily_check_date');
-    final bool? cachedSubmissionStatus = prefs.getBool('has_today_log_submitted');
-    
+    final bool? cachedSubmissionStatus = prefs.getBool(
+      'has_today_log_submitted',
+    );
+
     // If it's a new day, reset the submission status
     if (lastCheckedDate != today) {
       // New day - check database to see if today's log exists
@@ -81,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _hasTodayLogSubmitted = cachedSubmissionStatus ?? false;
       });
     }
-    
+
     // Show popup if log not submitted
     if (!_hasTodayLogSubmitted) {
       if (mounted) {
@@ -90,11 +97,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _checkDatabaseForTodayLog(String today, SharedPreferences prefs) async {
+  Future<void> _checkDatabaseForTodayLog(
+    String today,
+    SharedPreferences prefs,
+  ) async {
     try {
       final supabase = Supabase.instance.client;
       final user = supabase.auth.currentUser;
-      
+
       if (user != null) {
         // Query database to check if today's log exists
         final response = await supabase
@@ -103,13 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
             .eq('user_id', user.id)
             .eq('log_date', today)
             .maybeSingle();
-        
+
         final bool logExists = response != null;
-        
+
         // Update SharedPreferences with the database result
         await prefs.setString('last_daily_check_date', today);
         await prefs.setBool('has_today_log_submitted', logExists);
-        
+
         setState(() {
           _hasTodayLogSubmitted = logExists;
         });
@@ -117,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // No user logged in - reset to false
         await prefs.setString('last_daily_check_date', today);
         await prefs.setBool('has_today_log_submitted', false);
-        
+
         setState(() {
           _hasTodayLogSubmitted = false;
         });
@@ -127,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // On error, assume not submitted
       await prefs.setString('last_daily_check_date', today);
       await prefs.setBool('has_today_log_submitted', false);
-      
+
       setState(() {
         _hasTodayLogSubmitted = false;
       });
@@ -136,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadFarmerAndPlantation() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Load from local storage first for instant feedback
     setState(() {
       farmerName = prefs.getString('farmerName') ?? "Farmer";
@@ -157,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
             .select('name, planting_date')
             .eq('id', user.id)
             .maybeSingle();
-        
+
         if (res != null) {
           setState(() {
             if (res['name'] != null) {
@@ -167,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (res['planting_date'] != null) {
               String dateStr = res['planting_date'];
               DateTime? parsed = DateTime.tryParse(dateStr);
-              
+
               if (parsed == null) {
                 try {
                   parsed = DateFormat("d/M/yyyy").parse(dateStr);
@@ -177,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   } catch (_) {}
                 }
               }
-              
+
               if (parsed != null) {
                 plantationDate = parsed;
                 prefs.setString('plantingDate', parsed.toIso8601String());
@@ -202,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       setState(() {
         dayText =
-        "• Crop stage: Emergence (Germination)\n• Water requirement: 0 ml/plant\n• Nutrient application: None";
+            "• Crop stage: Emergence (Germination)\n• Water requirement: 0 ml/plant\n• Nutrient application: None";
       });
     }
   }
@@ -212,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final date = startDate.add(Duration(days: currentDay - 1));
     final day = date.day;
     final monthAbbr = DateFormat('MMM').format(date).toLowerCase();
-    
+
     // Repository month folders: "December 2025", "Jan 2026", "Feb 2026"
     String monthYearFolder;
     if (date.month == 12) {
@@ -220,18 +230,15 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       monthYearFolder = "${DateFormat('MMM').format(date)} ${date.year}";
     }
-    
+
     // Repository day folders: "10 dec", "1 jan", "4 feb" (no ordinals)
     final dayFolder = "$day $monthAbbr";
 
-    return List.generate(
-      10,
-        (i) {
-          final frameName = "frame_${(i).toString().padLeft(3, '0')}.webp";
-          // Using jsDelivr CDN for better performance and caching
-          return "https://cdn.jsdelivr.net/gh/PolisettyTharunSai/DigiTwin@Data/potato_extracted_frames_comp/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName";
-        }
-    );
+    return List.generate(10, (i) {
+      final frameName = "frame_${(i).toString().padLeft(3, '0')}.webp";
+      // Using jsDelivr CDN for better performance and caching
+      return "https://cdn.jsdelivr.net/gh/PolisettyTharunSai/DigiTwin@Data/potato_extracted_frames_comp/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName";
+    });
   }
 
   String _getModelUrl() {
@@ -248,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _autoScrollTimer?.cancel();
         return;
       }
-      
+
       try {
         _carouselController.nextPage();
       } catch (e) {
@@ -259,11 +266,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _pickViewingDate() async {
     if (plantationDate == null) return;
-    
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: plantationDate!.add(Duration(days: currentDay - 1)).isBefore(plantationDate!) 
-          ? plantationDate! 
+      initialDate:
+          plantationDate!
+              .add(Duration(days: currentDay - 1))
+              .isBefore(plantationDate!)
+          ? plantationDate!
           : plantationDate!.add(Duration(days: currentDay - 1)),
       firstDate: plantationDate!,
       lastDate: plantationDate!.add(const Duration(days: 108)),
@@ -295,10 +305,8 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FullScreenImageGallery(
-          images: images,
-          initialIndex: index,
-        ),
+        builder: (context) =>
+            FullScreenImageGallery(images: images, initialIndex: index),
       ),
     );
   }
@@ -363,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       // Sign out from Supabase
       await Supabase.instance.client.auth.signOut();
-      
+
       // Clear local preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
@@ -377,9 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error logging out: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error logging out: $e')));
       }
     }
   }
@@ -389,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final images = _getImages();
     final modelUrl = _getModelUrl();
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageWidth = screenWidth * 0.85; 
+    final imageWidth = screenWidth * 0.85;
     final imageHeight = imageWidth * 1.5;
 
     return Scaffold(
@@ -416,67 +424,81 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap: _showLogoutConfirmation,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.logout,
-                                size: 16,
-                                color: Colors.red.shade700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Hi $farmerName!",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: _showLogoutConfirmation,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.logout,
+                                  size: 16,
+                                  color: Colors.red.shade700,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Column(
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    "Planting Date",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
                                   Text(
-                                    plantationDate != null
-                                        ? DateFormat('dd MMM yyyy').format(plantationDate!)
-                                        : "Not Set",
+                                    "Hi $farmerName!",
                                     style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w500,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Planting Date",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: primaryColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          plantationDate != null
+                                              ? DateFormat(
+                                                  'dd MMM yyyy',
+                                                ).format(plantationDate!)
+                                              : "Not Set",
+                                          style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 12),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             decoration: BoxDecoration(
@@ -493,7 +515,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               clipBehavior: Clip.none,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.assignment_turned_in_outlined, color: primaryColor),
+                                  icon: const Icon(
+                                    Icons.assignment_turned_in_outlined,
+                                    color: primaryColor,
+                                  ),
                                   onPressed: () async {
                                     await _showDailyCheckPopup();
                                     // Refresh the status after showing the popup
@@ -534,11 +559,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.info_outline, color: primaryColor),
+                              icon: const Icon(
+                                Icons.info_outline,
+                                color: primaryColor,
+                              ),
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const InstructionsScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) => const InstructionsScreen(),
+                                  ),
                                 );
                               },
                             ),
@@ -556,11 +586,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.calendar_today_outlined, color: primaryColor),
+                              icon: const Icon(
+                                Icons.calendar_today_outlined,
+                                color: primaryColor,
+                              ),
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DailyRecommendationScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const DailyRecommendationScreen(),
+                                  ),
                                 );
                               },
                               tooltip: "Daily Recommendations",
@@ -581,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 100),
                           child: GestureDetector(
-                          onTap: () {
+                            onTap: () {
                               setState(() {
                                 show3DModel = !show3DModel;
                                 if (!show3DModel) {
@@ -597,22 +633,28 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(25),
-                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
                               ),
                               child: Stack(
                                 children: [
                                   AnimatedAlign(
                                     duration: const Duration(milliseconds: 250),
                                     curve: Curves.easeInOut,
-                                    alignment: show3DModel ? Alignment.centerRight : Alignment.centerLeft,
+                                    alignment: show3DModel
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
                                     child: Container(
-                                      width: (screenWidth - 200 - 8) / 2, 
+                                      width: (screenWidth - 200 - 8) / 2,
                                       decoration: BoxDecoration(
                                         color: primaryColor,
                                         borderRadius: BorderRadius.circular(20),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: primaryColor.withOpacity(0.3),
+                                            color: primaryColor.withOpacity(
+                                              0.3,
+                                            ),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
@@ -627,7 +669,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           child: Text(
                                             "2D",
                                             style: TextStyle(
-                                              color: !show3DModel ? Colors.white : Colors.grey.shade700,
+                                              color: !show3DModel
+                                                  ? Colors.white
+                                                  : Colors.grey.shade700,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
                                             ),
@@ -639,7 +683,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           child: Text(
                                             "3D",
                                             style: TextStyle(
-                                              color: show3DModel ? Colors.white : Colors.grey.shade700,
+                                              color: show3DModel
+                                                  ? Colors.white
+                                                  : Colors.grey.shade700,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
                                             ),
@@ -658,7 +704,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: imageHeight,
                           child: show3DModel
                               ? _buildTodayModel(modelUrl)
-                              : _build2DCarousel(images, imageWidth, imageHeight),
+                              : _build2DCarousel(
+                                  images,
+                                  imageWidth,
+                                  imageHeight,
+                                ),
                         ),
                         const SizedBox(height: 15),
                         if (!show3DModel)
@@ -668,11 +718,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               final active = i == currentImageIndex;
                               return AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
                                 width: active ? 18 : 6,
                                 height: 6,
                                 decoration: BoxDecoration(
-                                  color: active ? primaryColor : Colors.grey.shade300,
+                                  color: active
+                                      ? primaryColor
+                                      : Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               );
@@ -680,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         const SizedBox(height: 24),
                         _buildModernInsights(),
-                        const SizedBox(height: 120), 
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
@@ -712,16 +766,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _circleNav(
                     icon: Icons.chevron_left,
-                    onTap: currentDay > 1 ? () {
-                      setState(() {
-                        currentDay--;
-                        currentImageIndex = 0;
-                      });
-                      _loadDayData();
-                    } : null,
+                    onTap: currentDay > 1
+                        ? () {
+                            setState(() {
+                              currentDay--;
+                              currentImageIndex = 0;
+                            });
+                            _loadDayData();
+                          }
+                        : null,
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -740,20 +799,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 8),
                         GestureDetector(
                           onTap: _pickViewingDate,
-                          child: const Icon(Icons.calendar_month, color: primaryColor, size: 20),
+                          child: const Icon(
+                            Icons.calendar_month,
+                            color: primaryColor,
+                            size: 20,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   _circleNav(
                     icon: Icons.chevron_right,
-                    onTap: currentDay < 109 ? () {
-                      setState(() {
-                        currentDay++;
-                        currentImageIndex = 0;
-                      });
-                      _loadDayData();
-                    } : null,
+                    onTap: currentDay < 109
+                        ? () {
+                            setState(() {
+                              currentDay++;
+                              currentImageIndex = 0;
+                            });
+                            _loadDayData();
+                          }
+                        : null,
                   ),
                 ],
               ),
@@ -787,8 +852,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (var line in lines) {
       if (line.contains("stage:")) stage = line.split("stage:")[1].trim();
-      if (line.contains("requirement:")) water = line.split("requirement:")[1].trim();
-      if (line.contains("application:")) nutrients = line.split("application:")[1].trim();
+      if (line.contains("requirement:"))
+        water = line.split("requirement:")[1].trim();
+      if (line.contains("application:"))
+        nutrients = line.split("application:")[1].trim();
     }
 
     return Padding(
@@ -811,24 +878,22 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Column(
                   children: [
-                    Row(
-                      children: [
-                        _insightCard(
-                          icon: Icons.eco_outlined,
-                          label: "Stage",
-                          value: stage,
-                          color: primaryColor.withOpacity(0.1),
-                          iconColor: primaryColor,
-                        ),
-                        const SizedBox(width: 12),
-                        _insightCard(
-                          icon: Icons.water_drop_outlined,
-                          label: "Water",
-                          value: water,
-                          color: Colors.blue.withOpacity(0.1),
-                          iconColor: Colors.blue,
-                        ),
-                      ],
+                    _insightCard(
+                      icon: Icons.eco_outlined,
+                      label: "Stage",
+                      value: stage,
+                      color: Colors.green.withOpacity(0.12),
+                      iconColor: Colors.green,
+                      fullWidth: true,
+                    ),
+                    const SizedBox(height: 12),
+                    _insightCard(
+                      icon: Icons.water_drop_outlined,
+                      label: "Water",
+                      value: _formatWaterText(water),
+                      color: Colors.blue.withOpacity(0.1),
+                      iconColor: Colors.blue,
+                      fullWidth: true,
                     ),
                     const SizedBox(height: 12),
                     _insightCard(
@@ -849,13 +914,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _formatWaterText(String water) {
+    final lower = water.toLowerCase().trim();
+    if (RegExp(r'^0+(?:\.0+)?\s*ml').hasMatch(lower)) {
+      return "No water required";
+    }
+    return water;
+  }
+
   Widget _insightCard({
     required IconData icon,
     required String label,
     required String value,
     required Color color,
     required Color iconColor,
-    bool fullWidth = false,
+    bool fullWidth = true,
   }) {
     final card = Container(
       padding: const EdgeInsets.all(16),
@@ -903,8 +976,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
                 ),
               ],
             ),
@@ -916,7 +990,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return fullWidth ? card : Expanded(child: card);
   }
 
-  Widget _build2DCarousel(List<String> images, double imgWidth, double imgHeight) {
+  Widget _build2DCarousel(
+    List<String> images,
+    double imgWidth,
+    double imgHeight,
+  ) {
     return CarouselSlider(
       carouselController: _carouselController,
       options: CarouselOptions(
@@ -953,10 +1031,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator(color: primaryColor));
+                  return const Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey));
+                  return const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  );
                 },
               ),
             ),
@@ -1067,7 +1153,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   Future<void> _submit() async {
     if (watered == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please answer if you watered the plant.")),
+        const SnackBar(
+          content: Text("Please answer if you watered the plant."),
+        ),
       );
       return;
     }
@@ -1089,13 +1177,18 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       final List<String> imageUrls = [];
 
       for (var image in _images) {
-        final fileName = 'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-        await supabase.storage.from('daily_logs').upload(
-          fileName,
-          File(image.path),
-          fileOptions: const FileOptions(contentType: 'image/jpeg'),
-        );
-        final publicUrl = supabase.storage.from('daily_logs').getPublicUrl(fileName);
+        final fileName =
+            'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+        await supabase.storage
+            .from('daily_logs')
+            .upload(
+              fileName,
+              File(image.path),
+              fileOptions: const FileOptions(contentType: 'image/jpeg'),
+            );
+        final publicUrl = supabase.storage
+            .from('daily_logs')
+            .getPublicUrl(fileName);
         imageUrls.add(publicUrl);
       }
 
@@ -1109,11 +1202,15 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         'pest_notes': _pestNotesController.text,
         'feedback': _feedbackController.text,
         'images': imageUrls,
-        'water_amount': watered == true ? double.tryParse(_waterAmountController.text) : null,
+        'water_amount': watered == true
+            ? double.tryParse(_waterAmountController.text)
+            : null,
         'water_unit': watered == true ? _selectedWaterUnit : null,
       };
 
-      await supabase.from('plant_daily_log').upsert(logData, onConflict: 'user_id, log_date');
+      await supabase
+          .from('plant_daily_log')
+          .upsert(logData, onConflict: 'user_id, log_date');
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('last_daily_check_date', today);
@@ -1127,9 +1224,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -1173,7 +1270,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
             const SizedBox(height: 20),
             const Text(
               "Daily Plant Check",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _HomeScreenState.primaryColor),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: _HomeScreenState.primaryColor,
+              ),
             ),
             if (_alreadySubmittedToday)
               Container(
@@ -1191,14 +1292,21 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                     Expanded(
                       child: Text(
                         "You have already submitted a log for today. Submitting again will update your existing entry.",
-                        style: TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             const SizedBox(height: 20),
-            const Text("Did you water the plant today?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Text(
+              "Did you water the plant today?",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             Row(
               children: [
                 Expanded(
@@ -1230,7 +1338,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                       flex: 2,
                       child: TextField(
                         controller: _waterAmountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
                           hintText: "Amount",
                           border: OutlineInputBorder(),
@@ -1256,12 +1366,14 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                                 _selectedWaterUnit = newValue!;
                               });
                             },
-                            items: <String>['ml', 'liters'].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
+                            items: <String>['ml', 'liters']
+                                .map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                })
+                                .toList(),
                           ),
                         ),
                       ),
@@ -1271,7 +1383,10 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               ),
             const Divider(),
             SwitchListTile(
-              title: const Text("Did you observe any pests or problems?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              title: const Text(
+                "Did you observe any pests or problems?",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
               value: pestsObserved,
               activeColor: _HomeScreenState.primaryColor,
               onChanged: (v) => setState(() => pestsObserved = v),
@@ -1289,7 +1404,10 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                 ),
               ),
             const SizedBox(height: 20),
-            const Text("Feedback / Notes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Text(
+              "Feedback / Notes",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: _feedbackController,
@@ -1300,27 +1418,45 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               maxLines: 2,
             ),
             const SizedBox(height: 20),
-            const Text("Upload Photos", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Text(
+              "Upload Photos",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                ..._images.map((img) => Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(File(img.path), width: 80, height: 80, fit: BoxFit.cover),
-                    ),
-                    Positioned(
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _images.remove(img)),
-                        child: const CircleAvatar(radius: 10, backgroundColor: Colors.red, child: Icon(Icons.close, size: 12, color: Colors.white)),
+                ..._images.map(
+                  (img) => Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(img.path),
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                  ],
-                )),
+                      Positioned(
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _images.remove(img)),
+                          child: const CircleAvatar(
+                            radius: 10,
+                            backgroundColor: Colors.red,
+                            child: Icon(
+                              Icons.close,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 GestureDetector(
                   onTap: _pickImages,
                   child: Container(
@@ -1344,11 +1480,22 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                 onPressed: _isSubmitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _HomeScreenState.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(_alreadySubmittedToday ? "Update Today's Log" : "Submit Today's Log", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    : Text(
+                        _alreadySubmittedToday
+                            ? "Update Today's Log"
+                            : "Submit Today's Log",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 10),
@@ -1398,7 +1545,9 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
       body: Stack(
         children: [
           PageView.builder(
-            physics: isZoomed ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
+            physics: isZoomed
+                ? const NeverScrollableScrollPhysics()
+                : const BouncingScrollPhysics(),
             controller: _pageController,
             itemCount: widget.images.length,
             onPageChanged: (index) {
@@ -1419,10 +1568,18 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                     fit: BoxFit.contain,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
                     },
                     errorBuilder: (context, error, stackTrace) {
-                      return const Center(child: Icon(Icons.broken_image, color: Colors.white, size: 50));
+                      return const Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -1446,7 +1603,10 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black45,
                   borderRadius: BorderRadius.circular(20),
