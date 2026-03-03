@@ -58,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
       CarouselSliderController();
   Timer? _autoScrollTimer;
   bool _hasTodayLogSubmitted = false;
+  bool _isPopupShowing = false;
 
   @override
   void initState() {
@@ -88,29 +89,26 @@ class _HomeScreenState extends State<HomeScreen> {
     return (diff + 1).clamp(1, 109);
   }
 
-  Future<void> _checkDailyPopup() async {
+  Future<void> _checkDailyPopup({bool showIfMissing = true}) async {
     final prefs = await SharedPreferences.getInstance();
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    // Get the last checked date from SharedPreferences
     final String? lastCheckedDate = prefs.getString('last_daily_check_date');
     final bool? cachedSubmissionStatus = prefs.getBool(
       'has_today_log_submitted',
     );
 
-    // If it's a new day, reset the submission status
     if (lastCheckedDate != today) {
-      // New day - check database to see if today's log exists
       await _checkDatabaseForTodayLog(today, prefs);
     } else {
-      // Same day - use cached value
-      setState(() {
-        _hasTodayLogSubmitted = cachedSubmissionStatus ?? false;
-      });
+      if (mounted) {
+        setState(() {
+          _hasTodayLogSubmitted = cachedSubmissionStatus ?? false;
+        });
+      }
     }
 
-    // Show popup if log not submitted
-    if (!_hasTodayLogSubmitted) {
+    if (showIfMissing && !_hasTodayLogSubmitted) {
       if (mounted) {
         _showDailyCheckPopup();
       }
@@ -126,7 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final user = supabase.auth.currentUser;
 
       if (user != null) {
-        // Query database to check if today's log exists
         final response = await supabase
             .from('plant_daily_log')
             .select('log_date')
@@ -136,48 +133,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final bool logExists = response != null;
 
-        // Update SharedPreferences with the database result
         await prefs.setString('last_daily_check_date', today);
         await prefs.setBool('has_today_log_submitted', logExists);
 
-        setState(() {
-          _hasTodayLogSubmitted = logExists;
-        });
+        if (mounted) {
+          setState(() {
+            _hasTodayLogSubmitted = logExists;
+          });
+        }
       } else {
-        // No user logged in - reset to false
         await prefs.setString('last_daily_check_date', today);
         await prefs.setBool('has_today_log_submitted', false);
 
+        if (mounted) {
+          setState(() {
+            _hasTodayLogSubmitted = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking database for today\'s log: $e');
+      await prefs.setString('last_daily_check_date', today);
+      await prefs.setBool('has_today_log_submitted', false);
+
+      if (mounted) {
         setState(() {
           _hasTodayLogSubmitted = false;
         });
       }
-    } catch (e) {
-      debugPrint('Error checking database for today\'s log: $e');
-      // On error, assume not submitted
-      await prefs.setString('last_daily_check_date', today);
-      await prefs.setBool('has_today_log_submitted', false);
-
-      setState(() {
-        _hasTodayLogSubmitted = false;
-      });
     }
   }
 
   Future<void> _loadFarmerAndPlantation() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load from local storage first for instant feedback
-    setState(() {
-      farmerName = prefs.getString('farmerName') ?? "Farmer";
-      String? savedDate = prefs.getString('plantingDate');
-      if (savedDate != null) {
-        plantationDate = DateTime.tryParse(savedDate);
-        if (plantationDate != null) {
-          currentDay = _calculatedTodayDay;
+    if (mounted) {
+      setState(() {
+        farmerName = prefs.getString('farmerName') ?? "Farmer";
+        String? savedDate = prefs.getString('plantingDate');
+        if (savedDate != null) {
+          plantationDate = DateTime.tryParse(savedDate);
+          if (plantationDate != null) {
+            currentDay = _calculatedTodayDay;
+          }
         }
-      }
-    });
+      });
+    }
 
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
@@ -189,32 +190,34 @@ class _HomeScreenState extends State<HomeScreen> {
             .maybeSingle();
 
         if (res != null) {
-          setState(() {
-            if (res['name'] != null) {
-              farmerName = res['name'];
-              prefs.setString('farmerName', farmerName);
-            }
-            if (res['planting_date'] != null) {
-              String dateStr = res['planting_date'];
-              DateTime? parsed = DateTime.tryParse(dateStr);
+          if (mounted) {
+            setState(() {
+              if (res['name'] != null) {
+                farmerName = res['name'];
+                prefs.setString('farmerName', farmerName);
+              }
+              if (res['planting_date'] != null) {
+                String dateStr = res['planting_date'];
+                DateTime? parsed = DateTime.tryParse(dateStr);
 
-              if (parsed == null) {
-                try {
-                  parsed = DateFormat("d/M/yyyy").parse(dateStr);
-                } catch (_) {
+                if (parsed == null) {
                   try {
-                    parsed = DateFormat("dd/MM/yyyy").parse(dateStr);
-                  } catch (_) {}
+                    parsed = DateFormat("d/M/yyyy").parse(dateStr);
+                  } catch (_) {
+                    try {
+                      parsed = DateFormat("dd/MM/yyyy").parse(dateStr);
+                    } catch (_) {}
+                  }
+                }
+
+                if (parsed != null) {
+                  plantationDate = parsed;
+                  prefs.setString('plantingDate', parsed.toIso8601String());
+                  currentDay = _calculatedTodayDay;
                 }
               }
-
-              if (parsed != null) {
-                plantationDate = parsed;
-                prefs.setString('plantingDate', parsed.toIso8601String());
-                currentDay = _calculatedTodayDay;
-              }
-            }
-          });
+            });
+          }
         }
       } catch (e) {
         debugPrint("Error loading profile: $e");
@@ -228,12 +231,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final text = await rootBundle.loadString(
         'assets/Data/day$currentDay/day$currentDay.txt',
       );
-      setState(() => dayText = text);
+      if (mounted) setState(() => dayText = text);
     } catch (_) {
-      setState(() {
-        dayText =
-            "• Crop stage: Emergence (Germination)\n• Water requirement: 0 ml/plant\n• Nutrient application: None";
-      });
+      if (mounted) {
+        setState(() {
+          dayText =
+              "• Crop stage: Emergence (Germination)\n• Water requirement: 0 ml/plant\n• Nutrient application: None";
+        });
+      }
     }
   }
 
@@ -243,7 +248,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final day = date.day;
     final monthAbbr = DateFormat('MMM').format(date).toLowerCase();
 
-    // Repository month folders: "December 2025", "Jan 2026", "Feb 2026"
     String monthYearFolder;
     if (date.month == 12) {
       monthYearFolder = "December ${date.year}";
@@ -251,24 +255,21 @@ class _HomeScreenState extends State<HomeScreen> {
       monthYearFolder = "${DateFormat('MMM').format(date)} ${date.year}";
     }
 
-    // Repository day folders: "10 dec", "1 jan", "4 feb" (no ordinals)
     final dayFolder = "$day $monthAbbr";
 
     return List.generate(10, (i) {
       final frameName = "frame_${(i).toString().padLeft(3, '0')}.webp";
-      // Using jsDelivr CDN for better performance and caching
       return "https://cdn.jsdelivr.net/gh/PolisettyTharunSai/DigiTwin@Data/potato_extracted_frames_comp/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName";
     });
   }
 
   String _getModelUrl() {
-    // Dynamically fetch models based on currentDay from the Data branch
     return "https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/models/Day$currentDay.glb";
   }
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
-    if (show3DModel) return; // Don't start if in 3D mode
+    if (show3DModel) return;
 
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted || show3DModel) {
@@ -279,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         _carouselController.nextPage();
       } catch (e) {
-        // Silently skip if carousel is not ready
+        // Silently skip
       }
     });
   }
@@ -313,10 +314,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (picked != null) {
       final diff = picked.difference(plantationDate!).inDays;
-      setState(() {
-        currentDay = (diff + 1).clamp(1, 100);
-        currentImageIndex = 0;
-      });
+      if (mounted) {
+        setState(() {
+          currentDay = (diff + 1).clamp(1, 100);
+          currentImageIndex = 0;
+        });
+      }
       _loadDayData();
     }
   }
@@ -332,12 +335,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showDailyCheckPopup() async {
+    if (_isPopupShowing) return;
+    _isPopupShowing = true;
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const DailyCheckModal(),
     );
+    _isPopupShowing = false;
   }
 
   Future<void> _showLogoutConfirmation() async {
@@ -389,16 +395,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _handleLogout() async {
     try {
-      // Sign out from Supabase
       await Supabase.instance.client.auth.signOut();
-
-      // Clear local preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
       if (!mounted) return;
 
-      // Navigate to get started screen and remove all previous routes
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const GetStartedScreen()),
         (route) => false,
@@ -541,8 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   onPressed: () async {
                                     await _showDailyCheckPopup();
-                                    // Refresh the status after showing the popup
-                                    _checkDailyPopup();
+                                    _checkDailyPopup(showIfMissing: false);
                                   },
                                   tooltip: "Today's Plant Check",
                                 ),
@@ -638,14 +639,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 100),
                           child: GestureDetector(
                             onTap: () {
-                              setState(() {
-                                show3DModel = !show3DModel;
-                                if (!show3DModel) {
-                                  _startAutoScroll();
-                                } else {
-                                  _autoScrollTimer?.cancel();
-                                }
-                              });
+                              if (mounted) {
+                                setState(() {
+                                  show3DModel = !show3DModel;
+                                  if (!show3DModel) {
+                                    _startAutoScroll();
+                                  } else {
+                                    _autoScrollTimer?.cancel();
+                                  }
+                                });
+                              }
                             },
                             child: Container(
                               height: 45,
@@ -788,10 +791,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.chevron_left,
                     onTap: currentDay > 1
                         ? () {
-                            setState(() {
-                              currentDay--;
-                              currentImageIndex = 0;
-                            });
+                            if (mounted) {
+                              setState(() {
+                                currentDay--;
+                                currentImageIndex = 0;
+                              });
+                            }
                             _loadDayData();
                           }
                         : null,
@@ -832,10 +837,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.chevron_right,
                     onTap: currentDay < 109
                         ? () {
-                            setState(() {
-                              currentDay++;
-                              currentImageIndex = 0;
-                            });
+                            if (mounted) {
+                              setState(() {
+                                currentDay++;
+                                currentImageIndex = 0;
+                              });
+                            }
                             _loadDayData();
                           }
                         : null,
@@ -1023,7 +1030,7 @@ class _HomeScreenState extends State<HomeScreen> {
         enableInfiniteScroll: true,
         enlargeCenterPage: false,
         onPageChanged: (index, _) {
-          setState(() => currentImageIndex = index);
+          if (mounted) setState(() => currentImageIndex = index);
         },
       ),
       items: images.asMap().entries.map((entry) {
@@ -1112,7 +1119,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       MaterialPageRoute(
                         builder: (_) => ARViewPage(
                           modelPath: modelUrl,
-                          // Example usage in your ModelViewer or ARViewPage
                           cropName: "Day $currentDay",
                         ),
                       ),
@@ -1156,7 +1162,7 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     final prefs = await SharedPreferences.getInstance();
     final bool? hasSubmitted = prefs.getBool('has_today_log_submitted');
     if (hasSubmitted == true) {
-      setState(() => _alreadySubmittedToday = true);
+      if (mounted) setState(() => _alreadySubmittedToday = true);
     }
   }
 
@@ -1164,9 +1170,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     final picker = ImagePicker();
     final List<XFile> pickedImages = await picker.pickMultiImage();
     if (pickedImages.isNotEmpty) {
-      setState(() {
-        _images.addAll(pickedImages);
-      });
+      if (mounted) {
+        setState(() {
+          _images.addAll(pickedImages);
+        });
+      }
     }
   }
 
@@ -1187,7 +1195,7 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    if (mounted) setState(() => _isSubmitting = true);
 
     try {
       final supabase = Supabase.instance.client;
@@ -1199,13 +1207,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       for (var image in _images) {
         final fileName =
             'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-        await supabase.storage
-            .from('daily_logs')
-            .upload(
-              fileName,
-              File(image.path),
-              fileOptions: const FileOptions(contentType: 'image/jpeg'),
-            );
+        await supabase.storage.from('daily_logs').upload(
+          fileName,
+          File(image.path),
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
         final publicUrl = supabase.storage
             .from('daily_logs')
             .getPublicUrl(fileName);
@@ -1222,15 +1228,17 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         'pest_notes': _pestNotesController.text,
         'feedback': _feedbackController.text,
         'images': imageUrls,
-        'water_amount': watered == true
-            ? double.tryParse(_waterAmountController.text)
-            : null,
+        'water_amount':
+            watered == true
+                ? double.tryParse(_waterAmountController.text)
+                : null,
         'water_unit': watered == true ? _selectedWaterUnit : null,
       };
 
-      await supabase
-          .from('plant_daily_log')
-          .upsert(logData, onConflict: 'user_id, log_date');
+      await supabase.from('plant_daily_log').upsert(
+        logData,
+        onConflict: 'user_id, log_date',
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('last_daily_check_date', today);
@@ -1389,26 +1397,32 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                       ChoiceChip(
                         label: const Text("Yes"),
                         selected: watered == true,
-                        onSelected: (_) => setState(() => watered = true),
+                        onSelected: (selected) {
+                          if (mounted) setState(() => watered = true);
+                        },
                         selectedColor: _HomeScreenState.primaryColor
                             .withOpacity(0.15),
                         labelStyle: TextStyle(
-                          color: watered == true
-                              ? _HomeScreenState.primaryColor
-                              : Colors.grey.shade800,
+                          color:
+                              watered == true
+                                  ? _HomeScreenState.primaryColor
+                                  : Colors.grey.shade800,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       ChoiceChip(
                         label: const Text("No"),
                         selected: watered == false,
-                        onSelected: (_) => setState(() => watered = false),
+                        onSelected: (selected) {
+                          if (mounted) setState(() => watered = false);
+                        },
                         selectedColor: _HomeScreenState.primaryColor
                             .withOpacity(0.15),
                         labelStyle: TextStyle(
-                          color: watered == false
-                              ? _HomeScreenState.primaryColor
-                              : Colors.grey.shade800,
+                          color:
+                              watered == false
+                                  ? _HomeScreenState.primaryColor
+                                  : Colors.grey.shade800,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1452,20 +1466,21 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                                 value: _selectedWaterUnit,
                                 isExpanded: true,
                                 onChanged: (String? newValue) {
-                                  setState(() {
-                                    _selectedWaterUnit = newValue!;
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      _selectedWaterUnit = newValue!;
+                                    });
+                                  }
                                 },
-                                items: <String>['ml', 'liters']
-                                    .map<DropdownMenuItem<String>>((
-                                      String value,
-                                    ) {
+                                items:
+                                    <String>['ml', 'liters'].map<
+                                      DropdownMenuItem<String>
+                                    >((String value) {
                                       return DropdownMenuItem<String>(
                                         value: value,
                                         child: Text(value),
                                       );
-                                    })
-                                    .toList(),
+                                    }).toList(),
                               ),
                             ),
                           ),
@@ -1499,7 +1514,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                       Switch(
                         value: pestsObserved,
                         activeColor: _HomeScreenState.primaryColor,
-                        onChanged: (v) => setState(() => pestsObserved = v),
+                        onChanged: (v) {
+                          if (mounted) setState(() => pestsObserved = v);
+                        },
                       ),
                     ],
                   ),
@@ -1580,8 +1597,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                               right: 0,
                               top: 0,
                               child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _images.remove(img)),
+                                onTap: () {
+                                  if (mounted) {
+                                    setState(() => _images.remove(img));
+                                  }
+                                },
                                 child: const CircleAvatar(
                                   radius: 10,
                                   backgroundColor: Colors.red,
@@ -1629,18 +1649,19 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                 ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        _alreadySubmittedToday
-                            ? "Update Today's Log"
-                            : "Submit Today's Log",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                child:
+                    _isSubmitting
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                          _alreadySubmittedToday
+                              ? "Update Today's Log"
+                              : "Submit Today's Log",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
               ),
             ),
             const SizedBox(height: 10),
@@ -1690,22 +1711,25 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
       body: Stack(
         children: [
           PageView.builder(
-            physics: isZoomed
-                ? const NeverScrollableScrollPhysics()
-                : const BouncingScrollPhysics(),
+            physics:
+                isZoomed
+                    ? const NeverScrollableScrollPhysics()
+                    : const BouncingScrollPhysics(),
             controller: _pageController,
             itemCount: widget.images.length,
             onPageChanged: (index) {
-              setState(() => _currentIndex = index);
+              if (mounted) setState(() => _currentIndex = index);
             },
             itemBuilder: (context, index) {
               return InteractiveViewer(
                 minScale: 1.0,
                 maxScale: 6.0,
                 onInteractionUpdate: (details) {
-                  setState(() {
-                    isZoomed = details.scale > 1.0;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      isZoomed = details.scale > 1.0;
+                    });
+                  }
                 },
                 child: Center(
                   child: Image.network(
