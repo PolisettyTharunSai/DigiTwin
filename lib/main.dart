@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/splash_screen.dart';
@@ -24,6 +25,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
       home: const SplashScreen(),
+      builder: (context, child) {
+        final locale = Localizations.localeOf(context);
+        final isUrdu = locale.languageCode == 'ur';
+        return Directionality(
+          textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
+          child: child!,
+        );
+      },
     );
   }
 }

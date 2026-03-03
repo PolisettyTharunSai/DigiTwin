@@ -41,12 +41,14 @@ class _BottomCurveClipper extends CustomClipper<Path> {
 class _ProgressLinePainter extends CustomPainter {
   final int currentStep;
   final int totalSteps;
+  final bool isRtl;
   final Color activeColor;
   final Color inactiveColor;
 
   _ProgressLinePainter({
     required this.currentStep,
     required this.totalSteps,
+    required this.isRtl,
     required this.activeColor,
     required this.inactiveColor,
   });
@@ -62,24 +64,19 @@ class _ProgressLinePainter extends CustomPainter {
     for (int i = 0; i < totalSteps - 1; i++) {
       final startX = i * segmentWidth;
       final endX = (i + 1) * segmentWidth;
-
-      if (i < currentStep - 1) {
+      int logicalIndex = isRtl ? (totalSteps - 2 - i) : i;
+      if (logicalIndex < currentStep - 1) {
         paint.color = activeColor;
       } else {
         paint.color = inactiveColor;
       }
-
-      canvas.drawLine(
-        Offset(startX, 0),
-        Offset(endX, 0),
-        paint,
-      );
+      canvas.drawLine(Offset(startX, 0), Offset(endX, 0), paint);
     }
   }
 
   @override
   bool shouldRepaint(_ProgressLinePainter oldDelegate) {
-    return oldDelegate.currentStep != currentStep;
+    return oldDelegate.currentStep != currentStep || oldDelegate.isRtl != isRtl;
   }
 }
 
@@ -130,128 +127,138 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
     const background = Color(0xFFFFFDF1);
     final String effectiveLocale =
         widget.locale ?? Localizations.localeOf(context).languageCode;
+    final bool isRtl = effectiveLocale == 'ur';
 
-    return Scaffold(
-      backgroundColor: background,
-      body: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ---------- HEADER (STATIC) ----------
-              ClipPath(
-                clipper: _BottomCurveClipper(),
-                child: Container(
-                  padding: const EdgeInsets.only(
-                    top: 50,
-                    left: 10,
-                    right: 10,
-                    bottom: 18,
-                  ),
-                  width: double.infinity,
-                  color: primaryOrange,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          size: 20,
-                          color: Colors.white,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _getStepTitle(_currentStepIndex),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          softWrap: true,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w400,
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: background,
+        body: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ---------- HEADER (STATIC) ----------
+                ClipPath(
+                  clipper: _BottomCurveClipper(),
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      top: 28, // Reduced from 50
+                      left: 10,
+                      right: 10,
+                      bottom: 10, // Reduced from 18
+                    ),
+                    width: double.infinity,
+                    color: primaryOrange,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios,
+                            size: 20,
                             color: Colors.white,
                           ),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _getStepTitle(_currentStepIndex),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // ---------- STEP PROGRESS INDICATOR ----------
-              _buildStepProgressIndicator(),
+                // ---------- STEP PROGRESS INDICATOR ----------
+                _buildStepProgressIndicator(),
 
-              // ---------- PAGE VIEW CONTENT ----------
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentStepIndex = index + 1;
-                    });
-                  },
-                  children: List.generate(6, (index) {
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                      child: _getStepContent(index + 1, effectiveLocale),
-                    );
-                  }),
+                // ---------- PAGE VIEW CONTENT ----------
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentStepIndex = index + 1;
+                      });
+                    },
+                    children: List.generate(6, (index) {
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                        child: _getStepContent(index + 1, effectiveLocale),
+                      );
+                    }),
+                  ),
                 ),
-              ),
-            ],
-          ),
-
-          // ---------- NAVIGATION BUTTONS ----------
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (_currentStepIndex > 1)
-                  FloatingActionButton.extended(
-                    heroTag: 'step_prev_btn',
-                    onPressed: () => _navigateToStep(_currentStepIndex - 1),
-                    backgroundColor: Colors.white,
-                    elevation: 4,
-                    label: const Text(
-                      'PREV',
-                      style: TextStyle(
-                        color: primaryOrange,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        size: 18, color: primaryOrange),
-                  )
-                else
-                  const SizedBox(width: 48),
-                if (_currentStepIndex < 6)
-                  FloatingActionButton.extended(
-                    heroTag: 'step_next_btn',
-                    onPressed: () => _navigateToStep(_currentStepIndex + 1),
-                    backgroundColor: primaryOrange,
-                    elevation: 4,
-                    label: const Text(
-                      'NEXT',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    icon: const Icon(Icons.arrow_forward_ios,
-                        size: 18, color: Colors.white),
-                  )
-                else
-                  const SizedBox(width: 48),
               ],
             ),
-          ),
-        ],
+
+            // ---------- NAVIGATION BUTTONS ----------
+            Positioned(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_currentStepIndex > 1)
+                    FloatingActionButton.extended(
+                      heroTag: 'step_prev_btn',
+                      onPressed: () => _navigateToStep(_currentStepIndex - 1),
+                      backgroundColor: Colors.white,
+                      elevation: 4,
+                      label: const Text(
+                        'PREV',
+                        style: TextStyle(
+                          color: primaryOrange,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 18,
+                        color: primaryOrange,
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
+                  if (_currentStepIndex < 6)
+                    FloatingActionButton.extended(
+                      heroTag: 'step_next_btn',
+                      onPressed: () => _navigateToStep(_currentStepIndex + 1),
+                      backgroundColor: primaryOrange,
+                      elevation: 4,
+                      label: const Text(
+                        'NEXT',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -265,7 +272,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'Seed & Sowing',
         'Nutrient Management',
         'Field Care',
-        'Harvest & Storage'
+        'Harvest & Storage',
       ],
       'hi': [
         'परिचय',
@@ -273,7 +280,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'बीज और बुवाई',
         'पोषक तत्व प्रबंधन',
         'खेत की देखभाल',
-        'कटाई और भंडारण'
+        'कटाई और भंडारण',
       ],
       'pa': [
         'ਜਾਣ-ਪਛਾਣ',
@@ -281,7 +288,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'ਬੀਜ ਅਤੇ ਬਿਜਾਈ',
         'ਪੌਸ਼ਟਿਕ ਤੱਤ ਪ੍ਰਬੰਧਨ',
         'ਖੇਤ ਦੀ ਦੇਖਭਾਲ',
-        'ਕਟਾਈ ਅਤੇ ਭੰਡਾਰਨ'
+        'ਕਟਾਈ ਅਤੇ ਭੰਡਾਰਨ',
       ],
       'ta': [
         'அறிமுகம்',
@@ -289,7 +296,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'விதை மற்றும் விதைப்பு',
         'ஊட்டச்சத்து மேலாண்மை',
         'வயல் பராமரிப்பு',
-        'அறுவடை மற்றும் சேமிப்பு'
+        'அறுவடை மற்றும் சேமிப்பு',
       ],
       'te': [
         'పరిచయం',
@@ -297,7 +304,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'విత్తనాలు & నాటడం',
         'పోషక నిర్వహణ',
         'క్షేత్ర సంరక్షణ',
-        'కోత & నిల్వ'
+        'కోత & నిల్వ',
       ],
       'kn': [
         'ಪರಿಚಯ',
@@ -305,7 +312,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'ಬೀಜ ಮತ್ತು ಬಿತ್ತನೆ',
         'ಪೋಷಕಾಂಶ ನಿರ್ವಹಣೆ',
         'ಕ್ಷೇತ್ರದ ಆರೈಕೆ',
-        'ಕೊಯ್ಲು ಮತ್ತು ಸಂಗ್ರಹಣೆ'
+        'ಕೊಯ್ಲು ಮತ್ತು ಸಂಗ್ರಹಣೆ',
       ],
       'mr': [
         'ओळख',
@@ -313,7 +320,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'बियाणे आणि पेरणी',
         'पोषक तत्व व्यवस्थापन',
         'शेत देखभाल',
-        'काढणी आणि साठवणूक'
+        'काढणी आणि साठवणूक',
       ],
       'gu': [
         'પરિચય',
@@ -321,7 +328,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'બીજ અને વાવણી',
         'પોષક તત્વોનું સંચાલન',
         'ખેતરની સંભાળ',
-        'કાપણી અને સંગ્રહ'
+        'કાપણી અને સંગ્રહ',
       ],
       'bn': [
         'ভূমিকা',
@@ -329,7 +336,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'বীজ ও বপন',
         'পুষ্টি ব্যবস্থাপনা',
         'মাঠের যত্ন',
-        'সংগ্রহ ও সংরক্ষণ'
+        'সংগ্রহ ও সংরক্ষণ',
       ],
       'ml': [
         'ആമുഖം',
@@ -337,7 +344,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'വിത്തും വിതയ്ക്കലും',
         'പോഷക മാനേജ്‌മെന്റ്',
         'വയൽ പരിപालനം',
-        'വിളവെടുപ്പും സംഭരണവും'
+        'വിളവെടുപ്പും സംഭരണവും',
       ],
       'ur': [
         'تعارف',
@@ -345,7 +352,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         'بیج اور بوائی',
         'غذائی اجزاء کا انتظام',
         'کھیت کی دیکھ بھال',
-        'کٹائی اور ذخیرہ'
+        'کٹائی اور ذخیرہ',
       ],
     };
     final list = translations[locale] ?? translations['en']!;
@@ -357,13 +364,14 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
     const lightOrange = Color(0xFFFFCE99);
     const background = Color(0xFFFFFDF1);
 
+    final isRtl =
+        (widget.locale ?? Localizations.localeOf(context).languageCode) == 'ur';
     return Container(
       color: background,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final iconSize = 44.0;
-
+          final iconSize = 32.0;
           return SizedBox(
             height: 70,
             child: Stack(
@@ -374,8 +382,11 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                   right: iconSize / 2,
                   child: CustomPaint(
                     painter: _ProgressLinePainter(
-                      currentStep: _currentStepIndex,
+                      currentStep: isRtl
+                          ? (7 - _currentStepIndex)
+                          : _currentStepIndex,
                       totalSteps: 6,
+                      isRtl: isRtl,
                       activeColor: primaryOrange,
                       inactiveColor: lightOrange.withOpacity(0.3),
                     ),
@@ -383,12 +394,16 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                   children: List.generate(6, (index) {
-                    final stepNumber = index + 1;
+                    final stepNumber = isRtl ? (6 - index) : (index + 1);
                     final isActive = stepNumber == _currentStepIndex;
-                    final isCompleted = stepNumber < _currentStepIndex;
-                    final isReachable = stepNumber <= _currentStepIndex;
-
+                    final isCompleted = isRtl
+                        ? stepNumber > _currentStepIndex
+                        : stepNumber < _currentStepIndex;
+                    final isReachable = isRtl
+                        ? stepNumber >= _currentStepIndex
+                        : stepNumber <= _currentStepIndex;
                     return GestureDetector(
                       onTap: () => _navigateToStep(stepNumber),
                       child: _buildStepIcon(
@@ -453,11 +468,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                   ]
                 : null,
           ),
-          child: Icon(
-            _getStepIcon(stepNumber),
-            color: iconColor,
-            size: 22,
-          ),
+          child: Icon(_getStepIcon(stepNumber), color: iconColor, size: 22),
         ),
         const SizedBox(height: 4),
         Text(
