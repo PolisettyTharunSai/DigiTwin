@@ -22,6 +22,26 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+Widget _frostedCard({required Widget child}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
+      border: Border.all(color: Colors.grey.shade100),
+    ),
+    child: child,
+  );
+}
+
 class _HomeScreenState extends State<HomeScreen> {
   static const primaryColor = Color(0xFFFF9644); // Primary Orange
   static const accentColor = Color(0xFFFFCE99);
@@ -1267,25 +1287,70 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Daily Plant Check",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: _HomeScreenState.primaryColor,
-              ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _HomeScreenState.primaryColor.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_florist,
+                    color: _HomeScreenState.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              "Daily Plant Check",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: _HomeScreenState.primaryColor,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey),
+                            onPressed: () => Navigator.pop(context),
+                            tooltip: "Close",
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Log today’s care, water, and observations.",
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 13,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             if (_alreadySubmittedToday)
               Container(
-                margin: const EdgeInsets.only(top: 10),
-                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.25)),
                 ),
                 child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.info_outline, color: Colors.orange, size: 20),
                     SizedBox(width: 10),
@@ -1296,183 +1361,263 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                           color: Colors.orange,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
+                          height: 1.3,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            const SizedBox(height: 20),
-            const Text(
-              "Did you water the plant today?",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<bool>(
-                    title: const Text("Yes"),
-                    value: true,
-                    groupValue: watered,
-                    activeColor: _HomeScreenState.primaryColor,
-                    onChanged: (v) => setState(() => watered = v),
+            const SizedBox(height: 16),
+            _frostedCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Watering",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
-                ),
-                Expanded(
-                  child: RadioListTile<bool>(
-                    title: const Text("No"),
-                    value: false,
-                    groupValue: watered,
-                    activeColor: _HomeScreenState.primaryColor,
-                    onChanged: (v) => setState(() => watered = v),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Did you water the plant today?",
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                   ),
-                ),
-              ],
-            ),
-            if (watered == true)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: _waterAmountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: "Amount",
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      ChoiceChip(
+                        label: const Text("Yes"),
+                        selected: watered == true,
+                        onSelected: (_) => setState(() => watered = true),
+                        selectedColor: _HomeScreenState.primaryColor
+                            .withOpacity(0.15),
+                        labelStyle: TextStyle(
+                          color: watered == true
+                              ? _HomeScreenState.primaryColor
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 1,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4),
+                      ChoiceChip(
+                        label: const Text("No"),
+                        selected: watered == false,
+                        onSelected: (_) => setState(() => watered = false),
+                        selectedColor: _HomeScreenState.primaryColor
+                            .withOpacity(0.15),
+                        labelStyle: TextStyle(
+                          color: watered == false
+                              ? _HomeScreenState.primaryColor
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedWaterUnit,
-                            isExpanded: true,
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _selectedWaterUnit = newValue!;
-                              });
-                            },
-                            items: <String>['ml', 'liters']
-                                .map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                })
-                                .toList(),
+                      ),
+                    ],
+                  ),
+                  if (watered == true) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: _waterAmountController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: "Amount",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const Divider(),
-            SwitchListTile(
-              title: const Text(
-                "Did you observe any pests or problems?",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              value: pestsObserved,
-              activeColor: _HomeScreenState.primaryColor,
-              onChanged: (v) => setState(() => pestsObserved = v),
-            ),
-            if (pestsObserved)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: TextField(
-                  controller: _pestNotesController,
-                  decoration: const InputDecoration(
-                    hintText: "Describe the pests or problems...",
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                ),
-              ),
-            const SizedBox(height: 20),
-            const Text(
-              "Feedback / Notes",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _feedbackController,
-              decoration: const InputDecoration(
-                hintText: "How's your plant doing overall?",
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Upload Photos",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                ..._images.map(
-                  (img) => Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(img.path),
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _images.remove(img)),
-                          child: const CircleAvatar(
-                            radius: 10,
-                            backgroundColor: Colors.red,
-                            child: Icon(
-                              Icons.close,
-                              size: 12,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(10),
                               color: Colors.white,
                             ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedWaterUnit,
+                                isExpanded: true,
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedWaterUnit = newValue!;
+                                  });
+                                },
+                                items: <String>['ml', 'liters']
+                                    .map<DropdownMenuItem<String>>((
+                                      String value,
+                                    ) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    })
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _frostedCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Observations",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Any pests or problems?",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      Switch(
+                        value: pestsObserved,
+                        activeColor: _HomeScreenState.primaryColor,
+                        onChanged: (v) => setState(() => pestsObserved = v),
+                      ),
+                    ],
+                  ),
+                  if (pestsObserved) ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _pestNotesController,
+                      decoration: InputDecoration(
+                        hintText: "Describe issues noticed...",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _frostedCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Feedback / Notes",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _feedbackController,
+                    decoration: InputDecoration(
+                      hintText: "How's your plant doing overall?",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _frostedCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Upload Photos",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      ..._images.map(
+                        (img) => Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                File(img.path),
+                                width: 82,
+                                height: 82,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _images.remove(img)),
+                                child: const CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Colors.red,
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 12,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _pickImages,
+                        child: Container(
+                          width: 82,
+                          height: 82,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Icon(
+                            Icons.add_a_photo,
+                            color: Colors.grey.shade700,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                GestureDetector(
-                  onTap: _pickImages,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[400]!),
-                    ),
-                    child: const Icon(Icons.add_a_photo, color: Colors.grey),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 26),
             SizedBox(
               width: double.infinity,
               height: 50,

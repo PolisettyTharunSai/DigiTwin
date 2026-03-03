@@ -34,8 +34,6 @@ class _BottomCurveClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
-
-
 class InstructionsScreen extends StatefulWidget {
   const InstructionsScreen({super.key});
 
@@ -68,7 +66,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'Seed & Sowing',
         'Nutrient Management',
         'Field Care',
-        'Harvest & Storage'
+        'Harvest & Storage',
       ],
       'hi': [
         'परिचय',
@@ -76,7 +74,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'बीज और बुवाई',
         'पोषक तत्व प्रबंधन',
         'खेत की देखभाल',
-        'कटाई और भंडारण'
+        'कटाई और भंडारण',
       ],
       'pa': [
         'ਜਾਣ-ਪਛਾਣ',
@@ -84,7 +82,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'ਬੀਜ এবং ਬਿਜਾਈ',
         'ਪੌਸ਼ਟਿਕ ਤੱਤ ਪ੍ਰਬੰਧਨ',
         'ਖੇਤ ਦੀ ਦੇਖਭਾਲ',
-        'ਕਟਾਈ ਅਤੇ ਭੰਡਾਰਨ'
+        'ਕਟਾਈ ਅਤੇ ਭੰਡਾਰਨ',
       ],
       'ta': [
         'அறிமுகம்',
@@ -92,7 +90,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'விதை மற்றும் விதைப்பு',
         'ஊட்டச்சத்து மேலாண்மை',
         'வயல் பராமரிப்பு',
-        'அறுவடை மற்றும் சேமிப்பு'
+        'அறுவடை மற்றும் சேமிப்பு',
       ],
       'te': [
         'పరిచయం',
@@ -100,7 +98,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'విత్తనాలు & నాటడం',
         'పోషక నిర్వహణ',
         'క్షేత్ర సంరక్షణ',
-        'కోత & నిల్వ'
+        'కోత & నిల్వ',
       ],
       'kn': [
         'ಪರಿಚಯ',
@@ -108,7 +106,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'ಬೀಜ ಮತ್ತು ಬಿತ್ತನೆ',
         'ಪೋಷಕಾಂಶ ನಿರ್ವಹಣೆ',
         'ಕ್ಷೇತ್ರದ ಆರೈಕೆ',
-        'ಕೊಯ್ಲು ಮತ್ತು ಸಂಗ್ರಹಣೆ'
+        'ಕೊಯ್ಲು ಮತ್ತು ಸಂಗ್ರಹಣೆ',
       ],
       'mr': [
         'ओळख',
@@ -116,7 +114,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'बियाणे आणि पेरणी',
         'पोषक तत्व व्यवस्थापन',
         'शेत देखभाल',
-        'काढणी आणि साठवणूक'
+        'काढणी आणि साठवणूक',
       ],
       'gu': [
         'પરિચય',
@@ -124,7 +122,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'બીજ અને વાવણી',
         'પોષક તત્વોનું સંચાલન',
         'ખેતરની સંભાળ',
-        'કાપણી અને સંગ્રહ'
+        'કાપણી અને સંગ્રહ',
       ],
       'bn': [
         'ভূমিকা',
@@ -132,7 +130,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'বীজ ও বপন',
         'পুষ্টি ব্যবস্থাপনা',
         'মাঠের যত্ন',
-        'সংগ্রহ ও সংরক্ষণ'
+        'সংগ্রহ ও সংরক্ষণ',
       ],
       'ml': [
         'ആമുഖം',
@@ -140,7 +138,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'വിത്തും വിതയ്ക്കലും',
         'പോഷക മാനേജ്‌മെന്റ്',
         'വയൽ പരിപാലനം',
-        'വിളവെടുപ്പും സംഭരണവും'
+        'വിളവെടുപ്പും സംഭരണവും',
       ],
       'ur': [
         'تعارف',
@@ -148,7 +146,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'بیج اور بوائی',
         'غذائی اجزاء کا انتظام',
         'کھیت کی دیکھ بھال',
-        'کٹائی اور ذخیرہ'
+        'کٹائی اور ذخیرہ',
       ],
     };
 
@@ -165,7 +163,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'Prep & Planting',
         'Best Fertilization',
         'Protection & Irrigation',
-        'End of Cycle'
+        'End of Cycle',
       ],
       'hi': [
         'आलू के बारे में जानें',
@@ -173,7 +171,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'तैयारी और बुवाई',
         'सर्वोत्तम उर्वरक',
         'सुरक्षा और सिंचाई',
-        'चक्र का अंत'
+        'चक्र का अंत',
       ],
       'pa': [
         'ਆਲੂ ਬਾਰੇ ਜਾਣੋ',
@@ -181,7 +179,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'ਤਿਆਰੀ ਅਤੇ ਬਿਜਾਈ',
         'ਸਭ ਤੋਂ ਵਧੀਆ ਖਾਦ',
         'ਸੁਰੱਖਿਆ ਅਤੇ ਸਿੰਚਾਈ',
-        'ਚੱਕਰ ਦਾ ਅੰਤ'
+        'ਚੱਕਰ ਦਾ ਅੰਤ',
       ],
       'ta': [
         'உருளைக்கிழங்கு பற்றி தெரிந்து கொள்ளுங்கள்',
@@ -189,7 +187,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'தயாரிப்பு மற்றும் நடவு',
         'சிறந்த உரமிடுதல்',
         'பாதுகாப்பு மற்றும் பாசனம்',
-        'சுழற்சியின் முடிவு'
+        'சுழற்சியின் முடிவு',
       ],
       'te': [
         'బంగాళదుంప గురించి తెలుసుకోండి',
@@ -197,7 +195,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'తయారీ & నాటడం',
         'ఉత్తమ ఎరువులు',
         'రక్షణ & నీటి పారుదల',
-        'పంట ముగింపు'
+        'పంట ముగింపు',
       ],
       'kn': [
         'ಆಲೂಗಡ್ಡೆ ಬಗ್ಗೆ ತಿಳಿಯಿರಿ',
@@ -205,7 +203,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'ತಯಾರಿ ಮತ್ತು ಬಿತ್ತನೆ',
         'ಅತ್ಯುತ್ತಮ ಗೊಬ್ಬರ',
         'ರಕ್ಷಣೆ ಮತ್ತು ನೀರಾವರಿ',
-        'ಚಕ್ರದ ಅಂತ್ಯ'
+        'ಚಕ್ರದ ಅಂತ್ಯ',
       ],
       'mr': [
         'बटाट्याबद्दल जाणून घ्या',
@@ -213,7 +211,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'तयारी आणि लागवड',
         'सर्वोत्तम खत',
         'संरक्षण आणि सिंचन',
-        'चक्राचा शेवट'
+        'चक्राचा शेवट',
       ],
       'gu': [
         'બટાટા વિશે જાણો',
@@ -221,7 +219,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'તૈયારી અને વાવણી',
         'શ્રેષ્ઠ ખાતર',
         'રક્ષણ અને સિંચાઈ',
-        'ચક્રનો અંત'
+        'ચક્રનો અંત',
       ],
       'bn': [
         'আলু সম্পর্কে জানুন',
@@ -229,7 +227,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'প্রস্তুতি ও বপন',
         'সেরা সার প্রয়োগ',
         'সুরক্ষা ও সেচ',
-        'চক্রের শেষ'
+        'চক্রের শেষ',
       ],
       'ml': [
         'ഉരുളക്കിഴങ്ങിനെക്കുറിച്ച് അറിയുക',
@@ -237,7 +235,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'തയ്യാറെടുപ്പും വിതയ്ക്കലും',
         'മികച്ച വളപ്രയോഗം',
         'സംരക്ഷണവും ജലസേചനവും',
-        'ചക്രത്തിന്റെ അവസാനം'
+        'ചക്രത്തിന്റെ അവസാനം',
       ],
       'ur': [
         'آلو کے بارے میں جانیں',
@@ -245,7 +243,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
         'تیاری اور بوائی',
         'بہترین فرٹلائزیشن',
         'تحفظ اور آب پاشی',
-        'سائیکل کا اختتام'
+        'سائیکل کا اختتام',
       ],
     };
 
@@ -256,21 +254,22 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFFFF9644);
+    final double topInset = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-// ---------- HEADER WITH CURVE ----------
+          // ---------- HEADER WITH CURVE ----------
           ClipPath(
             clipper: _BottomCurveClipper(),
             child: Container(
-              padding: const EdgeInsets.only(
-                top: 50,
-                left: 10,
-                right: 10,
-                bottom: 18,
+              padding: EdgeInsets.only(
+                top: topInset + 12,
+                left: 12,
+                right: 12,
+                bottom: 12,
               ),
               width: double.infinity,
               color: primaryColor,
@@ -336,16 +335,16 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(24),
                         onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => StepDetailScreen(
-                                  stepIndex: i + 1,
-                                  title: sectionTitle,
-                                  locale: _currentLocale,
-                                ),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => StepDetailScreen(
+                                stepIndex: i + 1,
+                                title: sectionTitle,
+                                locale: _currentLocale,
                               ),
-                            );
+                            ),
+                          );
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -401,7 +400,9 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
-                                            color: primaryColor.withOpacity(0.8),
+                                            color: primaryColor.withOpacity(
+                                              0.8,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 4),
@@ -429,34 +430,31 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
       ),
     );
   }
+
   Widget _buildLanguagePicker() {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: PopupMenuButton<String>(
-        icon: const Icon(
-          Icons.translate,
-          color: Colors.white,
-          size: 26,
-        ),
+        icon: const Icon(Icons.translate, color: Colors.white, size: 26),
         tooltip: 'Change Language',
         onSelected: (String code) async {
           setState(() => _currentLocale = code);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('appLanguage', code);
         },
-      itemBuilder: (context) => [
-        const PopupMenuItem(value: 'en', child: Text("English")),
-        const PopupMenuItem(value: 'hi', child: Text("हिन्दी (Hindi)")),
-        const PopupMenuItem(value: 'ta', child: Text("தமிழ் (Tamil)")),
-        const PopupMenuItem(value: 'te', child: Text("తెలుగు (Telugu)")),
-        const PopupMenuItem(value: 'kn', child: Text("ಕನ್ನಡ (Kannada)")),
-        const PopupMenuItem(value: 'mr', child: Text("मराठी (Marathi)")),
-        const PopupMenuItem(value: 'pa', child: Text("ਪੰਜਾਬੀ (Punjabi)")),
-        const PopupMenuItem(value: 'gu', child: Text("ગુજરાતી (Gujarati)")),
-        const PopupMenuItem(value: 'bn', child: Text("বাংলা (Bengali)")),
-        const PopupMenuItem(value: 'ml', child: Text("മലയാളം (Malayalam)")),
-        const PopupMenuItem(value: 'ur', child: Text("اردو (Urdu)")),
-      ],
+        itemBuilder: (context) => [
+          const PopupMenuItem(value: 'en', child: Text("English")),
+          const PopupMenuItem(value: 'hi', child: Text("हिन्दी (Hindi)")),
+          const PopupMenuItem(value: 'ta', child: Text("தமிழ் (Tamil)")),
+          const PopupMenuItem(value: 'te', child: Text("తెలుగు (Telugu)")),
+          const PopupMenuItem(value: 'kn', child: Text("ಕನ್ನಡ (Kannada)")),
+          const PopupMenuItem(value: 'mr', child: Text("मराठी (Marathi)")),
+          const PopupMenuItem(value: 'pa', child: Text("ਪੰਜਾਬੀ (Punjabi)")),
+          const PopupMenuItem(value: 'gu', child: Text("ગુજરાતી (Gujarati)")),
+          const PopupMenuItem(value: 'bn', child: Text("বাংলা (Bengali)")),
+          const PopupMenuItem(value: 'ml', child: Text("മലയാളം (Malayalam)")),
+          const PopupMenuItem(value: 'ur', child: Text("اردو (Urdu)")),
+        ],
       ),
     );
   }

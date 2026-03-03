@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -26,7 +25,7 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
       try {
         final data = await rootBundle.loadString(path);
         final lines = data.split('\n'); // FIX: Use '\n' to split lines
-        
+
         final recommendation = {
           'day': 'Day $i',
           'crop_stage': 'Not available',
@@ -36,20 +35,25 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
 
         for (final line in lines) {
           if (line.startsWith('Crop stage:')) {
-            recommendation['crop_stage'] = line.substring('Crop stage: '.length).trim();
+            recommendation['crop_stage'] = line
+                .substring('Crop stage: '.length)
+                .trim();
           } else if (line.startsWith('Water requirement:')) {
-            recommendation['water_requirement'] = line.substring('Water requirement: '.length).trim();
+            recommendation['water_requirement'] = line
+                .substring('Water requirement: '.length)
+                .trim();
           } else if (line.startsWith('Nutrient application:')) {
-            recommendation['nutrient_application'] = line.substring('Nutrient application: '.length).trim();
+            recommendation['nutrient_application'] = line
+                .substring('Nutrient application: '.length)
+                .trim();
           }
         }
-        
+
         if (recommendation['crop_stage'] != 'Not available' ||
             recommendation['water_requirement'] != 'Not available' ||
             recommendation['nutrient_application'] != 'Not available') {
           recommendations.add(recommendation);
         }
-
       } catch (e) {
         // Handle file not found or other errors
         print('Error loading recommendation for day $i: $e');
@@ -60,96 +64,371 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daily Recommendations'),
-      ),
-      body: FutureBuilder<List<Map<String, String>>>(
-        future: _recommendations,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error loading recommendations.'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No recommendations found.'));
-          }
+    const primary = Color(0xFFFF9644);
+    const bg = Color(0xFFFFF9F2);
 
-          final recommendations = snapshot.data!;
-          return ListView.builder(
-            itemCount: recommendations.length,
-            itemBuilder: (context, index) {
-              final recommendation = recommendations[index];
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _Header(primary: primary),
+            Expanded(
+              child: FutureBuilder<List<Map<String, String>>>(
+                future: _recommendations,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('Error loading recommendations.'),
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(
+                      child: Text('No recommendations found.'),
+                    );
+                  }
+
+                  final recommendations = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                    itemCount: recommendations.length,
+                    itemBuilder: (context, index) {
+                      final rec = recommendations[index];
+                      return _DayCard(
+                        recommendation: rec,
+                        index: index,
+                        total: recommendations.length,
+                        primary: primary,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.primary});
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary, primary.withOpacity(0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Daily Recommendations',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Season Plan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DayCard extends StatelessWidget {
+  const _DayCard({
+    required this.recommendation,
+    required this.index,
+    required this.total,
+    required this.primary,
+  });
+
+  final Map<String, String> recommendation;
+  final int index;
+  final int total;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isLast = index == total - 1;
+    final Color textColor = const Color(0xFF2D2007);
+    final Color subText = const Color(0xFF6F5F45);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Timeline(isLast: isLast, primary: primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withOpacity(0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFF5EA), Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        recommendation['day']!,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              recommendation['day'] ?? 'Day',
+                              style: TextStyle(
+                                color: primary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      _buildRecommendationRow(
+                      _pill(
                         icon: Icons.eco,
-                        label: 'Crop Stage',
-                        value: recommendation['crop_stage']!,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRecommendationRow(
-                        icon: Icons.water_drop,
-                        label: 'Water Requirement',
-                        value: recommendation['water_requirement']!,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRecommendationRow(
-                        icon: Icons.science,
-                        label: 'Nutrient Application',
-                        value: recommendation['nutrient_application']!,
+                        label: recommendation['crop_stage'] ?? '',
+                        color: primary,
+                        textColor: Colors.white,
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          );
-        },
+                  const SizedBox(height: 14),
+                  _infoRow(
+                    icon: Icons.water_drop,
+                    label: 'Water Requirement',
+                    value: recommendation['water_requirement'] ?? '',
+                    textColor: textColor,
+                    subText: subText,
+                  ),
+                  const SizedBox(height: 10),
+                  _infoRow(
+                    icon: Icons.science,
+                    label: 'Nutrient Application',
+                    value: recommendation['nutrient_application'] ?? '',
+                    textColor: textColor,
+                    subText: subText,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRecommendationRow({
+  Widget _pill({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.28),
+            blurRadius: 10,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: textColor, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow({
     required IconData icon,
     required String label,
     required String value,
+    required Color textColor,
+    required Color subText,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: primary.withOpacity(0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: primary, size: 18),
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(value),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(fontSize: 14, height: 1.35, color: subText),
+              ),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _Timeline extends StatelessWidget {
+  const _Timeline({required this.isLast, required this.primary});
+  final bool isLast;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: primary, width: 3),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: primary.withOpacity(0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          Container(
+            width: 3,
+            height: 110,
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primary.withOpacity(0.7), primary.withOpacity(0.15)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
       ],
     );
   }
