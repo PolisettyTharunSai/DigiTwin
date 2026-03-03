@@ -61,6 +61,15 @@ class _SignupScreenState extends State<SignupScreen> {
       if (res.session == null) {
         _showVerifyDialog(email);
       } else {
+        // 3. Explicitly update the profile table with the name if the user is signed in immediately
+        // This ensures the name isn't lost if the database trigger uses a default value
+        try {
+          await supabase.from('profile').update({'name': name}).eq('id', user.id);
+        } catch (e) {
+          debugPrint("Error updating profile name after signup: $e");
+          // Not throwing here to allow navigation even if profile update fails (it might be handled by trigger later)
+        }
+
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,

@@ -104,15 +104,31 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
             .maybeSingle();
 
         bool isCropPlanted = false;
-        String? name = res.user!.userMetadata?['name'];
+        // Preferred name from Auth metadata (set during signup)
+        String? metadataName = res.user!.userMetadata?['name'];
+        String? finalName;
         
         if (profileData != null) {
           isCropPlanted = profileData['is_crop_planted'] ?? false;
-          name = profileData['name'] ?? name;
+          finalName = profileData['name'];
+
+          // If profile name is "New User" or null, sync it with metadataName
+          if ((finalName == null || finalName == "New User" || finalName.isEmpty) && metadataName != null) {
+            finalName = metadataName;
+            // Update the profile table with the correct name
+            try {
+              await Supabase.instance.client
+                  .from('profile')
+                  .update({'name': finalName})
+                  .eq('id', userId);
+            } catch (e) {
+              debugPrint("Error syncing profile name on login: $e");
+            }
+          }
           
           if (isCropPlanted) {
             final plantingData = PlantingData(
-              farmerName: name ?? '',
+              farmerName: finalName ?? 'Farmer',
               crop: profileData['crop'] ?? 'Potato',
               date: profileData['planting_date'] ?? '',
               latitude: (profileData['latitude'] as num?)?.toDouble() ?? 0.0,
@@ -128,12 +144,14 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
             await prefs.setBool('isCropPlanted', false);
           }
         } else {
-           await prefs.setBool('isCropPlanted', false);
+          // If profile doesn't exist yet (unlikely if trigger worked), use metadataName
+          finalName = metadataName;
+          await prefs.setBool('isCropPlanted', false);
         }
 
         // Save name to local storage
-        if (name != null) {
-          await prefs.setString('farmerName', name);
+        if (finalName != null) {
+          await prefs.setString('farmerName', finalName);
         }
 
         if (mounted) {
