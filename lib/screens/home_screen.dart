@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 
 import 'daily_recommendation_screen.dart';
 import 'instructions_screen.dart';
@@ -59,6 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _autoScrollTimer;
   bool _hasTodayLogSubmitted = false;
   bool _isPopupShowing = false;
+  bool _modelExists = true;
+  final Dio _dio = Dio();
 
   @override
   void initState() {
@@ -240,31 +243,60 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+
+    // Check if 3D model exists for the adjusted day
+    if (currentDay > 30) {
+      final modelUrl = _getModelUrl();
+      try {
+        final response = await _dio.head(modelUrl);
+        if (mounted) {
+          setState(() {
+            _modelExists = response.statusCode == 200;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _modelExists = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) setState(() => _modelExists = true);
+    }
   }
 
   List<String> _getImages() {
+    // No images for the first 30 days
+    if (currentDay <= 30) return [];
+
+    // Day 31 maps to Dec 10 (Day 1 of the dataset)
+    int adjustedDay = currentDay - 30;
+
     final startDate = DateTime(2025, 12, 10);
-    final date = startDate.add(Duration(days: currentDay - 1));
+    final date = startDate.add(Duration(days: adjustedDay - 1));
     final day = date.day;
     final monthAbbr = DateFormat('MMM').format(date).toLowerCase();
 
-    String monthYearFolder;
-    if (date.month == 12) {
-      monthYearFolder = "December ${date.year}";
-    } else {
-      monthYearFolder = "${DateFormat('MMM').format(date)} ${date.year}";
-    }
+    String monthYearFolder = date.month == 12
+        ? "December ${date.year}"
+        : "${DateFormat('MMM').format(date)} ${date.year}";
 
     final dayFolder = "$day $monthAbbr";
 
     return List.generate(10, (i) {
       final frameName = "frame_${(i).toString().padLeft(3, '0')}.webp";
-      return "https://cdn.jsdelivr.net/gh/PolisettyTharunSai/DigiTwin@Data/potato_extracted_frames_comp/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName";
+      return "https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/potato_extracted_frames_comp/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName";
     });
   }
 
   String _getModelUrl() {
-    return "https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/models/Day$currentDay.glb";
+    // If less than or equal to 30 days, we don't have a model yet
+    if (currentDay <= 30) return "";
+
+    // Day 31 maps to Day 1 model
+    int adjustedDay = currentDay - 30;
+    return "https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/models/Day$adjustedDay.glb";
   }
 
   void _startAutoScroll() {
@@ -285,38 +317,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _pickViewingDate() async {
+  Future<void> _showCustomCalendar() async {
     if (plantationDate == null) return;
 
-    final picked = await showDatePicker(
+    final picked = await showDialog<DateTime>(
       context: context,
-      initialDate:
-          plantationDate!
-              .add(Duration(days: currentDay - 1))
-              .isBefore(plantationDate!)
-          ? plantationDate!
-          : plantationDate!.add(Duration(days: currentDay - 1)),
-      firstDate: plantationDate!,
-      lastDate: plantationDate!.add(const Duration(days: 108)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryColor,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => _CustomCalendarDialog(
+        initialDate: plantationDate!.add(Duration(days: currentDay - 1)),
+        plantationDate: plantationDate!,
+      ),
     );
 
     if (picked != null) {
       final diff = picked.difference(plantationDate!).inDays;
       if (mounted) {
         setState(() {
-          currentDay = (diff + 1).clamp(1, 100);
+          currentDay = diff + 1;
           currentImageIndex = 0;
         });
       }
@@ -341,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const DailyCheckModal(),
+      builder: (context) => DailyCheckModal(initialAlreadySubmitted: _hasTodayLogSubmitted),
     );
     _isPopupShowing = false;
   }
@@ -421,6 +437,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final imageWidth = screenWidth * 0.85;
     final imageHeight = imageWidth * 1.5;
+
+    Widget mediaContent;
+    if (currentDay <= 30) {
+      mediaContent = _buildNoVisualInfoWidget(
+        "No visual information available\nfor the first 30 days.",
+      );
+    } else {
+      mediaContent = SizedBox(
+        height: imageHeight,
+        child: show3DModel
+            ? (_modelExists
+                ? _buildTodayModel(modelUrl)
+                : _buildNoVisualInfoWidget(
+                    "3D Model not available\nfor today.",
+                    height: imageHeight,
+                  ))
+            : _build2DCarousel(
+                images,
+                imageWidth,
+                imageHeight,
+              ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -723,18 +762,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        SizedBox(
-                          height: imageHeight,
-                          child: show3DModel
-                              ? _buildTodayModel(modelUrl)
-                              : _build2DCarousel(
-                                  images,
-                                  imageWidth,
-                                  imageHeight,
-                                ),
-                        ),
+                        mediaContent,
                         const SizedBox(height: 15),
-                        if (!show3DModel)
+                        if (!show3DModel && currentDay > 30)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(images.length, (i) {
@@ -823,7 +853,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: _pickViewingDate,
+                          onTap: _showCustomCalendar,
                           child: const Icon(
                             Icons.calendar_month,
                             color: primaryColor,
@@ -1063,12 +1093,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
+                  return _buildNoVisualInfoWidget(
+                    "No visual information available\nfor today.",
+                    height: imgHeight,
                   );
                 },
               ),
@@ -1132,10 +1159,40 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildNoVisualInfoWidget(String message, {double height = 300}) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.visibility_off_outlined,
+              size: 58, color: Colors.grey),
+          const SizedBox(height: 14),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class DailyCheckModal extends StatefulWidget {
-  const DailyCheckModal({super.key});
+  final bool initialAlreadySubmitted;
+  const DailyCheckModal({super.key, required this.initialAlreadySubmitted});
 
   @override
   State<DailyCheckModal> createState() => _DailyCheckModalState();
@@ -1148,21 +1205,74 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   bool pestsObserved = false;
   final TextEditingController _pestNotesController = TextEditingController();
   final TextEditingController _feedbackController = TextEditingController();
-  List<XFile> _images = [];
+  List<dynamic> _images = [];
   bool _isSubmitting = false;
   bool _alreadySubmittedToday = false;
+  bool _isEditing = false;
+  Map<String, dynamic>? _existingLogData;
+  bool _isCheckingStatus = true;
 
   @override
   void initState() {
     super.initState();
+    _alreadySubmittedToday = widget.initialAlreadySubmitted;
     _checkSubmissionStatus();
   }
 
   Future<void> _checkSubmissionStatus() async {
     final prefs = await SharedPreferences.getInstance();
+    
     final bool? hasSubmitted = prefs.getBool('has_today_log_submitted');
-    if (hasSubmitted == true) {
-      if (mounted) setState(() => _alreadySubmittedToday = true);
+    
+    // Use SharedPreferences as a fast hint if not already set by Widget
+    if (!_alreadySubmittedToday) {
+      if (hasSubmitted == true) {
+        if (mounted) setState(() => _alreadySubmittedToday = true);
+      }
+    }
+
+    // Always check DB to be sure and to fetch data for editing
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final response = await supabase
+          .from('plant_daily_log')
+          .select()
+          .eq('user_id', user.id)
+          .eq('log_date', today)
+          .maybeSingle();
+
+      if (response != null) {
+        if (mounted) {
+          setState(() {
+            _alreadySubmittedToday = true;
+            _existingLogData = response;
+
+            // Pre-fill data
+            watered = response['watered'];
+            if (watered == true) {
+              _waterAmountController.text =
+                  response['water_amount']?.toString() ?? "";
+              _selectedWaterUnit = response['water_unit'] ?? "ml";
+            }
+            pestsObserved = response['pests_observed'] ?? false;
+            _pestNotesController.text = response['pest_notes'] ?? "";
+            _feedbackController.text = response['feedback'] ?? "";
+            _images = List<dynamic>.from(response['images'] ?? []);
+          });
+        }
+      } else if (hasSubmitted == true) {
+        // SharedPreferences says yes but DB says no (maybe deleted or different device)
+        if (mounted) setState(() => _alreadySubmittedToday = false);
+        await prefs.setBool('has_today_log_submitted', false);
+      }
+    } catch (e) {
+      debugPrint("Error checking submission status: $e");
+    } finally {
+      if (mounted) setState(() => _isCheckingStatus = false);
     }
   }
 
@@ -1205,17 +1315,23 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       final List<String> imageUrls = [];
 
       for (var image in _images) {
-        final fileName =
-            'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-        await supabase.storage.from('daily_logs').upload(
-          fileName,
-          File(image.path),
-          fileOptions: const FileOptions(contentType: 'image/jpeg'),
-        );
-        final publicUrl = supabase.storage
-            .from('daily_logs')
-            .getPublicUrl(fileName);
-        imageUrls.add(publicUrl);
+        if (image is String) {
+          // It's an existing URL
+          imageUrls.add(image);
+        } else if (image is XFile) {
+          // It's a new local file
+          final fileName =
+              'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+          await supabase.storage.from('models').upload(
+            fileName,
+            File(image.path),
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+          final publicUrl = supabase.storage
+              .from('models')
+              .getPublicUrl(fileName);
+          imageUrls.add(publicUrl);
+        }
       }
 
       final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -1235,6 +1351,27 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         'water_unit': watered == true ? _selectedWaterUnit : null,
       };
 
+      // Delete old photos that are no longer in the list (if we were updating)
+      if (_alreadySubmittedToday && _existingLogData != null) {
+        final List<String> oldImages = List<String>.from(_existingLogData!['images'] ?? []);
+        final List<String> imagesToDelete = oldImages.where((url) => !imageUrls.contains(url)).toList();
+
+        for (var url in imagesToDelete) {
+          try {
+            // Extract filename from URL
+            final uri = Uri.parse(url);
+            final pathSegments = uri.pathSegments;
+            // The path in publicUrl is usually /storage/v1/object/public/models/filename
+            // or similar depending on the Supabase setup.
+            // For getPublicUrl, it's safer to extract after 'models/'
+            final storagePath = url.split('models/').last;
+            await supabase.storage.from('models').remove([storagePath]);
+          } catch (e) {
+            debugPrint("Error deleting old image: $e");
+          }
+        }
+      }
+
       await supabase.from('plant_daily_log').upsert(
         logData,
         onConflict: 'user_id, log_date',
@@ -1247,7 +1384,13 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Daily log submitted successfully!")),
+          SnackBar(
+            content: Text(
+              _alreadySubmittedToday
+                  ? "Daily log updated successfully!"
+                  : "Daily log submitted successfully!",
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -1377,7 +1520,8 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                 ),
               ),
             const SizedBox(height: 16),
-            _frostedCard(
+            if (!_alreadySubmittedToday || _isEditing) ...[
+              _frostedCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1586,12 +1730,19 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.file(
-                                File(img.path),
-                                width: 82,
-                                height: 82,
-                                fit: BoxFit.cover,
-                              ),
+                              child: img is String
+                                  ? Image.network(
+                                      img,
+                                      width: 82,
+                                      height: 82,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File((img as XFile).path),
+                                      width: 82,
+                                      height: 82,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             Positioned(
                               right: 0,
@@ -1638,31 +1789,41 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               ),
             ),
             const SizedBox(height: 26),
+            ],
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _HomeScreenState.primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                child:
-                    _isSubmitting
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                          _alreadySubmittedToday
-                              ? "Update Today's Log"
-                              : "Submit Today's Log",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+              child: _isCheckingStatus
+                  ? const Center(child: CircularProgressIndicator(color: _HomeScreenState.primaryColor))
+                  : ElevatedButton(
+                      onPressed:
+                          _isSubmitting
+                              ? null
+                              : (_alreadySubmittedToday && !_isEditing
+                                  ? () => setState(() => _isEditing = true)
+                                  : _submit),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _HomeScreenState.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-              ),
+                      ),
+                      child:
+                          _isSubmitting
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text(
+                                _alreadySubmittedToday
+                                    ? (_isEditing
+                                        ? "Update Today's Log"
+                                        : "Edit today's log")
+                                    : "Submit Today's Log",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                    ),
             ),
             const SizedBox(height: 10),
           ],
@@ -1792,3 +1953,307 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
     );
   }
 }
+
+class _CustomCalendarDialog extends StatefulWidget {
+  final DateTime initialDate;
+  final DateTime plantationDate;
+
+  const _CustomCalendarDialog({
+    required this.initialDate,
+    required this.plantationDate,
+  });
+
+  @override
+  State<_CustomCalendarDialog> createState() => _CustomCalendarDialogState();
+}
+
+class _CustomCalendarDialogState extends State<_CustomCalendarDialog> {
+  late DateTime _focusedDate;
+  late PageController _pageController;
+  static const Color plantationColor = Color(0xFFFF9644);
+
+  // Milestones: Day index (1-based) to Sticker/Label
+  final Map<int, String> milestones = {
+    1: '🌱', // Planting
+    30: '🌿', // Growth
+    60: '🥔', // Tuber
+    105: '🧺', // Harvest near end
+  };
+
+  late List<DateTime> months;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedDate = widget.initialDate;
+    months = _generateMonths();
+    final int initialPage = months.indexWhere(
+      (m) => m.year == _focusedDate.year && m.month == _focusedDate.month,
+    );
+    _pageController = PageController(initialPage: initialPage != -1 ? initialPage : 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      child: Container(
+        width: 350,
+        height: 500,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Select Date",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, color: plantationColor),
+                  onPressed: () {
+                    _pageController.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
+                Text(
+                  DateFormat('MMMM yyyy').format(_focusedDate),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: plantationColor,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, color: plantationColor),
+                  onPressed: () {
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: months.length,
+                onPageChanged: (i) {
+                  setState(() => _focusedDate = months[i]);
+                },
+                itemBuilder: (context, index) {
+                  return _buildMonthGrid(months[index]);
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildLegend(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<DateTime> _generateMonths() {
+    List<DateTime> list = [];
+    DateTime start = DateTime(
+      widget.plantationDate.year,
+      widget.plantationDate.month,
+    );
+    DateTime end = widget.plantationDate.add(const Duration(days: 109));
+
+    DateTime current = start;
+    while (current.isBefore(end) ||
+        (current.year == end.year && current.month == end.month)) {
+      list.add(current);
+      current = DateTime(current.year, current.month + 1);
+    }
+    return list;
+  }
+
+  Widget _buildMonthGrid(DateTime monthDate) {
+    final int daysInMonth = DateUtils.getDaysInMonth(
+      monthDate.year,
+      monthDate.month,
+    );
+    final int firstWeekday = DateTime(monthDate.year, monthDate.month, 1).weekday;
+    final int offset = firstWeekday % 7;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+              .map(
+                (d) => Text(
+                  d,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+            ),
+            itemCount: 42, // Max grid size
+            itemBuilder: (context, index) {
+              final dayIndex = index - offset + 1;
+              if (dayIndex < 1 || dayIndex > daysInMonth) {
+                return const SizedBox.shrink();
+              }
+
+              final date = DateTime(
+                monthDate.year,
+                monthDate.month,
+                dayIndex,
+              );
+              final isOutsideRange =
+                  date.isBefore(widget.plantationDate) ||
+                  date.isAfter(
+                    widget.plantationDate.add(const Duration(days: 108)),
+                  );
+
+              final dayOfCycle =
+                  date.difference(widget.plantationDate).inDays + 1;
+              final sticker = milestones[dayOfCycle];
+              final DateTime now = DateTime.now();
+              final bool isToday =
+                  date.year == now.year &&
+                  date.month == now.month &&
+                  date.day == now.day;
+
+              final isSelected =
+                  date.year == widget.initialDate.year &&
+                  date.month == widget.initialDate.month &&
+                  date.day == widget.initialDate.day;
+
+              return GestureDetector(
+                onTap: isOutsideRange ? null : () => Navigator.pop(context, date),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? plantationColor
+                            : (isOutsideRange
+                                ? Colors.grey.shade50
+                                : Colors.white),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color:
+                          isSelected
+                              ? plantationColor
+                              : (isToday
+                                  ? plantationColor.withOpacity(0.5)
+                                  : Colors.grey.shade100),
+                      width: isToday ? 2 : 1,
+                    ),
+                    boxShadow:
+                        isSelected
+                            ? [
+                              BoxShadow(
+                                color: plantationColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                            : null,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        dayIndex.toString(),
+                        style: TextStyle(
+                          color:
+                              isSelected
+                                  ? Colors.white
+                                  : (isOutsideRange
+                                      ? Colors.grey.shade300
+                                      : Colors.black87),
+                          fontWeight:
+                              isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                        ),
+                      ),
+                      if (sticker != null)
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: Text(
+                            sticker,
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegend() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: milestones.entries.map((e) {
+          return Row(
+            children: [
+              Text(e.value, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 4),
+              Text(
+                "Day ${e.key}",
+                style: const TextStyle(fontSize: 9, color: Colors.grey),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
