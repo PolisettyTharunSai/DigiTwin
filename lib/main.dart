@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'screens/splash_screen.dart';
-import 'theme/app_theme.dart';
+import 'core/theme/app_theme.dart';
+import 'features/onboarding/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,8 +25,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.theme,
       home: const SplashScreen(),
       builder: (context, child) {
-        final locale = Localizations.localeOf(context);
-        final isUrdu = locale.languageCode == 'ur';
+        final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
         return Directionality(
           textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
           child: child!,
