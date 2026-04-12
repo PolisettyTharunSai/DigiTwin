@@ -37,6 +37,7 @@ import '../../ar_view/screens/ar_view_screen.dart';
 import '../../instructions/screens/instructions_screen.dart';
 import '../../onboarding/screens/get_started_screen.dart';
 import 'daily_recommendation_screen.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
 
 /// Entry point for the main dashboard: coordinates services and widgets.
 /// All data loading is delegated to [ProfileService], [HomeService], and
@@ -57,10 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentImageIndex = 0;
   String _farmerName = 'Farmer';
   DateTime? _plantationDate;
+  String? _avatarUrl;
   bool _show3DModel = false;
   bool _hasTodayLogSubmitted = false;
   bool _isPopupShowing = false;
   bool _modelExists = true;
+  bool _isAdmin = false;
   DayData _dayData = DayData.fallback();
 
   final CarouselSliderController _carouselController =
@@ -87,15 +90,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadFarmerAndPlantation() async {
     final result = await ProfileService.instance.loadFarmerAndPlantation();
+    _checkAdminStatus();
     if (!mounted) return;
     setState(() {
       _farmerName = result['farmerName'];
       _plantationDate = result['plantationDate'];
+      _avatarUrl = result['avatarUrl'];
       if (_plantationDate != null) {
         _currentDay = DayUtils.calculateTodayDay(_plantationDate!);
       }
     });
     await _loadDayData();
+  }
+
+  void _checkAdminStatus() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      try {
+        final res = await Supabase.instance.client
+            .from('profile')
+            .select('is_admin')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (res != null && res['is_admin'] == true) {
+          if (mounted) {
+            setState(() {
+              _isAdmin = true;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('HomeService: Error checking admin status — $e');
+      }
+    }
   }
 
   Future<void> _loadDayData() async {
@@ -292,6 +320,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   farmerName: _farmerName,
                   plantationDate: _plantationDate,
                   hasTodayLogSubmitted: _hasTodayLogSubmitted,
+                  avatarUrl: _avatarUrl,
+                  isAdmin: _isAdmin,
+                  onAdminTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminDashboardScreen(),
+                    ),
+                  ),
                   onLogoutTap: _showLogoutConfirmation,
                   onDailyCheckTap: () async {
                     await _showDailyCheckPopup();

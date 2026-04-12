@@ -9,6 +9,7 @@ import 'signup_screen.dart';
 import 'placeholder_screen.dart';
 import '../../home/screens/home_screen.dart';
 import '../../home/models/planting_data.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
 
 class GetStartedScreen extends StatefulWidget {
   const GetStartedScreen({super.key});
@@ -74,18 +75,22 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
         final profileData = await Supabase.instance.client.from('profile').select().eq('id', userId).maybeSingle();
 
         bool isCropPlanted = false;
+        bool isAdmin = false;
         String? metadataName = res.user!.userMetadata?['name'];
         String? finalName;
 
         if (profileData != null) {
           isCropPlanted = profileData['is_crop_planted'] ?? false;
+          isAdmin = profileData['is_admin'] ?? false;
           finalName = profileData['name'];
+          
           if ((finalName == null || finalName == 'New User' || finalName.isEmpty) && metadataName != null) {
             finalName = metadataName;
             try {
               await Supabase.instance.client.from('profile').update({'name': finalName}).eq('id', userId);
             } catch (e) { debugPrint('Error syncing profile name on login: $e'); }
           }
+          
           if (isCropPlanted) {
             final plantingData = PlantingData(
               farmerName: finalName ?? 'Farmer',
@@ -107,12 +112,20 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
         }
 
         if (finalName != null) await prefs.setString('farmerName', finalName);
+        await prefs.setBool('isAdmin', isAdmin);
 
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen()),
-          );
+          if (isAdmin) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen()),
+            );
+          }
         }
       }
     } on AuthException catch (e) {

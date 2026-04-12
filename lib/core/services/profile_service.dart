@@ -11,14 +11,15 @@ class ProfileService {
 
   static const ProfileService instance = ProfileService._();
 
-  /// Loads farmer name and planting date from Supabase, falling back to
+  /// Loads farmer name, planting date, and avatar_url from Supabase, falling back to
   /// SharedPreferences offline cache.
-  /// Returns a map with keys: 'farmerName' (String) and 'plantationDate' (DateTime?).
+  /// Returns a map with keys: 'farmerName' (String), 'plantationDate' (DateTime?), and 'avatarUrl' (String?).
   Future<Map<String, dynamic>> loadFarmerAndPlantation() async {
     final prefs = await SharedPreferences.getInstance();
 
     // Start with cached values
     String farmerName = prefs.getString(AppConstants.PREF_FARMER_NAME) ?? 'Farmer';
+    String? avatarUrl = prefs.getString('avatarUrl');
     DateTime? plantationDate;
 
     final String? savedDate = prefs.getString(AppConstants.PREF_PLANTING_DATE);
@@ -32,7 +33,7 @@ class ProfileService {
       try {
         final res = await Supabase.instance.client
             .from(AppConstants.TABLE_PROFILE)
-            .select('name, planting_date')
+            .select('name, planting_date, avatar_url')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -40,6 +41,11 @@ class ProfileService {
           if (res['name'] != null) {
             farmerName = res['name'];
             await prefs.setString(AppConstants.PREF_FARMER_NAME, farmerName);
+          }
+
+          if (res['avatar_url'] != null) {
+            avatarUrl = res['avatar_url'];
+            await prefs.setString('avatarUrl', avatarUrl!);
           }
 
           if (res['planting_date'] != null) {
@@ -73,6 +79,7 @@ class ProfileService {
     return {
       'farmerName': farmerName,
       'plantationDate': plantationDate,
+      'avatarUrl': avatarUrl,
     };
   }
 }

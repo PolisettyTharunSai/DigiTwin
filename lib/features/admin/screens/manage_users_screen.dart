@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/day_utils.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import 'farmer_logs_screen.dart';
 
 class ManageUsersScreen extends StatefulWidget {
@@ -22,8 +23,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   // Filter states
   String _cropPlantedFilter = 'All'; // 'All', 'Planted', 'Not Planted'
   String _locationFilter = 'All'; // 'All', 'With GPS', 'Without GPS'
-  int? _dayFrom;
-  int? _dayTo;
+  final TextEditingController _dayFromController = TextEditingController();
+  final TextEditingController _dayToController = TextEditingController();
 
   @override
   void initState() {
@@ -35,6 +36,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _dayFromController.dispose();
+    _dayToController.dispose();
     super.dispose();
   }
 
@@ -42,7 +45,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     try {
       final response = await _supabase
           .from('profile')
-          .select()
+          .select('*, avatar_url')
           .eq('is_admin', false)
           .order('created_at');
       
@@ -65,6 +68,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   void _applyFilters() {
     final query = _searchController.text.toLowerCase();
+    final dayFrom = int.tryParse(_dayFromController.text);
+    final dayTo = int.tryParse(_dayToController.text);
+
     setState(() {
       _filteredUsers = _allUsers.where((user) {
         final name = (user['name'] ?? '').toString().toLowerCase();
@@ -86,16 +92,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         }
 
         bool matchesDayRange = true;
-        if (user['is_crop_planted'] == true && user['planting_date'] != null) {
-          final plantingDate = DateTime.parse(user['planting_date']);
-          final currentDay = DayUtils.calculateTodayDay(plantingDate);
-          if (_dayFrom != null && currentDay < _dayFrom!) matchesDayRange = false;
-          if (_dayTo != null && currentDay > _dayTo!) matchesDayRange = false;
-        } else if ((_dayFrom != null || _dayTo != null)) {
-          // If filtering by day but crop not planted, exclude? 
-          // Requirements say "filter on is_crop_planted" separately, 
-          // but if day range is set, we probably only want planted ones.
-          matchesDayRange = false;
+        if (dayFrom != null || dayTo != null) {
+          if (user['is_crop_planted'] == true && user['planting_date'] != null) {
+            try {
+              final plantingDate = DateTime.parse(user['planting_date']);
+              final currentDay = DayUtils.calculateTodayDay(plantingDate);
+              if (dayFrom != null && currentDay < dayFrom) matchesDayRange = false;
+              if (dayTo != null && currentDay > dayTo) matchesDayRange = false;
+            } catch (_) {
+              matchesDayRange = false;
+            }
+          } else {
+            matchesDayRange = false;
+          }
         }
 
         return matchesSearch && matchesCrop && matchesLocation && matchesDayRange;
@@ -107,8 +116,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     setState(() {
       _cropPlantedFilter = 'All';
       _locationFilter = 'All';
-      _dayFrom = null;
-      _dayTo = null;
+      _dayFromController.clear();
+      _dayToController.clear();
       _applyFilters();
     });
   }
@@ -135,55 +144,44 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Filter Farmers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text('Filter Users', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
                     ],
                   ),
                   const SizedBox(height: 16),
                   const Text('Crop Planted?', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'All', label: Text('All')),
-                      ButtonSegment(value: 'Planted', label: Text('Planted')),
-                      ButtonSegment(value: 'Not Planted', label: Text('Not')),
-                    ],
-                    selected: {_cropPlantedFilter},
-                    onSelectionChanged: (val) => setModalState(() => _cropPlantedFilter = val.first),
-                  ),
+                  const SizedBox(height: 8),
+                  _buildSegmentedControl(['All', 'Planted', 'Not Planted'], _cropPlantedFilter, (val) {
+                    setModalState(() => _cropPlantedFilter = val);
+                  }),
                   const SizedBox(height: 16),
                   const Text('Planting Day Range', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(labelText: 'From Day', border: OutlineInputBorder()),
+                          controller: _dayFromController,
+                          decoration: const InputDecoration(labelText: 'Day from', border: OutlineInputBorder()),
                           keyboardType: TextInputType.number,
-                          controller: TextEditingController(text: _dayFrom?.toString() ?? ''),
-                          onChanged: (val) => _dayFrom = int.tryParse(val),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(labelText: 'To Day', border: OutlineInputBorder()),
+                          controller: _dayToController,
+                          decoration: const InputDecoration(labelText: 'Day to', border: OutlineInputBorder()),
                           keyboardType: TextInputType.number,
-                          controller: TextEditingController(text: _dayTo?.toString() ?? ''),
-                          onChanged: (val) => _dayTo = int.tryParse(val),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('Has Location?', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'All', label: Text('All')),
-                      ButtonSegment(value: 'With GPS', label: Text('GPS')),
-                      ButtonSegment(value: 'Without GPS', label: Text('No GPS')),
-                    ],
-                    selected: {_locationFilter},
-                    onSelectionChanged: (val) => setModalState(() => _locationFilter = val.first),
-                  ),
+                  const Text('Has GPS?', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  _buildSegmentedControl(['All', 'With GPS', 'Without GPS'], _locationFilter, (val) {
+                    setModalState(() => _locationFilter = val);
+                  }),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -218,12 +216,30 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
+  Widget _buildSegmentedControl(List<String> options, String selected, Function(String) onSelect) {
+    return Wrap(
+      spacing: 8,
+      children: options.map((opt) {
+        final isSelected = selected == opt;
+        return ChoiceChip(
+          label: Text(opt),
+          selected: isSelected,
+          onSelected: (val) => onSelect(opt),
+          selectedColor: AppColors.primary.withOpacity(0.2),
+          labelStyle: TextStyle(color: isSelected ? AppColors.primary : Colors.black87),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Manage Users'),
+        title: const Text('Manage Users', style: TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
@@ -235,9 +251,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search by name or email',
+                      hintText: 'Search name or email...',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     ),
                   ),
@@ -251,12 +269,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               ],
             ),
           ),
-          _buildFilterChips(),
+          _buildActiveFilterChips(),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredUsers.isEmpty
-                    ? const Center(child: Text('No users found matching filters.'))
+                    ? const Center(child: Text('No farmers found matching filters.'))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         itemCount: _filteredUsers.length,
@@ -264,13 +282,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           final user = _filteredUsers[index];
                           final bool isPlanted = user['is_crop_planted'] == true;
                           String subtitle = "Not planted yet";
-                          if (isPlanted) {
-                            final plantingDateStr = user['planting_date'];
-                            int day = 0;
-                            if (plantingDateStr != null) {
-                              day = DayUtils.calculateTodayDay(DateTime.parse(plantingDateStr));
-                            }
-                            subtitle = "${user['crop'] ?? 'Crop'} • Day $day";
+                          if (isPlanted && user['planting_date'] != null) {
+                            try {
+                              final day = DayUtils.calculateTodayDay(DateTime.parse(user['planting_date']));
+                              subtitle = "${user['crop'] ?? 'Crop'} • Day $day";
+                            } catch (_) {}
                           }
                           
                           return Card(
@@ -278,22 +294,20 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: AppColors.primary.withOpacity(0.1),
-                                child: Text(
-                                  (user['name'] ?? 'U')[0].toUpperCase(),
-                                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                                ),
+                              leading: UserAvatar(
+                                avatarUrl: user['avatar_url'],
+                                name: user['name'] ?? 'Unknown',
+                                radius: 24,
                               ),
                               title: Text(user['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(user['email'] ?? 'No email'),
+                                  Text(user['email'] ?? 'No email', style: const TextStyle(fontSize: 12)),
                                   const SizedBox(height: 2),
                                   Row(
                                     children: [
-                                      Text(subtitle, style: TextStyle(color: isPlanted ? AppColors.successGreen : Colors.grey)),
+                                      Text(subtitle, style: TextStyle(color: isPlanted ? AppColors.successGreen : Colors.grey, fontSize: 12)),
                                       if (user['latitude'] != null) ...[
                                         const SizedBox(width: 8),
                                         const Icon(Icons.location_on, size: 14, color: AppColors.primary),
@@ -321,7 +335,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildActiveFilterChips() {
     final List<Widget> chips = [];
     if (_cropPlantedFilter != 'All') {
       chips.add(_filterChip(_cropPlantedFilter, () => setState(() { _cropPlantedFilter = 'All'; _applyFilters(); })));
@@ -329,17 +343,20 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     if (_locationFilter != 'All') {
       chips.add(_filterChip(_locationFilter, () => setState(() { _locationFilter = 'All'; _applyFilters(); })));
     }
-    if (_dayFrom != null || _dayTo != null) {
+    final dayFrom = _dayFromController.text;
+    final dayTo = _dayToController.text;
+    if (dayFrom.isNotEmpty || dayTo.isNotEmpty) {
       String label = "Day";
-      if (_dayFrom != null) label += " $_dayFrom+";
-      if (_dayTo != null) label += " up to $_dayTo";
-      chips.add(_filterChip(label, () => setState(() { _dayFrom = null; _dayTo = null; _applyFilters(); })));
+      if (dayFrom.isNotEmpty) label += " $dayFrom+";
+      if (dayTo.isNotEmpty) label += " to $dayTo";
+      chips.add(_filterChip(label, () => setState(() { _dayFromController.clear(); _dayToController.clear(); _applyFilters(); })));
     }
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
+    return Container(
       height: 40,
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -352,11 +369,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: InputChip(
-        label: Text(label, style: const TextStyle(fontSize: 12)),
+        label: Text(label, style: const TextStyle(fontSize: 11)),
         onDeleted: onDeleted,
         deleteIcon: const Icon(Icons.close, size: 14),
         backgroundColor: AppColors.primary.withOpacity(0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: BorderSide.none,
       ),
     );
   }

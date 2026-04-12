@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../home/screens/home_screen.dart';
 import 'get_started_screen.dart';
 import 'placeholder_screen.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -78,13 +79,24 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const GetStartedScreen()));
       return;
     }
+    
     final prefs = await SharedPreferences.getInstance();
+    final isAdmin = prefs.getBool('isAdmin') ?? false;
     final isCropPlanted = prefs.getBool('isCropPlanted') ?? false;
+
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen()),
-    );
+
+    if (isAdmin) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => isCropPlanted ? const HomeScreen() : const PlaceholderScreen()),
+      );
+    }
   }
 
   @override

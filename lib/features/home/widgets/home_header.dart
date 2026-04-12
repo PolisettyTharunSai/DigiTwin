@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/user_avatar.dart';
+import '../../profile/screens/profile_screen.dart';
 
 /// Header section shown at the top of the HomeScreen.
 /// Displays the farmer greeting, planting date, and action icon buttons.
@@ -9,21 +11,27 @@ class HomeHeader extends StatelessWidget {
   final String farmerName;
   final DateTime? plantationDate;
   final bool hasTodayLogSubmitted;
+  final String? avatarUrl;
 
   final VoidCallback onLogoutTap;
   final VoidCallback onDailyCheckTap;
   final VoidCallback onInstructionsTap;
   final VoidCallback onRecommendationsTap;
+  final bool isAdmin;
+  final VoidCallback? onAdminTap;
 
   const HomeHeader({
     super.key,
     required this.farmerName,
     required this.plantationDate,
     required this.hasTodayLogSubmitted,
+    this.avatarUrl,
     required this.onLogoutTap,
     required this.onDailyCheckTap,
     required this.onInstructionsTap,
     required this.onRecommendationsTap,
+    this.isAdmin = false,
+    this.onAdminTap,
   });
 
   @override
@@ -36,7 +44,17 @@ class HomeHeader extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _LogoutButton(onTap: onLogoutTap),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  ),
+                  child: UserAvatar(
+                    avatarUrl: avatarUrl,
+                    name: farmerName,
+                    radius: 20,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _PlantingInfo(
@@ -53,6 +71,8 @@ class HomeHeader extends StatelessWidget {
             onDailyCheckTap: onDailyCheckTap,
             onInstructionsTap: onInstructionsTap,
             onRecommendationsTap: onRecommendationsTap,
+            isAdmin: isAdmin,
+            onAdminTap: onAdminTap,
           ),
         ],
       ),
@@ -61,27 +81,6 @@ class HomeHeader extends StatelessWidget {
 }
 
 // ── Private sub-widgets ────────────────────────────────────────────────────
-
-class _LogoutButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _LogoutButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(Icons.logout, size: 16, color: Colors.red.shade700),
-      ),
-    );
-  }
-}
 
 class _PlantingInfo extends StatelessWidget {
   final String farmerName;
@@ -137,12 +136,16 @@ class _ActionButtons extends StatelessWidget {
   final VoidCallback onDailyCheckTap;
   final VoidCallback onInstructionsTap;
   final VoidCallback onRecommendationsTap;
+  final bool isAdmin;
+  final VoidCallback? onAdminTap;
 
   const _ActionButtons({
     required this.hasTodayLogSubmitted,
     required this.onDailyCheckTap,
     required this.onInstructionsTap,
     required this.onRecommendationsTap,
+    this.isAdmin = false,
+    this.onAdminTap,
   });
 
   @override
@@ -150,6 +153,14 @@ class _ActionButtons extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (isAdmin && onAdminTap != null) ...[
+          _IconActionButton(
+            icon: Icons.admin_panel_settings,
+            onPressed: onAdminTap!,
+            tooltip: 'Admin Dashboard',
+          ),
+          const SizedBox(width: 10),
+        ],
         _IconActionButton(
           icon: Icons.assignment_turned_in_outlined,
           onPressed: onDailyCheckTap,
@@ -194,7 +205,7 @@ class _IconActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
           ),
         ],
