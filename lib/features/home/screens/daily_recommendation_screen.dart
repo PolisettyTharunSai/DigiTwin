@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import '../services/recommendation_service.dart';
 
 class DailyRecommendationScreen extends StatefulWidget {
   const DailyRecommendationScreen({super.key});
@@ -9,6 +9,7 @@ class DailyRecommendationScreen extends StatefulWidget {
 }
 
 class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
+  final _recommendationService = RecommendationService();
   late Future<List<Map<String, String>>> _recommendations;
 
   @override
@@ -18,37 +19,13 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
   }
 
   Future<List<Map<String, String>>> _loadRecommendations() async {
-    final List<Map<String, String>> recommendations = [];
-    for (int i = 1; i <= 109; i++) {
-      final path = 'assets/Data/day$i/day$i.txt';
-      try {
-        final data = await rootBundle.loadString(path);
-        final lines = data.split('\n');
-        final recommendation = {
-          'day': 'Day $i',
-          'crop_stage': 'Not available',
-          'water_requirement': 'Not available',
-          'nutrient_application': 'Not available',
-        };
-        for (final line in lines) {
-          if (line.startsWith('Crop stage:')) {
-            recommendation['crop_stage'] = line.substring('Crop stage: '.length).trim();
-          } else if (line.startsWith('Water requirement:')) {
-            recommendation['water_requirement'] = line.substring('Water requirement: '.length).trim();
-          } else if (line.startsWith('Nutrient application:')) {
-            recommendation['nutrient_application'] = line.substring('Nutrient application: '.length).trim();
-          }
-        }
-        if (recommendation['crop_stage'] != 'Not available' ||
-            recommendation['water_requirement'] != 'Not available' ||
-            recommendation['nutrient_application'] != 'Not available') {
-          recommendations.add(recommendation);
-        }
-      } catch (e) {
-        debugPrint('Error loading recommendation for day $i: $e');
-      }
+    try {
+      final rec = await _recommendationService.getDailyRecommendation();
+      return [rec.toMap()];
+    } catch (e) {
+      debugPrint('_loadRecommendations error: $e');
+      rethrow;
     }
-    return recommendations;
   }
 
   @override
@@ -66,7 +43,7 @@ class _DailyRecommendationScreenState extends State<DailyRecommendationScreen> {
                 future: _recommendations,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  if (snapshot.hasError) return const Center(child: Text('Error loading recommendations.'));
+                  if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(16), child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center)));
                   if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text('No recommendations found.'));
                   final recommendations = snapshot.data!;
                   return ListView.builder(

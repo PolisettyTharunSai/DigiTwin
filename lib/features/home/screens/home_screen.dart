@@ -171,9 +171,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _autoScrollTimer?.cancel();
         return;
       }
-      try {
-        _carouselController.nextPage();
-      } catch (_) {}
+      // Only scroll if we are past the visual data start day (no carousel exists before then)
+      if (_currentDay > AppConstants.VISUAL_DATA_START_DAY) {
+        try {
+          _carouselController.nextPage();
+        } catch (e) {
+          debugPrint('AutoScroll: Controller not ready yet: $e');
+        }
+      }
     });
   }
 

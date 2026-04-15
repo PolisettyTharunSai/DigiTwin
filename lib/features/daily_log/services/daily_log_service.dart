@@ -4,12 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../home/services/recommendation_service.dart';
 
 /// Handles all Supabase interactions for the daily plant log feature.
 class DailyLogService {
-  const DailyLogService._();
+  DailyLogService._();
 
-  static const DailyLogService instance = DailyLogService._();
+  static final DailyLogService instance = DailyLogService._();
+
+  final _recommendationService = RecommendationService();
 
   /// Returns `true` if the authenticated user has already submitted a log today.
   Future<bool> hasSubmittedToday(String userId) async {
@@ -75,6 +78,16 @@ class DailyLogService {
     await Supabase.instance.client
         .from(AppConstants.TABLE_PLANT_DAILY_LOG)
         .upsert(logData, onConflict: 'user_id, log_date');
+
+    try {
+      await _recommendationService.updateCarryBalance(
+        waterAmount: logData['water_amount'] ?? 0,
+        waterUnit: logData['water_unit'],
+        watered: logData['watered'] ?? false,
+      );
+    } catch (e) {
+      debugPrint('Could not update carry balance: $e');
+    }
   }
 
   /// Uploads an image file to Supabase Storage and returns its public URL.
