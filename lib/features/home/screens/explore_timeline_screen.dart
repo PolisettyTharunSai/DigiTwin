@@ -37,7 +37,6 @@ import '../../ar_view/screens/ar_view_screen.dart';
 import '../../instructions/screens/instructions_screen.dart';
 import '../../onboarding/screens/get_started_screen.dart';
 import 'daily_recommendation_screen.dart';
-import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import 'explore_timeline_screen.dart';
@@ -45,29 +44,23 @@ import 'explore_timeline_screen.dart';
 /// Entry point for the main dashboard: coordinates services and widgets.
 /// All data loading is delegated to [ProfileService], [HomeService], and
 /// [DailyLogService]. All UI is delegated to the extracted widget files.
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class ExploreTimelineScreen extends StatefulWidget {
+  const ExploreTimelineScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<ExploreTimelineScreen> createState() => _ExploreTimelineScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
   // ── Services ───────────────────────────────────────────────────────────────
   final _homeService = HomeService();
 
   // ── State ──────────────────────────────────────────────────────────────────
   int _currentDay = 1;
   int _currentImageIndex = 0;
-  String _farmerName = 'Farmer';
   DateTime? _plantationDate;
-  String? _avatarUrl;
   bool _show3DModel = false;
-  bool _hasTodayLogSubmitted = false;
-  bool _isPopupShowing = false;
   bool _modelExists = true;
-  bool _isAdmin = false;
-  bool _exploreAllDays = false;
   DayData _dayData = DayData.fallback();
 
   final CarouselSliderController _carouselController =
@@ -79,65 +72,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _loadFarmerAndPlantation();
     _startAutoScroll();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkDailyPopup());
   }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _exploreAllDays = prefs.getBool('explore_all_days') ?? false;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _autoScrollTimer?.cancel();
-    super.dispose();
-  }
-
-  // ── Data loading ───────────────────────────────────────────────────────────
 
   Future<void> _loadFarmerAndPlantation() async {
     final result = await ProfileService.instance.loadFarmerAndPlantation();
-    _checkAdminStatus();
     if (!mounted) return;
     setState(() {
-      _farmerName = result['farmerName'];
       _plantationDate = result['plantationDate'];
-      _avatarUrl = result['avatarUrl'];
       if (_plantationDate != null) {
         _currentDay = DayUtils.calculateTodayDay(_plantationDate!);
       }
     });
     await _loadDayData();
-  }
-
-  void _checkAdminStatus() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      try {
-        final res = await Supabase.instance.client
-            .from('profile')
-            .select('is_admin')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (res != null && res['is_admin'] == true) {
-          if (mounted) {
-            setState(() {
-              _isAdmin = true;
-            });
-          }
-        }
-      } catch (e) {
-        debugPrint('HomeService: Error checking admin status — $e');
-      }
-    }
   }
 
   Future<void> _loadDayData() async {
@@ -148,31 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _dayData = data;
       _modelExists = modelExists;
     });
-  }
-
-  // ── Daily log check ────────────────────────────────────────────────────────
-
-  Future<void> _checkDailyPopup({bool showIfMissing = true}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final String? lastChecked =
-        prefs.getString(AppConstants.PREF_LAST_DAILY_CHECK_DATE);
-    final bool? cached =
-        prefs.getBool(AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED);
-
-    bool submitted;
-    if (lastChecked != today) {
-      // New day or first run → query DB via service
-      submitted = await DailyLogService.instance.checkTodayLogStatus();
-    } else {
-      submitted = cached ?? false;
-    }
-
-    if (mounted) setState(() => _hasTodayLogSubmitted = submitted);
-
-    if (showIfMissing && !submitted && mounted) {
-      _showDailyCheckPopup();
-    }
   }
 
   // ── Auto-scroll ────────────────────────────────────────────────────────────
@@ -226,79 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _showDailyCheckPopup() async {
-    if (_isPopupShowing) return;
-    _isPopupShowing = true;
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          DailyCheckModal(initialAlreadySubmitted: _hasTodayLogSubmitted),
-    );
-    _isPopupShowing = false;
-  }
-
-  Future<void> _showLogoutConfirmation() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text(
-          'Logout',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        content: const Text(
-          'Are you sure you want to logout from this device?',
-          style: TextStyle(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) await _handleLogout();
-  }
-
-  Future<void> _handleLogout() async {
-    try {
-      await Supabase.instance.client.auth.signOut();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const GetStartedScreen()),
-        (_) => false,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error logging out: $e')));
-      }
-    }
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    super.dispose();
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -313,7 +167,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: _buildDrawer(),
+      appBar: AppBar(
+        title: const Text('Explore Timeline', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: AppColors.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Stack(
         children: [
           // Decorative background circle
@@ -333,40 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 12),
-
-                // ── Header ─────────────────────────────────────────────────
-                HomeHeader(
-                  farmerName: _farmerName,
-                  plantationDate: _plantationDate,
-                  hasTodayLogSubmitted: _hasTodayLogSubmitted,
-                  avatarUrl: _avatarUrl,
-                  isAdmin: _isAdmin,
-                  onAdminTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminDashboardScreen(),
-                    ),
-                  ),
-                  onLogoutTap: _showLogoutConfirmation,
-                  onDailyCheckTap: () async {
-                    await _showDailyCheckPopup();
-                    await _checkDailyPopup(showIfMissing: false);
-                  },
-                  onInstructionsTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const InstructionsScreen(),
-                    ),
-                  ),
-                  onRecommendationsTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DailyRecommendationScreen(),
-                    ),
-                  ),
-                ),
-
                 const SizedBox(height: 20),
 
                 Expanded(
@@ -374,24 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // ── Day indicator ──
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Day $_currentDay',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-
                         // ── 2D / 3D Toggle ──────────────────────────────
                         ViewToggle(
                           show3DModel: _show3DModel,
@@ -439,13 +245,34 @@ class _HomeScreenState extends State<HomeScreen> {
                           nutrients: _dayData.nutrients,
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
                 ),
               ],
             ),
+          ),
+
+          // ── Floating day navigation bar ──────────────────────────────────
+          DayNavigationBar(
+            currentDay: _currentDay,
+            maxDay: AppConstants.TOTAL_CROP_DAYS,
+            onPrevious: () {
+              setState(() {
+                _currentDay--;
+                _currentImageIndex = 0;
+              });
+              _loadDayData();
+            },
+            onNext: () {
+              setState(() {
+                _currentDay++;
+                _currentImageIndex = 0;
+              });
+              _loadDayData();
+            },
+            onCalendarTap: _showCustomCalendar,
           ),
         ],
       ),
@@ -501,104 +328,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      child: Column(
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: AppColors.primary),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Options',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today_outlined),
-            title: const Text('Daily Log'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DailyRecommendationScreen(),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.assignment_turned_in_outlined),
-            title: const Text("Today's Plant Check"),
-            onTap: () async {
-              Navigator.pop(context);
-              await _showDailyCheckPopup();
-              await _checkDailyPopup(showIfMissing: false);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('Instructions'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const InstructionsScreen(),
-                ),
-              );
-            },
-          ),
-          const Spacer(),
-          const Divider(),
-          if (_exploreAllDays)
-            ListTile(
-              leading: const Icon(Icons.timeline),
-              title: const Text('Explore Timeline'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ExploreTimelineScreen()),
-                );
-              },
-            ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              ).then((_) => _loadSettings());
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: const Text('Profile'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
 }

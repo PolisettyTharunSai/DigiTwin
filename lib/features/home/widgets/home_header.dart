@@ -39,33 +39,27 @@ class HomeHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  ),
-                  child: UserAvatar(
-                    avatarUrl: avatarUrl,
-                    name: farmerName,
-                    radius: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _PlantingInfo(
-                    farmerName: farmerName,
-                    plantationDate: plantationDate,
-                  ),
-                ),
-              ],
-            ),
+          // Left Edge: Menu Button
+          _IconActionButton(
+            icon: Icons.menu,
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            tooltip: 'Menu',
           ),
           const SizedBox(width: 12),
+          
+          // Middle: Greeting and Planting Date
+          Expanded(
+            child: _PlantingInfo(
+              farmerName: farmerName,
+              plantationDate: plantationDate,
+            ),
+          ),
+          
+          // Action Buttons
           _ActionButtons(
             hasTodayLogSubmitted: hasTodayLogSubmitted,
             onDailyCheckTap: onDailyCheckTap,
@@ -73,6 +67,21 @@ class HomeHeader extends StatelessWidget {
             onRecommendationsTap: onRecommendationsTap,
             isAdmin: isAdmin,
             onAdminTap: onAdminTap,
+          ),
+          
+          const SizedBox(width: 10),
+          
+          // Right Edge: Profile Button
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            ),
+            child: UserAvatar(
+              avatarUrl: avatarUrl,
+              name: farmerName,
+              radius: 20,
+            ),
           ),
         ],
       ),
@@ -96,35 +105,41 @@ class _PlantingInfo extends StatelessWidget {
         Text(
           'Hi $farmerName!',
           style: const TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
+            fontSize: 20,
+            color: Colors.black,
+            fontWeight: FontWeight.w800,
           ),
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Planting Date',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            plantationDate != null
-                ? DateFormat('dd MMM yyyy').format(plantationDate!)
-                : 'Not Set',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+        const SizedBox(height: 2),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            const Text(
+              'Planted:',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            maxLines: 1,
-          ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                plantationDate != null
+                    ? DateFormat('dd MMM yyyy').format(plantationDate!)
+                    : 'Not Set',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -166,17 +181,6 @@ class _ActionButtons extends StatelessWidget {
           onPressed: onDailyCheckTap,
           tooltip: "Today's Plant Check",
           badge: !hasTodayLogSubmitted,
-        ),
-        const SizedBox(width: 10),
-        _IconActionButton(
-          icon: Icons.info_outline,
-          onPressed: onInstructionsTap,
-        ),
-        const SizedBox(width: 10),
-        _IconActionButton(
-          icon: Icons.calendar_today_outlined,
-          onPressed: onRecommendationsTap,
-          tooltip: 'Daily Recommendations',
         ),
       ],
     );
