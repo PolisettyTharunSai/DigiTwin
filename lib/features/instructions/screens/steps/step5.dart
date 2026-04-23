@@ -69,19 +69,19 @@ class Step5Content extends StatelessWidget {
         _buildFeatureCard(
           _t('mulching_title'),
           _t('mulching_desc'),
-          Icons.grass,
-          Colors.brown,
+          Icons.eco_outlined,
+          Colors.green,
         ),
         _buildFeatureCard(
           _t('manual_weeding_title'),
           _t('manual_weeding_desc'),
-          Icons.front_hand,
+          Icons.pan_tool_outlined,
           Colors.orange,
         ),
         _buildFeatureCard(
           _t('chemical_control_title'),
           _t('chemical_control_desc'),
-          Icons.science,
+          Icons.biotech_outlined,
           Colors.blue,
         ),
 
@@ -93,7 +93,7 @@ class Step5Content extends StatelessWidget {
         _buildRequirementBox(
           title: _t('irrigation_req_title'),
           desc: _t('irrigation_req_desc'),
-          icon: Icons.water_drop,
+          icon: Icons.waves_outlined,
           color: Colors.blue,
         ),
         const SizedBox(height: 15),
@@ -108,9 +108,9 @@ class Step5Content extends StatelessWidget {
 
         const SizedBox(height: 25),
 
-        // --- 5.3 EARTHING-UP ---
+        // --- 5.3 FIELD MONITORING ---
         _buildSubHeading(_t('earthing_up_heading')),
-        _buildInfoCard(_t('earthing_up_desc'), icon: Icons.landscape),
+        _buildInfoCard(_t('earthing_up_desc'), icon: Icons.visibility_outlined),
 
         const SizedBox(height: 25),
 
@@ -120,31 +120,31 @@ class Step5Content extends StatelessWidget {
         _buildPestRow(
           _t('early_blight_title'),
           _t('early_blight_desc'),
-          Icons.coronavirus,
+          Icons.spa_outlined,
           Colors.amber,
         ),
         _buildPestRow(
           _t('late_blight_title'),
           _t('late_blight_desc'),
-          Icons.ac_unit,
+          Icons.format_line_spacing,
           Colors.blueGrey,
         ),
         _buildPestRow(
           _t('aphids_title'),
           _t('aphids_desc'),
-          Icons.bug_report,
+          Icons.pest_control_outlined,
           Colors.green,
         ),
         _buildPestRow(
           _t('cutworms_title'),
           _t('cutworms_desc'),
-          Icons.cut,
+          Icons.bug_report_outlined,
           Colors.redAccent,
         ),
         _buildPestRow(
           _t('white_grubs_title'),
           _t('white_grubs_desc'),
-          Icons.pest_control,
+          Icons.nature_outlined,
           Colors.brown,
         ),
 
@@ -158,7 +158,7 @@ class Step5Content extends StatelessWidget {
 
         // --- 5.8 IPDM ---
         _buildSubHeading(_t('ipdm_heading')),
-        _buildInfoCard(_t('ipdm_desc'), icon: Icons.psychology),
+        _buildInfoCard(_t('ipdm_desc'), icon: Icons.psychology_outlined),
 
         const SizedBox(height: 30),
 

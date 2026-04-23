@@ -122,7 +122,7 @@ class Step2Content extends StatelessWidget {
               child: _buildMiniCard(
                 _t('drain_label'),
                 _t('drain_val'),
-                Icons.format_line_spacing,
+                Icons.water_drop,
                 Colors.teal,
               ),
             ),

@@ -59,7 +59,7 @@ class Step6Content extends StatelessWidget {
         _buildSubHeading(_t('harvest_title')),
         _buildInfoCard(
           _t('harvest_info'),
-          icon: Icons.auto_awesome_rounded,
+          icon: Icons.grass_outlined,
         ),
         const SizedBox(height: 12),
         _buildWarningBox(_t('harvest_warning')),
@@ -71,7 +71,7 @@ class Step6Content extends StatelessWidget {
               child: _buildMiniCard(
                 _t('manual_label'),
                 _t('manual_desc'),
-                Icons.front_hand,
+                Icons.pan_tool_outlined,
                 Colors.orange,
               ),
             ),
@@ -80,7 +80,7 @@ class Step6Content extends StatelessWidget {
               child: _buildMiniCard(
                 _t('mechanical_label'),
                 _t('mechanical_desc'),
-                Icons.agriculture,
+                Icons.agriculture_outlined,
                 Colors.blue,
               ),
             ),
@@ -90,7 +90,7 @@ class Step6Content extends StatelessWidget {
         _buildRequirementBox(
           title: _t('haulm_title'),
           desc: _t('haulm_desc'),
-          icon: Icons.content_cut_rounded,
+          icon: Icons.settings_input_component_outlined,
           color: Colors.teal,
         ),
 
@@ -114,23 +114,23 @@ class Step6Content extends StatelessWidget {
         _buildSubHeading(_t('grading_title')),
         _buildGradeTable(),
         const SizedBox(height: 8),
-        _buildInfoCard(_t('grading_tip'), icon: Icons.lightbulb_outline),
+        _buildInfoCard(_t('grading_tip'), icon: Icons.tips_and_updates_outlined),
 
         const SizedBox(height: 25),
 
-        // --- 6.3 & 6.4 CURING & STORAGE ---
+        // --- 6.3 & 6.4 PROCESSING & STORAGE ---
         _buildSubHeading(_t('storage_title')),
         _buildRequirementBox(
           title: _t('curing_title'),
           desc: _t('curing_desc'),
-          icon: Icons.healing_rounded,
+          icon: Icons.layers_outlined,
           color: Colors.blueAccent,
         ),
         const SizedBox(height: 10),
         _buildRequirementBox(
           title: _t('cold_storage_title'),
           desc: _t('cold_storage_desc'),
-          icon: Icons.ac_unit_rounded,
+          icon: Icons.inventory_2_outlined,
           color: Colors.cyan,
         ),
         const SizedBox(height: 10),
@@ -143,19 +143,19 @@ class Step6Content extends StatelessWidget {
         _buildPestRow(
           _t('channels_label'),
           _t('channels_desc'),
-          Icons.hub_rounded,
+          Icons.account_tree_outlined,
           Colors.indigo,
         ),
         _buildPestRow(
           _t('value_added_label'),
           _t('value_added_desc'),
-          Icons.fastfood_rounded,
+          Icons.fastfood_outlined,
           Colors.amber,
         ),
         const SizedBox(height: 10),
         _buildInfoCard(
           _t('economic_tip'),
-          icon: Icons.attach_money_rounded,
+          icon: Icons.payments_outlined,
         ),
 
         const SizedBox(height: 25),

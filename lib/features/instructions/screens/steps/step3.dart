@@ -63,38 +63,38 @@ class Step3Content extends StatelessWidget {
 
         const SizedBox(height: 25),
 
-        // --- 3.2 SEED SELECTION & CUTTING ---
+        // --- 3.2 SEED SELECTION & CLEANING ---
         _buildSubHeading(_t('seed_selection_heading')),
         _buildRequirementBox(
           title: _t('ideal_seed_title'),
           desc: _t('ideal_seed_desc'),
-          icon: Icons.spa_outlined,
-          color: Colors.brown,
+          icon: Icons.science_outlined,
+          color: Colors.blueAccent,
         ),
         const SizedBox(height: 10),
         _buildFeatureCard(
           _t('seed_cut_title'),
           _t('seed_cut_desc'),
-          Icons.content_cut,
-          Colors.redAccent,
+          Icons.grass,
+          Colors.green,
         ),
 
         const SizedBox(height: 25),
 
-        // --- 3.4 DORMANCY & CHITTING ---
+        // --- 3.4 SEED TREATMENT ---
         _buildSubHeading(_t('seed_prep_heading')),
 
         _buildFeatureCard(
           _t('dormancy_title'),
           _t('dormancy_desc'),
-          Icons.wb_sunny_outlined,
+          Icons.timer_outlined,
           Colors.amber,
         ),
         _buildFeatureCard(
           _t('chitting_title'),
           _t('chitting_desc'),
-          Icons.eco_outlined,
-          Colors.green,
+          Icons.grain,
+          Colors.brown,
         ),
 
         const SizedBox(height: 25),
@@ -123,7 +123,7 @@ class Step3Content extends StatelessWidget {
               child: _buildMiniCard(
                 _t('ridge_title'),
                 _t('ridge_desc'),
-                Icons.agriculture,
+                Icons.waves,
                 Colors.teal,
               ),
             ),
@@ -132,7 +132,7 @@ class Step3Content extends StatelessWidget {
               child: _buildMiniCard(
                 _t('mech_title'),
                 _t('mech_desc'),
-                Icons.precision_manufacturing,
+                Icons.settings_suggest,
                 Colors.indigo,
               ),
             ),

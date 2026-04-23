@@ -51,7 +51,7 @@ class Section {
 final List<Section> sections = [
   Section(
     title: 'Introduction',
-    description: 'Get to know about Potato',
+    description: 'Get to know about Rice',
     thumbnailAsset: 'assets/images/step1.png',
     content: [],
   ),

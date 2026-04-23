@@ -25,6 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _currentLocale = 'en';
   bool _exploreAllDays = false;
+  bool _weatherNotifications = true;
+  bool _recommendationNotifications = true;
 
   @override
   void initState() {
@@ -37,6 +39,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final prefs = await SharedPreferences.getInstance();
       _currentLocale = prefs.getString('appLanguage') ?? 'en';
       _exploreAllDays = prefs.getBool('explore_all_days') ?? false;
+      _weatherNotifications = prefs.getBool('weather_notifications') ?? true;
+      _recommendationNotifications = prefs.getBool('recommendation_notifications') ?? true;
 
       final userId = _supabase.auth.currentUser?.id;
       if (userId != null) {
@@ -115,6 +119,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool('explore_all_days', value);
   }
 
+  Future<void> _toggleWeatherNotifications(bool value) async {
+    setState(() => _weatherNotifications = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('weather_notifications', value);
+  }
+
+  Future<void> _toggleRecommendationNotifications(bool value) async {
+    setState(() => _recommendationNotifications = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('recommendation_notifications', value);
+  }
+
   Future<void> _changeLanguage(String code) async {
     setState(() => _currentLocale = code);
     final prefs = await SharedPreferences.getInstance();
@@ -187,6 +203,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text('Allow navigating through crop timeline in sidebar.'),
               value: _exploreAllDays,
               onChanged: _toggleExploreDays,
+            ),
+            const Divider(),
+
+            const Text('Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkBrown)),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              activeColor: AppColors.primary,
+              title: const Text('Weather Notifications', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: const Text('Receive alerts about weather changes.'),
+              value: _weatherNotifications,
+              onChanged: _toggleWeatherNotifications,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              activeColor: AppColors.primary,
+              title: const Text('Recommendation Notifications', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: const Text('Receive personalized crop recommendations.'),
+              value: _recommendationNotifications,
+              onChanged: _toggleRecommendationNotifications,
             ),
             const SizedBox(height: 24),
             

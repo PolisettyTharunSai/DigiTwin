@@ -70,19 +70,19 @@ class Step4Content extends StatelessWidget {
         _buildFeatureCard(
           _t('phosphorus_title'),
           _t('phosphorus_desc'),
-          Icons.straighten_outlined,
+          Icons.hub_outlined,
           Colors.orange,
         ),
         _buildFeatureCard(
           _t('potassium_title'),
           _t('potassium_desc'),
-          Icons.verified_user_outlined,
+          Icons.security_outlined,
           Colors.blue,
         ),
 
         const SizedBox(height: 25),
 
-        // --- 4.3 APPLICATION METHOD ---
+        // --- 4.3 APPLICATION TIMELINE ---
         _buildSubHeading(_t('timeline_heading')),
         _buildRequirementBox(
           title: _t('basal_app_title'),
@@ -94,7 +94,7 @@ class Step4Content extends StatelessWidget {
         _buildRequirementBox(
           title: _t('top_dressing_title'),
           desc: _t('top_dressing_desc'),
-          icon: Icons.shutter_speed_outlined,
+          icon: Icons.update_outlined,
           color: accentGreen,
         ),
 
