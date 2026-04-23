@@ -22,6 +22,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
+    
+    // Check for new system notifications (like irrigation) before fetching
+    await NotificationService.instance.checkSystemNotifications();
+
     final data = await NotificationService.instance.getNotifications();
     if (mounted) {
       setState(() {
@@ -88,7 +92,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } else if (type == 'log') {
       icon = Icons.assignment_outlined;
       iconColor = Colors.blue;
-    } else if (type == 'irrigation') {
+    } else if (type == 'irrigation' || type == 'recommendation') {
       icon = Icons.water_drop_outlined;
       iconColor = Colors.cyan;
     }

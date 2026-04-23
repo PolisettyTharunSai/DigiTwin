@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/profile_service.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/utils/day_utils.dart';
 
 // Home feature
@@ -82,7 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadSettings();
     _loadFarmerAndPlantation();
     _startAutoScroll();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkDailyPopup());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkDailyPopup();
+      NotificationService.instance.checkSystemNotifications();
+    });
   }
 
   Future<void> _loadSettings() async {
