@@ -88,8 +88,8 @@ class RecommendationService {
     return {
       'user_id': userId,
       'day': day,
-      'lat': (row['latitude'] as num?)?.toDouble() ?? 0.0,
-      'lon': (row['longitude'] as num?)?.toDouble() ?? 0.0,
+      // Note: We no longer send lat/lon from the app as the Edge Function 
+      // will fetch them directly from the profile table for better data integrity.
     };
   }
 
@@ -123,16 +123,14 @@ class RecommendationService {
       dynamic apiData;
       try {
         debugPrint('═══ RecommendationService.getDailyRecommendation ═══');
-        debugPrint('📤 Sending to dynamic-function: action=recommend, user_id=${profile['user_id']}, day=$dayNum, lat=${profile['lat']}, lon=${profile['lon']}, is_today=${targetDay == null}');
+        debugPrint('📤 Sending to dynamic-function: action=recommend, user_id=${profile['user_id']}, day=$dayNum, is_today=${targetDay == null}');
 
         final response = await _supabase.functions.invoke(
-          'dynamic-function',
+          'irrigation-recommendation',
           body: {
             'action': 'recommend',
             'user_id': profile['user_id'],
             'day': dayNum,
-            'lat': profile['lat'],
-            'lon': profile['lon'],
             'is_today': targetDay == null,
           },
         );

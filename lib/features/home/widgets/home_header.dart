@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../settings/screens/notifications_screen.dart';
+import '../../../core/services/notification_service.dart';
 
 /// Header section shown at the top of the HomeScreen.
 /// Displays the farmer greeting, planting date, and action icon buttons.
@@ -146,7 +148,7 @@ class _PlantingInfo extends StatelessWidget {
   }
 }
 
-class _ActionButtons extends StatelessWidget {
+class _ActionButtons extends StatefulWidget {
   final bool hasTodayLogSubmitted;
   final VoidCallback onDailyCheckTap;
   final VoidCallback onInstructionsTap;
@@ -164,23 +166,57 @@ class _ActionButtons extends StatelessWidget {
   });
 
   @override
+  State<_ActionButtons> createState() => _ActionButtonsState();
+}
+
+class _ActionButtonsState extends State<_ActionButtons> {
+  bool _hasUnread = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUnread();
+  }
+
+  void _checkUnread() async {
+    final notes = await NotificationService.instance.getNotifications();
+    if (mounted) {
+      setState(() {
+        _hasUnread = notes.any((n) => n['is_read'] == false);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isAdmin && onAdminTap != null) ...[
+        if (widget.isAdmin && widget.onAdminTap != null) ...[
           _IconActionButton(
             icon: Icons.admin_panel_settings,
-            onPressed: onAdminTap!,
+            onPressed: widget.onAdminTap!,
             tooltip: 'Admin Dashboard',
           ),
           const SizedBox(width: 10),
         ],
         _IconActionButton(
+          icon: Icons.notifications_none_outlined,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+            ).then((_) => _checkUnread());
+          },
+          tooltip: 'Notifications',
+          badge: _hasUnread,
+        ),
+        const SizedBox(width: 10),
+        _IconActionButton(
           icon: Icons.assignment_turned_in_outlined,
-          onPressed: onDailyCheckTap,
+          onPressed: widget.onDailyCheckTap,
           tooltip: "Today's Plant Check",
-          badge: !hasTodayLogSubmitted,
+          badge: !widget.hasTodayLogSubmitted,
         ),
       ],
     );
