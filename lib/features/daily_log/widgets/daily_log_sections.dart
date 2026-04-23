@@ -66,7 +66,9 @@ class WateringSection extends StatelessWidget {
                 onSelected: (_) => onWateredChanged(true),
                 selectedColor: AppColors.primary.withOpacity(0.15),
                 labelStyle: TextStyle(
-                  color: watered == true ? AppColors.primary : Colors.grey.shade800,
+                  color: watered == true
+                      ? AppColors.primary
+                      : Colors.grey.shade800,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -76,7 +78,9 @@ class WateringSection extends StatelessWidget {
                 onSelected: (_) => onWateredChanged(false),
                 selectedColor: AppColors.primary.withOpacity(0.15),
                 labelStyle: TextStyle(
-                  color: watered == false ? AppColors.primary : Colors.grey.shade800,
+                  color: watered == false
+                      ? AppColors.primary
+                      : Colors.grey.shade800,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -90,8 +94,9 @@ class WateringSection extends StatelessWidget {
                   flex: 2,
                   child: TextField(
                     controller: waterAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Amount',
                       border: OutlineInputBorder(
@@ -196,6 +201,99 @@ class ObservationSection extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Nutrient input section for farmer-entered applied quantities.
+class NutrientApplicationSection extends StatelessWidget {
+  final TextEditingController nitrogenController;
+  final TextEditingController phosphorusController;
+  final TextEditingController potassiumController;
+
+  const NutrientApplicationSection({
+    super.key,
+    required this.nitrogenController,
+    required this.phosphorusController,
+    required this.potassiumController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return frostedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Nutrient Application',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Enter nutrients applied today (grams). Leave empty if not applied.',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+          ),
+          const SizedBox(height: 12),
+          _NutrientInputRow(
+            label: 'Nitrogen (N)',
+            controller: nitrogenController,
+          ),
+          const SizedBox(height: 10),
+          _NutrientInputRow(
+            label: 'Phosphorus (P2O5)',
+            controller: phosphorusController,
+          ),
+          const SizedBox(height: 10),
+          _NutrientInputRow(
+            label: 'Potassium (K2O)',
+            controller: potassiumController,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NutrientInputRow extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+
+  const _NutrientInputRow({required this.label, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade900,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 120,
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              hintText: '0.0',
+              suffixText: 'g',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

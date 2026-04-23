@@ -41,6 +41,9 @@ flutter:
     # Onboarding screens
     - assets/onboarding/
 
+    # Nutrient schedule fallback CSV
+    - potato_nutrients.csv
+
     # Agricultural guide images
     - assets/requirements/
 

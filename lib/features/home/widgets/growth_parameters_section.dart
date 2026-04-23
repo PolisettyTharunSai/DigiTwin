@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/day_utils.dart';
 
 /// Displays the three growth-parameter insight cards:
@@ -56,6 +55,7 @@ class GrowthParametersSection extends StatelessWidget {
             iconBgColor: Colors.orange.withOpacity(0.1),
             iconColor: Colors.orange,
           ),
+          const SizedBox(height: 88),
         ],
       ),
     );

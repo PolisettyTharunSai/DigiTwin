@@ -35,5 +35,7 @@ class AppConstants {
   // ── Supabase table / bucket names ─────────────────────────────────────────
   static const String TABLE_PROFILE = 'profile';
   static const String TABLE_PLANT_DAILY_LOG = 'plant_daily_log';
+  static const String TABLE_NUTRIENT_SCHEDULE = 'nutrient_schedule';
+  static const String TABLE_NUTRIENT_DAILY_STATE = 'nutrient_daily_state';
   static const String STORAGE_BUCKET_MODELS = 'models';
 }
