@@ -122,7 +122,9 @@ class RecommendationService {
       // 2. Fetch live water recommendation from Supabase
       dynamic apiData;
       try {
-        debugPrint('Invoking dynamic-function for day $dayNum...');
+        debugPrint('═══ RecommendationService.getDailyRecommendation ═══');
+        debugPrint('📤 Sending to dynamic-function: action=recommend, user_id=${profile['user_id']}, day=$dayNum, lat=${profile['lat']}, lon=${profile['lon']}, is_today=${targetDay == null}');
+
         final response = await _supabase.functions.invoke(
           'dynamic-function',
           body: {
@@ -131,17 +133,21 @@ class RecommendationService {
             'day': dayNum,
             'lat': profile['lat'],
             'lon': profile['lon'],
+            'is_today': targetDay == null,
           },
         );
+
+        debugPrint('📥 recommend response status: ${response.status}');
+        debugPrint('📥 recommend response data: ${response.data}');
 
         if (response.status == 200 && response.data != null) {
           apiData = response.data;
           debugPrint('✅ SUCCESS! Received from Supabase: $apiData');
         } else {
-          debugPrint('Recommendation error (Status ${response.status}): ${response.data}');
+          debugPrint('❌ Recommendation error (Status ${response.status}): ${response.data}');
         }
       } catch (e) {
-        debugPrint('Recommendation fetch failed: $e');
+        debugPrint('❌ Recommendation fetch failed: $e');
       }
 
       // 3. Construct merged response
@@ -163,7 +169,7 @@ class RecommendationService {
         );
       }
     } catch (e) {
-      debugPrint('Error in getDailyRecommendation: $e');
+      debugPrint('❌ Error in getDailyRecommendation: $e');
       rethrow;
     }
   }
@@ -185,7 +191,8 @@ class RecommendationService {
     final double actualMl = watered ? _toMl(waterAmount, waterUnit) : 0.0;
 
     try {
-      debugPrint('Updating carry balance for user $userId with $actualMl ml...');
+      debugPrint('═══ RecommendationService.updateCarryBalance ═══');
+      debugPrint('📤 Sending to dynamic-function: action=update_balance, user_id=$userId, actual_watered_ml=$actualMl');
       
       final response = await _supabase.functions.invoke(
         'dynamic-function',
@@ -196,11 +203,14 @@ class RecommendationService {
         },
       );
 
+      debugPrint('📥 update_balance response status: ${response.status}');
+      debugPrint('📥 update_balance response data: ${response.data}');
+
       if (response.status != 200) {
-        debugPrint('updateCarryBalance failed: ${response.data}');
+        debugPrint('❌ updateCarryBalance failed: ${response.data}');
       }
     } catch (e) {
-      debugPrint('Error in updateCarryBalance: $e');
+      debugPrint('❌ Error in updateCarryBalance: $e');
     }
   }
 }

@@ -75,18 +75,25 @@ class DailyLogService {
   /// Upserts a daily log entry.
   /// [logData] must include 'user_id', 'log_date', and all log fields.
   Future<void> submitLog(Map<String, dynamic> logData) async {
-    await Supabase.instance.client
+    debugPrint('═══ DailyLogService.submitLog ═══');
+    debugPrint('📤 Sending to plant_daily_log: $logData');
+
+    final response = await Supabase.instance.client
         .from(AppConstants.TABLE_PLANT_DAILY_LOG)
         .upsert(logData, onConflict: 'user_id, log_date');
 
+    debugPrint('📥 plant_daily_log upsert completed: $response');
+
     try {
+      debugPrint('📤 Calling updateCarryBalance → watered=${logData['watered']}, water_amount=${logData['water_amount']}, water_unit=${logData['water_unit']}');
       await _recommendationService.updateCarryBalance(
         waterAmount: logData['water_amount'] ?? 0,
         waterUnit: logData['water_unit'],
         watered: logData['watered'] ?? false,
       );
+      debugPrint('✅ updateCarryBalance completed');
     } catch (e) {
-      debugPrint('Could not update carry balance: $e');
+      debugPrint('❌ Could not update carry balance: $e');
     }
   }
 

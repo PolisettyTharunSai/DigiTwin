@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../widgets/daily_log_sections.dart';
+import '../services/daily_log_service.dart';
 
 /// Bottom-sheet modal for the daily plant health check.
 /// Allows the farmer to log watering, observations, photos, and notes.
@@ -178,22 +179,23 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
 
       final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+      final double? waterAmountValue = double.tryParse(_waterAmountController.text);
+      final bool isWatered = watered ?? false;
+
       final logData = {
         'user_id': user.id,
         'log_date': today,
-        'watered': watered,
+        'watered': isWatered,
         'pests_observed': pestsObserved,
         'pest_notes': _pestNotesController.text,
         'feedback': _feedbackController.text,
         'images': imageUrls,
-        'water_amount':
-            watered == true ? double.tryParse(_waterAmountController.text) : null,
-        'water_unit': watered == true ? _selectedWaterUnit : null,
+        'water_amount': isWatered ? waterAmountValue : null,
+        'water_unit': isWatered ? _selectedWaterUnit : null,
       };
 
-      await supabase
-          .from(AppConstants.TABLE_PLANT_DAILY_LOG)
-          .upsert(logData, onConflict: 'user_id, log_date');
+      // Use DailyLogService to submit, which handles the carry balance update internally.
+      await DailyLogService.instance.submitLog(logData);
 
       // Update local cache
       final prefs = await SharedPreferences.getInstance();
