@@ -58,15 +58,17 @@ class RecommendationResponse {
 class RecommendationService {
   final _supabase = Supabase.instance.client;
 
-  // Reads planting_date, lat, lon from profile table.
-  // Returns the crop day number (1-based, clamped 1–109).
+  // Change this to match exactly what you named your function during deployment
+  static const String _functionName = 'dynamic-function';
+
+  // Reads profile to calculate the crop day number (1-based, clamped 1–109).
   Future<Map<String, dynamic>> _readProfile({int? targetDay}) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('User not authenticated');
 
     final row = await _supabase
         .from('profile')
-        .select('latitude, longitude, planting_date, is_crop_planted')
+        .select('planting_date, is_crop_planted')
         .eq('id', userId)
         .single();
 
@@ -88,22 +90,20 @@ class RecommendationService {
     return {
       'user_id': userId,
       'day': day,
-      // Note: We no longer send lat/lon from the app as the Edge Function 
-      // will fetch them directly from the profile table for better data integrity.
     };
   }
 
   // ------------------------------------------------------------------
   // getDailyRecommendation
-  // Calls the single deployed edge function with action='recommend',
-  // and merges with local asset data for stage and nutrients.
+  // Calls the edge function with action='recommend'.
+  // Merges live water value with local asset labels for stage/nutrients.
   // ------------------------------------------------------------------
   Future<RecommendationResponse> getDailyRecommendation({int? targetDay}) async {
     try {
       final profile = await _readProfile(targetDay: targetDay);
       final int dayNum = profile['day'];
 
-      // 1. Load local baseline data (Stage/Nutrients/Water fallback)
+      // 1. Load local baseline data
       String localStage = 'Emergence';
       String localNutrients = 'None';
       String localWater = '0 ml';
@@ -116,17 +116,17 @@ class RecommendationService {
           if (line.contains('application:')) localNutrients = line.split('application:')[1].trim();
         }
       } catch (e) {
-        debugPrint('RecommendationService: Failed to load daily asset for day $dayNum: $e');
+        debugPrint('RecommendationService: No asset for day $dayNum');
       }
 
-      // 2. Fetch live water recommendation from Supabase
+      // 2. Fetch live data from Supabase
       dynamic apiData;
       try {
         debugPrint('═══ RecommendationService.getDailyRecommendation ═══');
-        debugPrint('📤 Sending to dynamic-function: action=recommend, user_id=${profile['user_id']}, day=$dayNum, is_today=${targetDay == null}');
+        debugPrint('📤 Sending to $_functionName: action=recommend, user_id=${profile['user_id']}, day=$dayNum, is_today=${targetDay == null}');
 
         final response = await _supabase.functions.invoke(
-          'irrigation-recommendation',
+          _functionName,
           body: {
             'action': 'recommend',
             'user_id': profile['user_id'],
@@ -135,8 +135,8 @@ class RecommendationService {
           },
         );
 
-        debugPrint('📥 recommend response status: ${response.status}');
-        debugPrint('📥 recommend response data: ${response.data}');
+        debugPrint('📥 $_functionName response status: ${response.status}');
+        // debugPrint('📥 $_functionName response data: ${response.data}');
 
         if (response.status == 200 && response.data != null) {
           apiData = response.data;
@@ -148,17 +148,15 @@ class RecommendationService {
         debugPrint('❌ Recommendation fetch failed: $e');
       }
 
-      // 3. Construct merged response
       if (apiData != null) {
         final apiRec = RecommendationResponse.fromJson(Map<String, dynamic>.from(apiData as Map));
         return RecommendationResponse(
           day: dayNum.toString(),
-          cropStage: localStage, // Local anchor
-          waterRequirement: apiRec.waterRequirement, // Dynamic live value
-          nutrientApplication: localNutrients, // Local anchor
+          cropStage: localStage,
+          waterRequirement: apiRec.waterRequirement,
+          nutrientApplication: localNutrients,
         );
       } else {
-        // Fallback to local data if API fails
         return RecommendationResponse(
           day: dayNum.toString(),
           cropStage: localStage,
@@ -175,7 +173,6 @@ class RecommendationService {
   // ------------------------------------------------------------------
   // updateCarryBalance
   // Called after plant_daily_log insert.
-  // Converts water_amount + water_unit to ml before sending.
   // ------------------------------------------------------------------
   Future<void> updateCarryBalance({
     required num waterAmount,
@@ -185,15 +182,14 @@ class RecommendationService {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;
 
-    // If farmer marked watered=false, send 0 regardless of amount field
     final double actualMl = watered ? _toMl(waterAmount, waterUnit) : 0.0;
 
     try {
       debugPrint('═══ RecommendationService.updateCarryBalance ═══');
-      debugPrint('📤 Sending to dynamic-function: action=update_balance, user_id=$userId, actual_watered_ml=$actualMl');
+      debugPrint('📤 Sending to $_functionName: action=update_balance, user_id=$userId, actual_watered_ml=$actualMl');
       
       final response = await _supabase.functions.invoke(
-        'dynamic-function',
+        _functionName,
         body: {
           'action': 'update_balance',
           'user_id': userId,
@@ -201,8 +197,8 @@ class RecommendationService {
         },
       );
 
-      debugPrint('📥 update_balance response status: ${response.status}');
-      debugPrint('📥 update_balance response data: ${response.data}');
+      debugPrint('📥 $_functionName response status: ${response.status}');
+      debugPrint('📥 $_functionName response data: ${response.data}');
 
       if (response.status != 200) {
         debugPrint('❌ updateCarryBalance failed: ${response.data}');
