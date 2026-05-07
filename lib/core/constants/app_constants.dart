@@ -38,4 +38,28 @@ class AppConstants {
   static const String TABLE_NUTRIENT_SCHEDULE = 'nutrient_schedule';
   static const String TABLE_NUTRIENT_DAILY_STATE = 'nutrient_daily_state';
   static const String STORAGE_BUCKET_MODELS = 'models';
+
+  // ── CropSense API ─────────────────────────────────────────────────────────
+  /// Base URL for the CropSense model API.
+  static const String CROPSENSE_BASE_URL = 'https://model.annam.ai';
+
+  /// Crop name used in advisory endpoint paths.
+  /// The disease advisory endpoint requires: /advisory/disease/{crop_name}/{disease_name}
+  static const String CROP_NAME = 'potato';
+
+  // ── plant_daily_log — image analysis columns ──────────────────────────────
+  /// 'pending' while the background pipeline is running,
+  /// 'completed' on success, 'failed' if every prediction call fails.
+  static const String COL_IMAGE_ANALYSIS_STATUS = 'image_analysis_status';
+
+  static const String COL_DISEASE_LABEL      = 'disease_label';
+  static const String COL_DISEASE_CONFIDENCE = 'disease_confidence';
+  static const String COL_DISEASE_ADVISORY   = 'disease_advisory';
+
+  static const String COL_PEST_LABEL         = 'pest_label';
+  static const String COL_PEST_CONFIDENCE    = 'pest_confidence';
+  static const String COL_PEST_ADVISORY      = 'pest_advisory';
+
+  static const String COL_DAMAGE_LABEL       = 'damage_label';
+  static const String COL_DAMAGE_CONFIDENCE  = 'damage_confidence';
 }

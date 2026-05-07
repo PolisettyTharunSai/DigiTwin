@@ -261,7 +261,7 @@ class RecommendationService {
 
     if (allZero) {
       return 'No nutrient application required today. '
-          'Carry: N ${state.carryN} g, P2O5 ${state.carryP} g, K2O ${state.carryK} g.';
+          'N ${state.carryN} g, P2O5 ${state.carryP} g, K2O ${state.carryK} g.';
     }
 
     final sourceText =
