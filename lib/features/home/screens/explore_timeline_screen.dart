@@ -17,33 +17,15 @@ import '../models/day_data.dart';
 import '../services/home_service.dart';
 import '../widgets/day_navigation_bar.dart';
 import '../widgets/growth_parameters_section.dart';
-import '../widgets/home_header.dart';
 import '../widgets/image_indicator.dart';
 import '../widgets/media_carousel.dart';
-import '../widgets/model_viewer_card.dart';
-import '../widgets/view_toggle.dart';
-
-// Daily log feature
-import '../../daily_log/screens/daily_check_modal.dart';
-import '../../daily_log/services/daily_log_service.dart';
 
 // Shared
 import '../../../shared/dialogs/custom_calendar_dialog.dart';
 import '../../../shared/widgets/fullscreen_image_gallery.dart';
 import '../../../shared/widgets/no_visual_info_widget.dart';
 
-// Other screens
-import '../../ar_view/screens/ar_view_screen.dart';
-import '../../instructions/screens/instructions_screen.dart';
-import '../../onboarding/screens/get_started_screen.dart';
-import 'daily_recommendation_screen.dart';
-import '../../profile/screens/profile_screen.dart';
-import '../../settings/screens/settings_screen.dart';
-import 'explore_timeline_screen.dart';
-
-/// Entry point for the main dashboard: coordinates services and widgets.
-/// All data loading is delegated to [ProfileService], [HomeService], and
-/// [DailyLogService]. All UI is delegated to the extracted widget files.
+/// Screen allowing historical exploration of the crop timeline.
 class ExploreTimelineScreen extends StatefulWidget {
   const ExploreTimelineScreen({super.key});
 
@@ -59,8 +41,6 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
   int _currentDay = 1;
   int _currentImageIndex = 0;
   DateTime? _plantationDate;
-  bool _show3DModel = false;
-  bool _modelExists = true;
   DayData _dayData = DayData.fallback();
 
   final CarouselSliderController _carouselController =
@@ -90,11 +70,9 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
 
   Future<void> _loadDayData() async {
     final data = await _homeService.loadDayData(_currentDay);
-    final modelExists = await _homeService.checkModelExists(_currentDay);
     if (!mounted) return;
     setState(() {
       _dayData = data;
-      _modelExists = modelExists;
     });
   }
 
@@ -102,13 +80,12 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
-    if (_show3DModel) return;
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted || _show3DModel) {
+      if (!mounted) {
         _autoScrollTimer?.cancel();
         return;
       }
-      // Only scroll if we are past the visual data start day (no carousel exists before then)
+      // Only scroll if we are past the visual data start day
       if (_currentDay > AppConstants.VISUAL_DATA_START_DAY) {
         try {
           _carouselController.nextPage();
@@ -160,7 +137,6 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     final images = DayUtils.getImagesForDay(_currentDay);
-    final modelUrl = DayUtils.getModelUrlForDay(_currentDay);
     final screenWidth = MediaQuery.of(context).size.width;
     final imageWidth = screenWidth * 0.85;
     final imageHeight = imageWidth * 1.5;
@@ -168,7 +144,10 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Explore Timeline', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          'Explore Timeline',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -198,29 +177,11 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // ── 2D / 3D Toggle ──────────────────────────────
-                        ViewToggle(
-                          show3DModel: _show3DModel,
-                          onToggle: (value) {
-                            setState(() {
-                              _show3DModel = value;
-                              if (!_show3DModel) {
-                                _startAutoScroll();
-                              } else {
-                                _autoScrollTimer?.cancel();
-                              }
-                            });
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
                         // ── Media Content ────────────────────────────────
                         SizedBox(
                           height: imageHeight,
                           child: _buildMediaContent(
                             images: images,
-                            modelUrl: modelUrl,
                             imageWidth: imageWidth,
                             imageHeight: imageHeight,
                           ),
@@ -229,8 +190,7 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
                         const SizedBox(height: 15),
 
                         // ── Image dot indicator ──────────────────────────
-                        if (!_show3DModel &&
-                            _currentDay > AppConstants.VISUAL_DATA_START_DAY)
+                        if (_currentDay > AppConstants.VISUAL_DATA_START_DAY)
                           ImageIndicator(
                             imageCount: images.length,
                             currentIndex: _currentImageIndex,
@@ -283,7 +243,6 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
 
   Widget _buildMediaContent({
     required List<String> images,
-    required String modelUrl,
     required double imageWidth,
     required double imageHeight,
   }) {
@@ -293,28 +252,6 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
         message: 'No visual information available\nfor the first 30 days.',
         height: imageHeight,
       );
-    }
-
-    // 3D model view
-    if (_show3DModel) {
-      return _modelExists
-          ? ModelViewerCard(
-              modelUrl: modelUrl,
-              currentDay: _currentDay,
-              onFullscreenTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ArViewScreen(
-                    modelPath: modelUrl,
-                    cropName: 'Day $_currentDay',
-                  ),
-                ),
-              ),
-            )
-          : NoVisualInfoWidget(
-              message: '3D Model not available\nfor today.',
-              height: imageHeight,
-            );
     }
 
     // 2D image carousel
@@ -327,5 +264,4 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
       onImageTap: (index) => _openFullScreenImage(index, images),
     );
   }
-
 }

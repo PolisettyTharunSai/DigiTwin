@@ -21,14 +21,12 @@ import '../widgets/home_header.dart';
 import '../widgets/image_indicator.dart';
 import '../widgets/media_carousel.dart';
 import '../widgets/model_viewer_card.dart';
-import '../widgets/view_toggle.dart';
 
 // Daily log feature
 import '../../daily_log/screens/daily_check_modal.dart';
 import '../../daily_log/services/daily_log_service.dart';
 
 // Shared
-import '../../../shared/dialogs/custom_calendar_dialog.dart';
 import '../../../shared/widgets/fullscreen_image_gallery.dart';
 import '../../../shared/widgets/no_visual_info_widget.dart';
 
@@ -62,10 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _farmerName = 'Farmer';
   DateTime? _plantationDate;
   String? _avatarUrl;
-  bool _show3DModel = false;
   bool _hasTodayLogSubmitted = false;
   bool _isPopupShowing = false;
-  bool _modelExists = true;
   bool _isAdmin = false;
   bool _exploreAllDays = false;
   bool _isChatOpen = false;
@@ -78,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<_ChatMessage> _chatMessages = [
     _ChatMessage(
       text:
-          'Hi, I am your DigiTwin assistant. Ask me about water, nutrients, day progress, or 2D/3D views.',
+          'Hi, I am your DigiTwin assistant. Ask me about water, nutrients, or day progress.',
       isUser: false,
       timestamp: DateTime.now(),
     ),
@@ -161,11 +157,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadDayData() async {
     final data = await _homeService.loadDayData(_currentDay);
-    final modelExists = await _homeService.checkModelExists(_currentDay);
     if (!mounted) return;
     setState(() {
       _dayData = data;
-      _modelExists = modelExists;
     });
   }
 
@@ -200,9 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
-    if (_show3DModel) return;
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted || _show3DModel) {
+      if (!mounted) {
         _autoScrollTimer?.cancel();
         return;
       }
@@ -218,24 +211,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ── Navigation helpers ─────────────────────────────────────────────────────
-
-  Future<void> _showCustomCalendar() async {
-    if (_plantationDate == null) return;
-    final picked = await showDialog<DateTime>(
-      context: context,
-      builder: (_) => CustomCalendarDialog(
-        initialDate: _plantationDate!.add(Duration(days: _currentDay - 1)),
-        plantationDate: _plantationDate!,
-      ),
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _currentDay = picked.difference(_plantationDate!).inDays + 1;
-        _currentImageIndex = 0;
-      });
-      await _loadDayData();
-    }
-  }
 
   void _openFullScreenImage(int index, List<String> images) {
     Navigator.push(
@@ -364,18 +339,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (text.contains('day') || text.contains('today')) {
-      return 'You are currently on Day $_currentDay. Use the floating Day chip to jump to another date using calendar.';
-    }
-
-    if (text.contains('2d') || text.contains('3d') || text.contains('model')) {
-      return 'Use the 2D/3D toggle below the visual section to switch between image carousel and 3D model view for the selected day.';
+      return 'You are currently on Day $_currentDay (Today). You can explore other days from the Timeline in the side menu.';
     }
 
     if (text.contains('hello') || text.contains('hi') || text.contains('hey')) {
-      return 'Hello! Ask me anything about crop progress, day-wise visuals, water, nutrients, or how to use this screen.';
+      return 'Hello! Ask me anything about crop progress, water, nutrients, or how to use this screen.';
     }
 
-    return 'I understood your question. For best guidance, share your concern with details like day number, symptoms, or whether you need water, nutrient, or visual-model help.';
+    return 'I understood your question. For best guidance, share your concern with details like symptoms, or whether you need water or nutrient help.';
   }
 
   Future<void> _handleLogout() async {
@@ -402,7 +373,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final images = DayUtils.getImagesForDay(_currentDay);
-    final modelUrl = DayUtils.getModelUrlForDay(_currentDay);
     final screenWidth = MediaQuery.of(context).size.width;
     final imageWidth = screenWidth * 0.85;
     final imageHeight = imageWidth * 1.5;
@@ -475,34 +445,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: imageHeight,
                           child: _buildMediaContent(
                             images: images,
-                            modelUrl: modelUrl,
                             imageWidth: imageWidth,
                             imageHeight: imageHeight,
                           ),
                         ),
 
-                        const SizedBox(height: 16),
-
-                        // ── 2D / 3D Toggle (below media) ─────────────────
-                        ViewToggle(
-                          show3DModel: _show3DModel,
-                          onToggle: (value) {
-                            setState(() {
-                              _show3DModel = value;
-                              if (!_show3DModel) {
-                                _startAutoScroll();
-                              } else {
-                                _autoScrollTimer?.cancel();
-                              }
-                            });
-                          },
-                        ),
-
                         const SizedBox(height: 15),
 
                         // ── Image dot indicator ──────────────────────────
-                        if (!_show3DModel &&
-                            _currentDay > AppConstants.VISUAL_DATA_START_DAY)
+                        if (_currentDay > AppConstants.VISUAL_DATA_START_DAY)
                           ImageIndicator(
                             imageCount: images.length,
                             currentIndex: _currentImageIndex,
@@ -525,66 +476,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
-          if (!(_isChatOpen && _isChatFullscreen))
-            Positioned(
-              left: 16,
-              bottom: 24,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: _showCustomCalendar,
-                  child: Ink(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.18),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(
-                            Icons.calendar_month_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Day $_currentDay',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.darkBrown,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
           if (_isChatOpen) _buildChatWindow(),
 
@@ -888,7 +779,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMediaContent({
     required List<String> images,
-    required String modelUrl,
     required double imageWidth,
     required double imageHeight,
   }) {
@@ -898,28 +788,6 @@ class _HomeScreenState extends State<HomeScreen> {
         message: 'No visual information available\nfor the first 30 days.',
         height: imageHeight,
       );
-    }
-
-    // 3D model view
-    if (_show3DModel) {
-      return _modelExists
-          ? ModelViewerCard(
-              modelUrl: modelUrl,
-              currentDay: _currentDay,
-              onFullscreenTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ArViewScreen(
-                    modelPath: modelUrl,
-                    cropName: 'Day $_currentDay',
-                  ),
-                ),
-              ),
-            )
-          : NoVisualInfoWidget(
-              message: '3D Model not available\nfor today.',
-              height: imageHeight,
-            );
     }
 
     // 2D image carousel

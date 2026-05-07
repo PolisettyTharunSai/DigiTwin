@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/user_avatar.dart';
-import '../../profile/screens/profile_screen.dart';
 import '../../settings/screens/notifications_screen.dart';
 import '../../../core/services/notification_service.dart';
 
@@ -61,7 +59,7 @@ class HomeHeader extends StatelessWidget {
             ),
           ),
           
-          // Action Buttons
+          // Action Buttons (Moved to the right side)
           _ActionButtons(
             hasTodayLogSubmitted: hasTodayLogSubmitted,
             onDailyCheckTap: onDailyCheckTap,
@@ -69,21 +67,6 @@ class HomeHeader extends StatelessWidget {
             onRecommendationsTap: onRecommendationsTap,
             isAdmin: isAdmin,
             onAdminTap: onAdminTap,
-          ),
-          
-          const SizedBox(width: 10),
-          
-          // Right Edge: Profile Button
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            ),
-            child: UserAvatar(
-              avatarUrl: avatarUrl,
-              name: farmerName,
-              radius: 20,
-            ),
           ),
         ],
       ),
