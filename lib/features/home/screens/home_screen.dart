@@ -16,7 +16,6 @@ import '../../../core/utils/day_utils.dart';
 // Home feature
 import '../models/day_data.dart';
 import '../services/home_service.dart';
-import '../widgets/day_navigation_bar.dart';
 import '../widgets/growth_parameters_section.dart';
 import '../widgets/home_header.dart';
 import '../widgets/image_indicator.dart';
@@ -69,7 +68,21 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _modelExists = true;
   bool _isAdmin = false;
   bool _exploreAllDays = false;
+  bool _isChatOpen = false;
+  bool _isChatMinimized = false;
+  bool _isChatFullscreen = false;
+  bool _isBotTyping = false;
   DayData _dayData = DayData.fallback();
+  final TextEditingController _chatController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
+  final List<_ChatMessage> _chatMessages = [
+    _ChatMessage(
+      text:
+          'Hi, I am your DigiTwin assistant. Ask me about water, nutrients, day progress, or 2D/3D views.',
+      isUser: false,
+      timestamp: DateTime.now(),
+    ),
+  ];
 
   final CarouselSliderController _carouselController =
       CarouselSliderController();
@@ -101,6 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
+    _chatController.dispose();
+    _chatScrollController.dispose();
     super.dispose();
   }
 
@@ -159,10 +174,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkDailyPopup({bool showIfMissing = true}) async {
     final prefs = await SharedPreferences.getInstance();
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final String? lastChecked =
-        prefs.getString(AppConstants.PREF_LAST_DAILY_CHECK_DATE);
-    final bool? cached =
-        prefs.getBool(AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED);
+    final String? lastChecked = prefs.getString(
+      AppConstants.PREF_LAST_DAILY_CHECK_DATE,
+    );
+    final bool? cached = prefs.getBool(
+      AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED,
+    );
 
     bool submitted;
     if (lastChecked != today) {
@@ -287,6 +304,80 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirmed == true) await _handleLogout();
   }
 
+  void _openChat() {
+    setState(() {
+      _isChatOpen = true;
+      _isChatMinimized = false;
+    });
+    _scrollChatToBottom();
+  }
+
+  void _scrollChatToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_chatScrollController.hasClients) return;
+      _chatScrollController.animateTo(
+        _chatScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _sendChatMessage() async {
+    final message = _chatController.text.trim();
+    if (message.isEmpty || _isBotTyping) return;
+
+    setState(() {
+      _chatMessages.add(
+        _ChatMessage(text: message, isUser: true, timestamp: DateTime.now()),
+      );
+      _chatController.clear();
+      _isBotTyping = true;
+    });
+    _scrollChatToBottom();
+
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+
+    setState(() {
+      _chatMessages.add(
+        _ChatMessage(
+          text: _buildAssistantReply(message),
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+      _isBotTyping = false;
+    });
+    _scrollChatToBottom();
+  }
+
+  String _buildAssistantReply(String input) {
+    final text = input.toLowerCase();
+
+    if (text.contains('water') || text.contains('irrigation')) {
+      return 'Day $_currentDay irrigation guidance: ${_dayData.water}. Keep soil moisture even and avoid overwatering.';
+    }
+
+    if (text.contains('nutrient') || text.contains('fertilizer')) {
+      return 'For Day $_currentDay, nutrient guidance is: ${_dayData.nutrients}. Apply gradually and monitor leaf response.';
+    }
+
+    if (text.contains('day') || text.contains('today')) {
+      return 'You are currently on Day $_currentDay. Use the floating Day chip to jump to another date using calendar.';
+    }
+
+    if (text.contains('2d') || text.contains('3d') || text.contains('model')) {
+      return 'Use the 2D/3D toggle below the visual section to switch between image carousel and 3D model view for the selected day.';
+    }
+
+    if (text.contains('hello') || text.contains('hi') || text.contains('hey')) {
+      return 'Hello! Ask me anything about crop progress, day-wise visuals, water, nutrients, or how to use this screen.';
+    }
+
+    return 'I understood your question. For best guidance, share your concern with details like day number, symptoms, or whether you need water, nutrient, or visual-model help.';
+  }
+
   Future<void> _handleLogout() async {
     try {
       await Supabase.instance.client.auth.signOut();
@@ -299,8 +390,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error logging out: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error logging out: $e')));
       }
     }
   }
@@ -378,25 +470,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // ── Day indicator ──
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Day $_currentDay',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                        // ── Media Content ────────────────────────────────
+                        SizedBox(
+                          height: imageHeight,
+                          child: _buildMediaContent(
+                            images: images,
+                            modelUrl: modelUrl,
+                            imageWidth: imageWidth,
+                            imageHeight: imageHeight,
                           ),
                         ),
 
-                        // ── 2D / 3D Toggle ──────────────────────────────
+                        const SizedBox(height: 16),
+
+                        // ── 2D / 3D Toggle (below media) ─────────────────
                         ViewToggle(
                           show3DModel: _show3DModel,
                           onToggle: (value) {
@@ -409,19 +496,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             });
                           },
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Media Content ────────────────────────────────
-                        SizedBox(
-                          height: imageHeight,
-                          child: _buildMediaContent(
-                            images: images,
-                            modelUrl: modelUrl,
-                            imageWidth: imageWidth,
-                            imageHeight: imageHeight,
-                          ),
                         ),
 
                         const SizedBox(height: 15),
@@ -451,7 +525,361 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+
+          if (!(_isChatOpen && _isChatFullscreen))
+            Positioned(
+              left: 16,
+              bottom: 24,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: _showCustomCalendar,
+                  child: Ink(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.18),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Icon(
+                            Icons.calendar_month_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Day $_currentDay',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkBrown,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          if (_isChatOpen) _buildChatWindow(),
+
+          if (!_isChatOpen || _isChatMinimized)
+            Positioned(
+              right: 16,
+              bottom: 24,
+              child: FloatingActionButton(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 6,
+                onPressed: _openChat,
+                child: const Icon(Icons.chat_bubble_outline_rounded),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatWindow() {
+    if (_isChatMinimized) {
+      return const SizedBox.shrink();
+    }
+
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final bool fullscreen = _isChatFullscreen;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    final Widget chatSurface = Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: fullscreen
+              ? BorderRadius.zero
+              : const BorderRadius.all(Radius.circular(20)),
+          boxShadow: fullscreen
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 58,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: fullscreen
+                    ? BorderRadius.zero
+                    : const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  if (fullscreen)
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isChatFullscreen = false;
+                        });
+                      },
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      color: Colors.white,
+                    )
+                  else
+                    const SizedBox(width: 6),
+                  const Icon(
+                    Icons.smart_toy_outlined,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'DigiTwin Assistant',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isChatMinimized = true;
+                      });
+                    },
+                    icon: const Icon(Icons.minimize_rounded),
+                    color: Colors.white,
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isChatFullscreen = !_isChatFullscreen;
+                      });
+                    },
+                    icon: Icon(
+                      fullscreen
+                          ? Icons.fullscreen_exit_rounded
+                          : Icons.fullscreen_rounded,
+                    ),
+                    color: Colors.white,
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isChatOpen = false;
+                        _isChatMinimized = false;
+                        _isChatFullscreen = false;
+                      });
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                color: const Color(0xFFFFFBF6),
+                child: ListView.builder(
+                  controller: _chatScrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  itemCount: _chatMessages.length + (_isBotTyping ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (_isBotTyping && index == _chatMessages.length) {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: const Text(
+                            'Typing...',
+                            style: TextStyle(
+                              color: AppColors.darkBrown,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final message = _chatMessages[index];
+                    final isUser = message.isUser;
+                    return Align(
+                      alignment: isUser
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: screenWidth * (fullscreen ? 0.74 : 0.62),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                        decoration: BoxDecoration(
+                          color: isUser ? AppColors.primary : Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(14),
+                            topRight: const Radius.circular(14),
+                            bottomLeft: Radius.circular(isUser ? 14 : 4),
+                            bottomRight: Radius.circular(isUser ? 4 : 14),
+                          ),
+                          border: isUser
+                              ? null
+                              : Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.16,
+                                  ),
+                                ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.text,
+                              style: TextStyle(
+                                color: isUser
+                                    ? Colors.white
+                                    : AppColors.darkBrown,
+                                height: 1.35,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              DateFormat('hh:mm a').format(message.timestamp),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isUser
+                                    ? Colors.white70
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: fullscreen
+                    ? BorderRadius.zero
+                    : const BorderRadius.vertical(bottom: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _chatController,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendChatMessage(),
+                      decoration: InputDecoration(
+                        hintText: 'Write your doubt...',
+                        filled: true,
+                        fillColor: const Color(0xFFFFF2E8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: ElevatedButton(
+                      onPressed: _sendChatMessage,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (fullscreen) {
+      return Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        child: SafeArea(child: chatSurface),
+      );
+    }
+
+    return Positioned(
+      right: 16,
+      bottom: 86 + keyboardInset,
+      child: SizedBox(
+        width: screenWidth > 420 ? 390 : screenWidth - 24,
+        height: 460,
+        child: chatSurface,
       ),
     );
   }
@@ -558,9 +986,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const InstructionsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const InstructionsScreen()),
               );
             },
           ),
@@ -574,7 +1000,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ExploreTimelineScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const ExploreTimelineScreen(),
+                  ),
                 );
               },
             ),
@@ -605,4 +1033,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+class _ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  const _ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
 }

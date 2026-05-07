@@ -30,6 +30,12 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   String _selectedWaterUnit = 'ml';
   bool pestsObserved = false;
   final TextEditingController _pestNotesController = TextEditingController();
+  final TextEditingController _nitrogenAppliedController =
+      TextEditingController();
+  final TextEditingController _phosphorusAppliedController =
+      TextEditingController();
+  final TextEditingController _potassiumAppliedController =
+      TextEditingController();
   final TextEditingController _feedbackController = TextEditingController();
   List<dynamic> _images = [];
 
@@ -52,8 +58,17 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   void dispose() {
     _waterAmountController.dispose();
     _pestNotesController.dispose();
+    _nitrogenAppliedController.dispose();
+    _phosphorusAppliedController.dispose();
+    _potassiumAppliedController.dispose();
     _feedbackController.dispose();
     super.dispose();
+  }
+
+  double _parseNonNegativeDouble(String raw) {
+    final parsed = double.tryParse(raw.trim()) ?? 0.0;
+    if (parsed.isNaN || parsed.isInfinite) return 0.0;
+    return parsed < 0 ? 0.0 : parsed;
   }
 
   // ── Logic ─────────────────────────────────────────────────────────────────
@@ -61,7 +76,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   /// Checks SharedPreferences and then Supabase to determine if today's log exists.
   Future<void> _checkSubmissionStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool? cached = prefs.getBool(AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED);
+    final bool? cached = prefs.getBool(
+      AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED,
+    );
 
     if (!_alreadySubmittedToday && cached == true) {
       if (mounted) setState(() => _alreadySubmittedToday = true);
@@ -95,6 +112,12 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
             }
             pestsObserved = response['pests_observed'] ?? false;
             _pestNotesController.text = response['pest_notes'] ?? '';
+            _nitrogenAppliedController.text =
+                response['nutrient_n_applied_g']?.toString() ?? '';
+            _phosphorusAppliedController.text =
+                response['nutrient_p_applied_g']?.toString() ?? '';
+            _potassiumAppliedController.text =
+                response['nutrient_k_applied_g']?.toString() ?? '';
             _feedbackController.text = response['feedback'] ?? '';
             _images = List<dynamic>.from(response['images'] ?? []);
           });
@@ -146,11 +169,13 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         } else if (image is XFile) {
           final fileName =
               'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-          await supabase.storage.from(AppConstants.STORAGE_BUCKET_MODELS).upload(
-            fileName,
-            File(image.path),
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+          await supabase.storage
+              .from(AppConstants.STORAGE_BUCKET_MODELS)
+              .upload(
+                fileName,
+                File(image.path),
+                fileOptions: const FileOptions(contentType: 'image/jpeg'),
+              );
           final publicUrl = supabase.storage
               .from(AppConstants.STORAGE_BUCKET_MODELS)
               .getPublicUrl(fileName);
@@ -160,14 +185,16 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
 
       // Delete old photos that were removed during editing
       if (_alreadySubmittedToday && _existingLogData != null) {
-        final List<String> oldImages =
-            List<String>.from(_existingLogData!['images'] ?? []);
+        final List<String> oldImages = List<String>.from(
+          _existingLogData!['images'] ?? [],
+        );
         final toDelete = oldImages.where((u) => !imageUrls.contains(u));
 
         for (final url in toDelete) {
           try {
-            final storagePath =
-                url.split('${AppConstants.STORAGE_BUCKET_MODELS}/').last;
+            final storagePath = url
+                .split('${AppConstants.STORAGE_BUCKET_MODELS}/')
+                .last;
             await supabase.storage
                 .from(AppConstants.STORAGE_BUCKET_MODELS)
                 .remove([storagePath]);
@@ -179,8 +206,19 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
 
       final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-      final double? waterAmountValue = double.tryParse(_waterAmountController.text);
+      final double? waterAmountValue = double.tryParse(
+        _waterAmountController.text,
+      );
       final bool isWatered = watered ?? false;
+      final double appliedN = _parseNonNegativeDouble(
+        _nitrogenAppliedController.text,
+      );
+      final double appliedP = _parseNonNegativeDouble(
+        _phosphorusAppliedController.text,
+      );
+      final double appliedK = _parseNonNegativeDouble(
+        _potassiumAppliedController.text,
+      );
 
       final logData = {
         'user_id': user.id,
@@ -192,6 +230,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         'images': imageUrls,
         'water_amount': isWatered ? waterAmountValue : null,
         'water_unit': isWatered ? _selectedWaterUnit : null,
+        'nutrient_n_applied_g': appliedN,
+        'nutrient_p_applied_g': appliedP,
+        'nutrient_k_applied_g': appliedK,
       };
 
       // Use DailyLogService to submit, which handles the carry balance update internally.
@@ -218,8 +259,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -281,6 +323,12 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                 onPestsChanged: (val) {
                   if (mounted) setState(() => pestsObserved = val);
                 },
+              ),
+              const SizedBox(height: 14),
+              NutrientApplicationSection(
+                nitrogenController: _nitrogenAppliedController,
+                phosphorusController: _phosphorusAppliedController,
+                potassiumController: _potassiumAppliedController,
               ),
               const SizedBox(height: 14),
               _buildFeedbackSection(),
@@ -432,7 +480,12 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: img is String
-                          ? Image.network(img, width: 82, height: 82, fit: BoxFit.cover)
+                          ? Image.network(
+                              img,
+                              width: 82,
+                              height: 82,
+                              fit: BoxFit.cover,
+                            )
                           : Image.file(
                               File((img as XFile).path),
                               width: 82,
@@ -450,7 +503,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                         child: const CircleAvatar(
                           radius: 10,
                           backgroundColor: Colors.red,
-                          child: Icon(Icons.close, size: 12, color: Colors.white),
+                          child: Icon(
+                            Icons.close,
+                            size: 12,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -490,8 +547,8 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               onPressed: _isSubmitting
                   ? null
                   : (_alreadySubmittedToday && !_isEditing
-                      ? () => setState(() => _isEditing = true)
-                      : _submit),
+                        ? () => setState(() => _isEditing = true)
+                        : _submit),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
@@ -503,8 +560,8 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
                   : Text(
                       _alreadySubmittedToday
                           ? (_isEditing
-                              ? "Update Today's Log"
-                              : "Edit today's log")
+                                ? "Update Today's Log"
+                                : "Edit today's log")
                           : "Submit Today's Log",
                       style: const TextStyle(
                         color: Colors.white,
