@@ -59,6 +59,25 @@ class DailyLogService {
         .maybeSingle();
   }
 
+  /// Fetches all submitted logs for the current user, ordered by day_number.
+  Future<List<Map<String, dynamic>>> fetchAllUserLogs() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return [];
+
+    try {
+      final response = await Supabase.instance.client
+          .from(AppConstants.TABLE_PLANT_DAILY_LOG)
+          .select()
+          .eq('user_id', user.id)
+          .order('day_number', ascending: false);
+      
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('DailyLogService: Error fetching all logs — $e');
+      return [];
+    }
+  }
+
   /// Queries the DB for today's log, stores the result in [SharedPreferences],
   /// and returns whether the log exists.
   Future<bool> checkTodayLogStatus() async {
@@ -97,12 +116,6 @@ class DailyLogService {
 
   /// Upserts a daily log entry and optionally triggers a background image
   /// analysis pipeline via CropSense.
-  ///
-  /// [logData] must include 'user_id', 'log_date', and all log fields.
-  ///
-  /// If [imageBytes] is provided, the log is saved immediately with
-  /// `image_analysis_status = 'pending'`, then the CropSense pipeline
-  /// runs in the background and updates the row when complete.
   Future<void> submitLog(
     Map<String, dynamic> logData, {
     List<int>? imageBytes,
@@ -148,8 +161,6 @@ class DailyLogService {
     }
 
     // ── Mark analysis status before upsert ────────────────────────────────
-    // If image bytes are provided we set pending immediately so the UI can
-    // show a loading indicator while the background pipeline runs.
     if (imageBytes != null) {
       payload[AppConstants.COL_IMAGE_ANALYSIS_STATUS] = 'pending';
     }
@@ -199,8 +210,6 @@ class DailyLogService {
   }
 
   /// Runs the CropSense pipeline and patches the log row with results.
-  ///
-  /// Errors are caught and the row is marked 'failed' so the UI can react.
   Future<void> _runImageAnalysisPipeline({
     required String userId,
     required String logDate,

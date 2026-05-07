@@ -18,6 +18,7 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.19.0
   dio: ^5.9.0
+  http: ^1.6.0
   path_provider: ^2.1.5
   image_picker: ^1.2.1
 
@@ -161,4 +162,3 @@ flutter:
     - assets/Data/day107/
     - assets/Data/day108/
     - assets/Data/day109/
-

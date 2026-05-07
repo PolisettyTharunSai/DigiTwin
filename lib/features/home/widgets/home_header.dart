@@ -16,7 +16,6 @@ class HomeHeader extends StatelessWidget {
   final VoidCallback onLogoutTap;
   final VoidCallback onDailyCheckTap;
   final VoidCallback onInstructionsTap;
-  final VoidCallback onRecommendationsTap;
   final bool isAdmin;
   final VoidCallback? onAdminTap;
 
@@ -29,7 +28,6 @@ class HomeHeader extends StatelessWidget {
     required this.onLogoutTap,
     required this.onDailyCheckTap,
     required this.onInstructionsTap,
-    required this.onRecommendationsTap,
     this.isAdmin = false,
     this.onAdminTap,
   });
@@ -64,7 +62,6 @@ class HomeHeader extends StatelessWidget {
             hasTodayLogSubmitted: hasTodayLogSubmitted,
             onDailyCheckTap: onDailyCheckTap,
             onInstructionsTap: onInstructionsTap,
-            onRecommendationsTap: onRecommendationsTap,
             isAdmin: isAdmin,
             onAdminTap: onAdminTap,
           ),
@@ -135,7 +132,6 @@ class _ActionButtons extends StatefulWidget {
   final bool hasTodayLogSubmitted;
   final VoidCallback onDailyCheckTap;
   final VoidCallback onInstructionsTap;
-  final VoidCallback onRecommendationsTap;
   final bool isAdmin;
   final VoidCallback? onAdminTap;
 
@@ -143,7 +139,6 @@ class _ActionButtons extends StatefulWidget {
     required this.hasTodayLogSubmitted,
     required this.onDailyCheckTap,
     required this.onInstructionsTap,
-    required this.onRecommendationsTap,
     this.isAdmin = false,
     this.onAdminTap,
   });

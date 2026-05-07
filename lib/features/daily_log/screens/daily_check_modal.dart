@@ -10,9 +10,11 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../widgets/daily_log_sections.dart';
 import '../services/daily_log_service.dart';
+import 'daily_log_detail_screen.dart';
 
 /// Bottom-sheet modal for the daily plant health check.
 /// Allows the farmer to log watering, observations, photos, and notes.
+/// If already submitted, shows the read-only log for today.
 class DailyCheckModal extends StatefulWidget {
   /// Whether today's log was already submitted (passed from HomeScreen).
   final bool initialAlreadySubmitted;
@@ -42,10 +44,8 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
   // ── UI state ──────────────────────────────────────────────────────────────
   bool _isSubmitting = false;
   bool _alreadySubmittedToday = false;
-  bool _isEditing = false;
   bool _isCheckingStatus = true;
-
-  Map<String, dynamic>? _existingLogData;
+  Map<String, dynamic>? _todayLogData;
 
   @override
   void initState() {
@@ -69,6 +69,11 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     final parsed = double.tryParse(raw.trim()) ?? 0.0;
     if (parsed.isNaN || parsed.isInfinite) return 0.0;
     return parsed < 0 ? 0.0 : parsed;
+  }
+
+  String _valueOrZero(TextEditingController controller) {
+    final value = controller.text.trim();
+    return value.isEmpty ? '0' : value;
   }
 
   // ── Logic ─────────────────────────────────────────────────────────────────
@@ -101,23 +106,23 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         if (mounted) {
           setState(() {
             _alreadySubmittedToday = true;
-            _existingLogData = response;
+            _todayLogData = response;
 
-            // Pre-fill form fields with existing data
+            // Pre-fill form fields for read-only display
             watered = response['watered'];
             if (watered == true) {
               _waterAmountController.text =
-                  response['water_amount']?.toString() ?? '';
+                  response['water_amount']?.toString() ?? '0';
               _selectedWaterUnit = response['water_unit'] ?? 'ml';
             }
             pestsObserved = response['pests_observed'] ?? false;
             _pestNotesController.text = response['pest_notes'] ?? '';
             _nitrogenAppliedController.text =
-                response['nutrient_n_applied_g']?.toString() ?? '';
+                response['nutrient_n_applied_g']?.toString() ?? '0';
             _phosphorusAppliedController.text =
-                response['nutrient_p_applied_g']?.toString() ?? '';
+                response['nutrient_p_applied_g']?.toString() ?? '0';
             _potassiumAppliedController.text =
-                response['nutrient_k_applied_g']?.toString() ?? '';
+                response['nutrient_k_applied_g']?.toString() ?? '0';
             _feedbackController.text = response['feedback'] ?? '';
             _images = List<dynamic>.from(response['images'] ?? []);
           });
@@ -143,7 +148,7 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     }
   }
 
-  /// Validates, uploads images, and submits (or updates) the daily log.
+  /// Validates, uploads images, and submits the daily log.
   Future<void> _submit() async {
     if (watered == null) {
       _showSnackBar('Please answer if you watered the plant.');
@@ -161,12 +166,14 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
-      // Upload new images; keep existing URL strings as-is
+      // Upload new images
       final List<String> imageUrls = [];
+      List<int>? imageBytesForAnalysis;
       for (final image in _images) {
         if (image is String) {
           imageUrls.add(image);
         } else if (image is XFile) {
+          imageBytesForAnalysis ??= await image.readAsBytes();
           final fileName =
               'public/${user.id}/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
           await supabase.storage
@@ -180,27 +187,6 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               .from(AppConstants.STORAGE_BUCKET_MODELS)
               .getPublicUrl(fileName);
           imageUrls.add(publicUrl);
-        }
-      }
-
-      // Delete old photos that were removed during editing
-      if (_alreadySubmittedToday && _existingLogData != null) {
-        final List<String> oldImages = List<String>.from(
-          _existingLogData!['images'] ?? [],
-        );
-        final toDelete = oldImages.where((u) => !imageUrls.contains(u));
-
-        for (final url in toDelete) {
-          try {
-            final storagePath = url
-                .split('${AppConstants.STORAGE_BUCKET_MODELS}/')
-                .last;
-            await supabase.storage
-                .from(AppConstants.STORAGE_BUCKET_MODELS)
-                .remove([storagePath]);
-          } catch (e) {
-            debugPrint('DailyCheckModal: Error deleting old image — $e');
-          }
         }
       }
 
@@ -235,8 +221,10 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         'nutrient_k_applied_g': appliedK,
       };
 
-      // Use DailyLogService to submit, which handles the carry balance update internally.
-      await DailyLogService.instance.submitLog(logData);
+      await DailyLogService.instance.submitLog(
+        logData,
+        imageBytes: imageBytesForAnalysis,
+      );
 
       // Update local cache
       final prefs = await SharedPreferences.getInstance();
@@ -244,17 +232,22 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
       await prefs.setBool(AppConstants.PREF_HAS_TODAY_LOG_SUBMITTED, true);
 
       if (mounted) {
-        Navigator.pop(context);
-        _showSnackBar(
-          _alreadySubmittedToday
-              ? 'Daily log updated successfully!'
-              : 'Daily log submitted successfully!',
-        );
+        // Instead of popping, we could show the read-only view immediately.
+        // But for simplicity and UI flow consistency, we pop and let the HomeScreen
+        // re-trigger or update. Alternatively, we just set the state here.
+        setState(() {
+          _alreadySubmittedToday = true;
+          _isSubmitting = false;
+          _images = imageUrls;
+          _todayLogData = logData;
+        });
+        _showSnackBar('Daily log submitted successfully!');
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Error: $e');
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) {
+        _showSnackBar('Error: $e');
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -298,13 +291,17 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
             // Modal header
             _buildModalHeader(),
 
-            // Already-submitted warning banner
-            if (_alreadySubmittedToday) _buildAlreadySubmittedBanner(),
-
-            const SizedBox(height: 16),
-
-            // Form sections (only when submitting or editing)
-            if (!_alreadySubmittedToday || _isEditing) ...[
+            if (_isCheckingStatus)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            else if (_alreadySubmittedToday)
+              _buildReadOnlyView()
+            else ...[
+              const SizedBox(height: 16),
               WateringSection(
                 watered: watered,
                 waterAmountController: _waterAmountController,
@@ -335,10 +332,8 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               const SizedBox(height: 14),
               _buildPhotoSection(),
               const SizedBox(height: 26),
+              _buildSubmitButton(),
             ],
-
-            // Submit / Edit button
-            _buildSubmitButton(),
             const SizedBox(height: 10),
           ],
         ),
@@ -355,7 +350,7 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.local_florist, color: AppColors.primary),
@@ -367,10 +362,12 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Daily Plant Check',
-                      style: TextStyle(
+                      _alreadySubmittedToday
+                          ? 'Today\'s Log'
+                          : 'Daily Plant Check',
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -386,7 +383,9 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
               ),
               const SizedBox(height: 4),
               Text(
-                "Log today's care, water, and observations.",
+                _alreadySubmittedToday
+                    ? "Here is what you logged for today."
+                    : "Log today's care, water, and observations.",
                 style: TextStyle(
                   color: Colors.grey.shade700,
                   fontSize: 13,
@@ -400,29 +399,235 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     );
   }
 
-  Widget _buildAlreadySubmittedBanner() {
+  Widget _buildReadOnlyView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        _buildSuccessBanner(),
+        const SizedBox(height: 20),
+
+        _buildInfoRow(
+          'Watered',
+          (watered ?? false)
+              ? 'Yes, ${_waterAmountController.text} $_selectedWaterUnit'
+              : 'No',
+        ),
+        const SizedBox(height: 16),
+
+        _buildInfoRow('Pests Observed', pestsObserved ? 'Yes' : 'No'),
+        if (pestsObserved && _pestNotesController.text.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              'Notes: ${_pestNotesController.text}',
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+
+        _buildInfoRow(
+          'Nutrients Applied',
+          'N: ${_valueOrZero(_nitrogenAppliedController)}g, '
+              'P: ${_valueOrZero(_phosphorusAppliedController)}g, '
+              'K: ${_valueOrZero(_potassiumAppliedController)}g',
+        ),
+        const SizedBox(height: 16),
+
+        if (_feedbackController.text.isNotEmpty) ...[
+          _buildInfoRow('Feedback', _feedbackController.text),
+          const SizedBox(height: 16),
+        ],
+
+        if (_images.isNotEmpty) ...[
+          const Text(
+            'Photos',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 120,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _images.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final img = _images[index];
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _buildReadOnlyImage(img),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+
+        if (_canOpenAnalysisSummary) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: _openAnalysisSummary,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: const Text('View AI Summary'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: const Text(
+              'Close',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool get _canOpenAnalysisSummary {
+    final status = _todayLogData?['image_analysis_status']
+        ?.toString()
+        .toLowerCase()
+        .trim();
+    return status == 'completed';
+  }
+
+  void _openAnalysisSummary() {
+    final log = _todayLogData;
+    if (log == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DailyLogDetailScreen(log: log)),
+    );
+  }
+
+  Widget _buildReadOnlyImage(dynamic img) {
+    if (img is String) {
+      return Image.network(
+        img,
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: 120,
+            height: 120,
+            color: Colors.grey[100],
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _brokenImageBox(),
+      );
+    }
+
+    if (img is XFile) {
+      return Image.file(
+        File(img.path),
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _brokenImageBox(),
+      );
+    }
+
+    return _brokenImageBox();
+  }
+
+  Widget _brokenImageBox() {
     return Container(
-      margin: const EdgeInsets.only(top: 12),
+      width: 120,
+      height: 120,
+      color: Colors.grey[200],
+      child: const Icon(Icons.broken_image, color: Colors.grey),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 15, color: Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuccessBanner() {
+    return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.25)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
       ),
       child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, color: Colors.orange, size: 20),
-          SizedBox(width: 10),
+          Icon(Icons.check_circle_outline, color: Colors.green, size: 24),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
-              'You have already submitted a log for today. '
-              'Submitting again will update your existing entry.',
+              'Daily log submitted successfully!',
               style: TextStyle(
-                color: Colors.orange,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                height: 1.3,
+                color: Colors.green,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -539,37 +744,25 @@ class _DailyCheckModalState extends State<DailyCheckModal> {
     return SizedBox(
       width: double.infinity,
       height: 50,
-      child: _isCheckingStatus
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : ElevatedButton(
-              onPressed: _isSubmitting
-                  ? null
-                  : (_alreadySubmittedToday && !_isEditing
-                        ? () => setState(() => _isEditing = true)
-                        : _submit),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+      child: ElevatedButton(
+        onPressed: _isSubmitting ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: _isSubmitting
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                "Submit Today's Log",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: _isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(
-                      _alreadySubmittedToday
-                          ? (_isEditing
-                                ? "Update Today's Log"
-                                : "Edit today's log")
-                          : "Submit Today's Log",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-            ),
+      ),
     );
   }
 }

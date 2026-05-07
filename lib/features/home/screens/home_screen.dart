@@ -20,10 +20,10 @@ import '../widgets/growth_parameters_section.dart';
 import '../widgets/home_header.dart';
 import '../widgets/image_indicator.dart';
 import '../widgets/media_carousel.dart';
-import '../widgets/model_viewer_card.dart';
 
 // Daily log feature
 import '../../daily_log/screens/daily_check_modal.dart';
+import '../../daily_log/screens/daily_log_list_screen.dart';
 import '../../daily_log/services/daily_log_service.dart';
 
 // Shared
@@ -34,15 +34,12 @@ import '../../../shared/widgets/no_visual_info_widget.dart';
 import '../../ar_view/screens/ar_view_screen.dart';
 import '../../instructions/screens/instructions_screen.dart';
 import '../../onboarding/screens/get_started_screen.dart';
-import 'daily_recommendation_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import 'explore_timeline_screen.dart';
 
 /// Entry point for the main dashboard: coordinates services and widgets.
-/// All data loading is delegated to [ProfileService], [HomeService], and
-/// [DailyLogService]. All UI is delegated to the extracted widget files.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -177,7 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     bool submitted;
     if (lastChecked != today) {
-      // New day or first run → query DB via service
       submitted = await DailyLogService.instance.checkTodayLogStatus();
     } else {
       submitted = cached ?? false;
@@ -199,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _autoScrollTimer?.cancel();
         return;
       }
-      // Only scroll if we are past the visual data start day (no carousel exists before then)
       if (_currentDay > AppConstants.VISUAL_DATA_START_DAY) {
         try {
           _carouselController.nextPage();
@@ -331,15 +326,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = input.toLowerCase();
 
     if (text.contains('water') || text.contains('irrigation')) {
-      return 'Day $_currentDay irrigation guidance: ${_dayData.water}. Keep soil moisture even and avoid overwatering.';
+      return 'Day \$_currentDay irrigation guidance: \${_dayData.water}. Keep soil moisture even and avoid overwatering.';
     }
 
     if (text.contains('nutrient') || text.contains('fertilizer')) {
-      return 'For Day $_currentDay, nutrient guidance is: ${_dayData.nutrients}. Apply gradually and monitor leaf response.';
+      return 'For Day \$_currentDay, nutrient guidance is: \${_dayData.nutrients}. Apply gradually and monitor leaf response.';
     }
 
     if (text.contains('day') || text.contains('today')) {
-      return 'You are currently on Day $_currentDay (Today). You can explore other days from the Timeline in the side menu.';
+      return 'You are currently on Day \$_currentDay (Today). You can explore other days from the Timeline in the side menu.';
     }
 
     if (text.contains('hello') || text.contains('hi') || text.contains('hey')) {
@@ -363,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error logging out: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error logging out: \$e')));
       }
     }
   }
@@ -423,12 +418,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => const InstructionsScreen(),
-                    ),
-                  ),
-                  onRecommendationsTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DailyRecommendationScreen(),
                     ),
                   ),
                 ),
@@ -782,7 +771,6 @@ class _HomeScreenState extends State<HomeScreen> {
     required double imageWidth,
     required double imageHeight,
   }) {
-    // Days 1–30: no visual data yet
     if (_currentDay <= AppConstants.VISUAL_DATA_START_DAY) {
       return NoVisualInfoWidget(
         message: 'No visual information available\nfor the first 30 days.',
@@ -790,7 +778,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // 2D image carousel
     return MediaCarousel(
       images: images,
       imageWidth: imageWidth,
@@ -826,14 +813,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.calendar_today_outlined),
-            title: const Text('Daily Log'),
+            leading: const Icon(Icons.history),
+            title: const Text('Daily Log History'),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const DailyRecommendationScreen(),
+                  builder: (_) => const DailyLogListScreen(),
                 ),
               );
             },
