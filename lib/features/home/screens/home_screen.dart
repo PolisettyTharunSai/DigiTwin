@@ -31,12 +31,13 @@ import '../../../shared/widgets/fullscreen_image_gallery.dart';
 import '../../../shared/widgets/no_visual_info_widget.dart';
 
 // Other screens
-import '../../ar_view/screens/ar_view_screen.dart';
 import '../../instructions/screens/instructions_screen.dart';
 import '../../onboarding/screens/get_started_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../support/screens/customer_support_screen.dart';
+import '../../support/screens/plant_analysis_screen.dart';
 import 'explore_timeline_screen.dart';
 
 /// Entry point for the main dashboard: coordinates services and widgets.
@@ -61,21 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isPopupShowing = false;
   bool _isAdmin = false;
   bool _exploreAllDays = false;
-  bool _isChatOpen = false;
-  bool _isChatMinimized = false;
-  bool _isChatFullscreen = false;
-  bool _isBotTyping = false;
+  bool _isHelpExpanded = false;
   DayData _dayData = DayData.fallback();
-  final TextEditingController _chatController = TextEditingController();
-  final ScrollController _chatScrollController = ScrollController();
-  final List<_ChatMessage> _chatMessages = [
-    _ChatMessage(
-      text:
-          'Hi, I am your DigiTwin assistant. Ask me about water, nutrients, or day progress.',
-      isUser: false,
-      timestamp: DateTime.now(),
-    ),
-  ];
 
   final CarouselSliderController _carouselController =
       CarouselSliderController();
@@ -107,8 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
-    _chatController.dispose();
-    _chatScrollController.dispose();
     super.dispose();
   }
 
@@ -274,74 +260,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirmed == true) await _handleLogout();
   }
 
-  void _openChat() {
-    setState(() {
-      _isChatOpen = true;
-      _isChatMinimized = false;
-    });
-    _scrollChatToBottom();
+  void _toggleHelpFab() {
+    setState(() => _isHelpExpanded = !_isHelpExpanded);
   }
 
-  void _scrollChatToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_chatScrollController.hasClients) return;
-      _chatScrollController.animateTo(
-        _chatScrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOut,
-      );
-    });
+  void _openCustomerSupport() {
+    setState(() => _isHelpExpanded = false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CustomerSupportScreen()),
+    );
   }
 
-  Future<void> _sendChatMessage() async {
-    final message = _chatController.text.trim();
-    if (message.isEmpty || _isBotTyping) return;
-
-    setState(() {
-      _chatMessages.add(
-        _ChatMessage(text: message, isUser: true, timestamp: DateTime.now()),
-      );
-      _chatController.clear();
-      _isBotTyping = true;
-    });
-    _scrollChatToBottom();
-
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-
-    setState(() {
-      _chatMessages.add(
-        _ChatMessage(
-          text: _buildAssistantReply(message),
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
-      _isBotTyping = false;
-    });
-    _scrollChatToBottom();
-  }
-
-  String _buildAssistantReply(String input) {
-    final text = input.toLowerCase();
-
-    if (text.contains('water') || text.contains('irrigation')) {
-      return 'Day \$_currentDay irrigation guidance: \${_dayData.water}. Keep soil moisture even and avoid overwatering.';
-    }
-
-    if (text.contains('nutrient') || text.contains('fertilizer')) {
-      return 'For Day \$_currentDay, nutrient guidance is: \${_dayData.nutrients}. Apply gradually and monitor leaf response.';
-    }
-
-    if (text.contains('day') || text.contains('today')) {
-      return 'You are currently on Day \$_currentDay (Today). You can explore other days from the Timeline in the side menu.';
-    }
-
-    if (text.contains('hello') || text.contains('hi') || text.contains('hey')) {
-      return 'Hello! Ask me anything about crop progress, water, nutrients, or how to use this screen.';
-    }
-
-    return 'I understood your question. For best guidance, share your concern with details like symptoms, or whether you need water or nutrient help.';
+  void _openPlantAnalysis() {
+    setState(() => _isHelpExpanded = false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PlantAnalysisScreen()),
+    );
   }
 
   Future<void> _handleLogout() async {
@@ -466,305 +402,106 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          if (_isChatOpen) _buildChatWindow(),
-
-          if (!_isChatOpen || _isChatMinimized)
-            Positioned(
-              right: 16,
-              bottom: 24,
-              child: FloatingActionButton(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 6,
-                onPressed: _openChat,
-                child: const Icon(Icons.chat_bubble_outline_rounded),
-              ),
-            ),
+          Positioned(right: 16, bottom: 24, child: _buildHelpFab()),
         ],
       ),
     );
   }
 
-  Widget _buildChatWindow() {
-    if (_isChatMinimized) {
-      return const SizedBox.shrink();
-    }
+  // ── Private build helpers ──────────────────────────────────────────────────
 
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    final bool fullscreen = _isChatFullscreen;
-    final double screenWidth = MediaQuery.of(context).size.width;
-
-    final Widget chatSurface = Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: fullscreen
-              ? BorderRadius.zero
-              : const BorderRadius.all(Radius.circular(20)),
-          boxShadow: fullscreen
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
+  Widget _buildHelpFab() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildHelpAction(
+          visible: _isHelpExpanded,
+          icon: Icons.support_agent_rounded,
+          label: 'Customer Support',
+          onTap: _openCustomerSupport,
+          offset: 18,
         ),
-        child: Column(
-          children: [
-            Container(
-              height: 58,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: fullscreen
-                    ? BorderRadius.zero
-                    : const BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Row(
-                children: [
-                  if (fullscreen)
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isChatFullscreen = false;
-                        });
-                      },
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      color: Colors.white,
-                    )
-                  else
-                    const SizedBox(width: 6),
-                  const Icon(
-                    Icons.smart_toy_outlined,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'DigiTwin Assistant',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _isChatMinimized = true;
-                      });
-                    },
-                    icon: const Icon(Icons.minimize_rounded),
-                    color: Colors.white,
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _isChatFullscreen = !_isChatFullscreen;
-                      });
-                    },
-                    icon: Icon(
-                      fullscreen
-                          ? Icons.fullscreen_exit_rounded
-                          : Icons.fullscreen_rounded,
-                    ),
-                    color: Colors.white,
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _isChatOpen = false;
-                        _isChatMinimized = false;
-                        _isChatFullscreen = false;
-                      });
-                    },
-                    icon: const Icon(Icons.close_rounded),
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                color: const Color(0xFFFFFBF6),
-                child: ListView.builder(
-                  controller: _chatScrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  itemCount: _chatMessages.length + (_isBotTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (_isBotTyping && index == _chatMessages.length) {
-                      return Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          child: const Text(
-                            'Typing...',
-                            style: TextStyle(
-                              color: AppColors.darkBrown,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final message = _chatMessages[index];
-                    final isUser = message.isUser;
-                    return Align(
-                      alignment: isUser
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxWidth: screenWidth * (fullscreen ? 0.74 : 0.62),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                        decoration: BoxDecoration(
-                          color: isUser ? AppColors.primary : Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(14),
-                            topRight: const Radius.circular(14),
-                            bottomLeft: Radius.circular(isUser ? 14 : 4),
-                            bottomRight: Radius.circular(isUser ? 4 : 14),
-                          ),
-                          border: isUser
-                              ? null
-                              : Border.all(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.16,
-                                  ),
-                                ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message.text,
-                              style: TextStyle(
-                                color: isUser
-                                    ? Colors.white
-                                    : AppColors.darkBrown,
-                                height: 1.35,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              DateFormat('hh:mm a').format(message.timestamp),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isUser
-                                    ? Colors.white70
-                                    : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: fullscreen
-                    ? BorderRadius.zero
-                    : const BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _chatController,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendChatMessage(),
-                      decoration: InputDecoration(
-                        hintText: 'Write your doubt...',
-                        filled: true,
-                        fillColor: const Color(0xFFFFF2E8),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: ElevatedButton(
-                      onPressed: _sendChatMessage,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        const SizedBox(height: 10),
+        _buildHelpAction(
+          visible: _isHelpExpanded,
+          icon: Icons.eco_outlined,
+          label: 'Analyze Plant',
+          onTap: _openPlantAnalysis,
+          offset: 8,
         ),
-      ),
-    );
-
-    if (fullscreen) {
-      return Positioned(
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        child: SafeArea(child: chatSurface),
-      );
-    }
-
-    return Positioned(
-      right: 16,
-      bottom: 86 + keyboardInset,
-      child: SizedBox(
-        width: screenWidth > 420 ? 390 : screenWidth - 24,
-        height: 460,
-        child: chatSurface,
-      ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 6,
+          onPressed: _toggleHelpFab,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: Icon(
+              _isHelpExpanded
+                  ? Icons.close_rounded
+                  : Icons.help_outline_rounded,
+              key: ValueKey(_isHelpExpanded),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  // ── Private build helpers ──────────────────────────────────────────────────
+  Widget _buildHelpAction({
+    required bool visible,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required double offset,
+  }) {
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: AnimatedSlide(
+          offset: visible ? Offset.zero : Offset(0, offset / 56),
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            elevation: 4,
+            shadowColor: Colors.black.withValues(alpha: 0.14),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(18),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 11,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: AppColors.primary, size: 19),
+                    const SizedBox(width: 8),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: AppColors.darkBrown,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildMediaContent({
     required List<String> images,
@@ -819,9 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DailyLogListScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const DailyLogListScreen()),
               );
             },
           ),
@@ -843,6 +578,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const InstructionsScreen()),
               );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.eco_outlined),
+            title: const Text('Analyze Plant'),
+            onTap: () {
+              Navigator.pop(context);
+              _openPlantAnalysis();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.support_agent_rounded),
+            title: const Text('Customer Support'),
+            onTap: () {
+              Navigator.pop(context);
+              _openCustomerSupport();
             },
           ),
           const Spacer(),

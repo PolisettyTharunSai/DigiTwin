@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../onboarding/screens/get_started_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'manage_users_screen.dart';
 import 'audit_logs_screen.dart';
 import 'analytics_screen.dart';
 import 'data_export_screen.dart';
+import 'manage_tickets_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -114,6 +113,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         subtitle: 'View, filter & inspect farmers',
                         icon: Icons.people_alt_outlined,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
+                      ),
+                      _buildFeatureCard(
+                        context,
+                        title: 'Support Tickets',
+                        subtitle: 'Reply to help requests',
+                        icon: Icons.confirmation_number_outlined,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
                       ),
                       _buildFeatureCard(
                         context,

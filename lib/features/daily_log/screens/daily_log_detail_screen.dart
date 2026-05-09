@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/fullscreen_image_gallery.dart';
+import '../../home/services/recommendation_service.dart';
 
 class DailyLogDetailScreen extends StatefulWidget {
   final Map<String, dynamic> log;
@@ -12,11 +14,44 @@ class DailyLogDetailScreen extends StatefulWidget {
 }
 
 class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
+  final _recommendationService = RecommendationService();
+  String? _recommendedWater;
+  bool _isLoadingRec = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecommendation();
+  }
+
+  Future<void> _fetchRecommendation() async {
+    try {
+      final dayNumber = widget.log['day_number'];
+      if (dayNumber != null) {
+        final rec = await _recommendationService.getDailyRecommendation(
+          targetDay: dayNumber as int,
+        );
+        if (mounted) {
+          setState(() {
+            _recommendedWater = rec.waterRequirement;
+            _isLoadingRec = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingRec = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching recommendation for detail view: $e');
+      if (mounted) setState(() => _isLoadingRec = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final log = widget.log;
     final date = DateTime.parse(log['log_date']);
     final dayNum = log['day_number'] ?? '?';
+    final images = List<String>.from(log['images'] ?? []);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -51,10 +86,17 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
             _buildSectionHeader('Watering'),
             _buildDetailCard([
               _buildDetailRow(
-                'Watered',
+                'Actual Watered',
                 log['watered'] == true
                     ? '${log['water_amount']} ${log['water_unit']}'
                     : 'No',
+              ),
+              _buildDetailRow(
+                'Recommended',
+                _isLoadingRec
+                    ? 'Loading...'
+                    : (_recommendedWater ?? 'Not available'),
+                valueColor: AppColors.primary,
               ),
             ]),
             const SizedBox(height: 20),
@@ -81,6 +123,22 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
               _buildDetailRow('N Applied', '${log['nutrient_n_applied_g']} g'),
               _buildDetailRow('P Applied', '${log['nutrient_p_applied_g']} g'),
               _buildDetailRow('K Applied', '${log['nutrient_k_applied_g']} g'),
+              const Divider(height: 24),
+              _buildDetailRow(
+                'N Recommended',
+                '${log['nutrient_rec_n_g'] ?? 0} g',
+                valueColor: Colors.blueGrey,
+              ),
+              _buildDetailRow(
+                'P Recommended',
+                '${log['nutrient_rec_p_g'] ?? 0} g',
+                valueColor: Colors.blueGrey,
+              ),
+              _buildDetailRow(
+                'K Recommended',
+                '${log['nutrient_rec_k_g'] ?? 0} g',
+                valueColor: Colors.blueGrey,
+              ),
               if (log['fertilizer_source'] != null &&
                   log['fertilizer_source'].toString().isNotEmpty)
                 _buildDetailRow('Source', log['fertilizer_source']),
@@ -88,7 +146,8 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
             const SizedBox(height: 20),
 
             // ---------------- AI ANALYSIS ----------------
-            if (log['image_analysis_status'] == 'processing') ...[
+            if (log['image_analysis_status'] == 'processing' ||
+                log['image_analysis_status'] == 'pending') ...[
               _buildSectionHeader('AI Crop Health Review'),
               _buildDetailCard([
                 const Row(
@@ -116,15 +175,12 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
             if (log['image_analysis_status'] == 'completed') ...[
               _buildSectionHeader('AI Crop Health Review'),
               _buildDetailCard([
-                // Overall Health
                 _buildDetailRow(
                   'Overall Health',
                   _getHealthStatus(log),
                   valueColor: _getHealthColor(log),
                 ),
                 const Divider(height: 24),
-
-                // Disease Section
                 _buildFarmerFriendlyBlock(
                   title: '🦠 Disease Detection',
                   label: log['disease_label'],
@@ -133,8 +189,6 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
                   fallbackLabel: 'No signs of disease',
                 ),
                 const Divider(height: 24),
-
-                // Pest Section
                 _buildFarmerFriendlyBlock(
                   title: '🐛 Pest Detection',
                   label: log['pest_label'],
@@ -143,14 +197,11 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
                   fallbackLabel: 'No pests detected',
                 ),
                 const Divider(height: 24),
-
-                // Physical Damage Section
                 _buildFarmerFriendlyBlock(
                   title: '🍂 Physical Damage',
                   label: log['damage_label'],
                   confidence: log['damage_confidence'],
-                  advisory:
-                      null, // Damage usually doesn't have an advisory in your schema, but you can add it if needed
+                  advisory: null,
                   fallbackLabel: 'No visible leaf damage',
                 ),
               ]),
@@ -158,33 +209,48 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
             ],
 
             // ---------------- IMAGES ----------------
-            if (log['images'] != null &&
-                (log['images'] as List).isNotEmpty) ...[
+            if (images.isNotEmpty) ...[
               _buildSectionHeader('Photos'),
               const SizedBox(height: 10),
               SizedBox(
                 height: 150,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: (log['images'] as List).length,
+                  itemCount: images.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(width: 12),
                   itemBuilder: (context, index) {
-                    final url = log['images'][index];
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        url,
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 150,
-                          height: 150,
-                          color: Colors.grey[200],
-                          child: const Icon(
-                            Icons.broken_image,
-                            color: Colors.grey,
+                    final url = images[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullscreenImageGallery(
+                              images: images,
+                              initialIndex: index,
+                            ),
+                          ),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Hero(
+                          tag: 'detail_img_$url',
+                          child: Image.network(
+                            url,
+                            width: 150,
+                            height: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 150,
+                              height: 150,
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -202,7 +268,6 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
 
   // ---------------- HELPERS ----------------
 
-  /// A specialized block to make AI data scannable for farmers
   Widget _buildFarmerFriendlyBlock({
     required String title,
     required dynamic label,
@@ -210,8 +275,7 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
     required dynamic advisory,
     required String fallbackLabel,
   }) {
-    final bool hasIssue =
-        label != null &&
+    final bool hasIssue = label != null &&
         label.toString().isNotEmpty &&
         label.toString().toLowerCase() != 'healthy' &&
         label.toString().toLowerCase() != 'none';
@@ -277,48 +341,35 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
   }
 
   String _getHealthStatus(Map log) {
-    // If any of the labels indicate a problem, flag it.
-    final bool hasDisease =
-        log['disease_label'] != null &&
-        log['disease_label'].toString().toLowerCase() != 'healthy';
-    final bool hasPest =
-        log['pest_label'] != null &&
+    final bool hasDisease = log['disease_label'] != null &&
+        log['disease_label'].toString().toLowerCase() != 'healthy' &&
+        log['disease_label'].toString().toLowerCase() != 'none';
+    final bool hasPest = log['pest_label'] != null &&
         log['pest_label'].toString().toLowerCase() != 'none';
 
-    if (hasDisease || hasPest) {
-      return 'Attention Needed ⚠️';
-    }
+    if (hasDisease || hasPest) return 'Attention Needed ⚠️';
     return 'Healthy 🌱';
   }
 
   Color _getHealthColor(Map log) {
-    final bool hasDisease =
-        log['disease_label'] != null &&
-        log['disease_label'].toString().toLowerCase() != 'healthy';
-    final bool hasPest =
-        log['pest_label'] != null &&
+    final bool hasDisease = log['disease_label'] != null &&
+        log['disease_label'].toString().toLowerCase() != 'healthy' &&
+        log['disease_label'].toString().toLowerCase() != 'none';
+    final bool hasPest = log['pest_label'] != null &&
         log['pest_label'].toString().toLowerCase() != 'none';
 
-    if (hasDisease || hasPest) {
-      return Colors.red;
-    }
-    return Colors.green;
+    return (hasDisease || hasPest) ? Colors.red : Colors.green;
   }
 
   String _formatConfidence(dynamic value) {
     if (value == null) return 'Unknown';
-
-    final double? parsed = value is num
-        ? value.toDouble()
-        : double.tryParse(value.toString());
+    final double? parsed =
+        value is num ? value.toDouble() : double.tryParse(value.toString());
     if (parsed == null) return 'Unknown';
-
     final double percentValue = parsed > 1 ? parsed : parsed * 100;
     final percent = percentValue.toStringAsFixed(0);
-    final normalized = percentValue / 100;
-
-    if (normalized > 0.8) return 'High ($percent%)';
-    if (normalized > 0.5) return 'Medium ($percent%)';
+    if (percentValue > 80) return 'High ($percent%)';
+    if (percentValue > 50) return 'Medium ($percent%)';
     return 'Low ($percent%)';
   }
 
@@ -397,17 +448,13 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
     );
   }
 
-  /// Parses a messy Map or stringified JSON into clean, bolded bullet points.
   Widget _buildAdvisoryText(dynamic advisoryData) {
     if (advisoryData == null) return const SizedBox();
-
     String text = advisoryData.toString().trim();
     if (text.isEmpty) return const SizedBox();
-
     if (text.startsWith('{') && text.endsWith('}')) {
       text = text.substring(1, text.length - 1);
     }
-
     final items = text
         .split(', ')
         .map((item) => item.trim())
@@ -418,11 +465,9 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((item) {
         final colonIndex = item.indexOf(':');
-
         if (colonIndex != -1) {
           final key = item.substring(0, colonIndex).trim();
           final value = item.substring(colonIndex + 1).trim();
-
           return Padding(
             padding: const EdgeInsets.only(bottom: 6.0),
             child: RichText(
@@ -443,7 +488,6 @@ class _DailyLogDetailScreenState extends State<DailyLogDetailScreen> {
             ),
           );
         }
-
         return Padding(
           padding: const EdgeInsets.only(bottom: 6.0),
           child: Text(

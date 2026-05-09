@@ -37,7 +37,10 @@ class AppConstants {
   static const String TABLE_PLANT_DAILY_LOG = 'plant_daily_log';
   static const String TABLE_NUTRIENT_SCHEDULE = 'nutrient_schedule';
   static const String TABLE_NUTRIENT_DAILY_STATE = 'nutrient_daily_state';
+  static const String TABLE_SUPPORT_TICKETS = 'support_tickets';
+  static const String TABLE_TICKET_MESSAGES = 'ticket_messages';
   static const String STORAGE_BUCKET_MODELS = 'models';
+  static const String STORAGE_BUCKET_SUPPORT = 'support_attachments';
 
   // ── CropSense API ─────────────────────────────────────────────────────────
   /// Base URL for the CropSense model API.
