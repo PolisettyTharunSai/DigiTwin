@@ -4,8 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'manage_users_screen.dart';
-import 'audit_logs_screen.dart';
-import 'analytics_screen.dart';
 import 'data_export_screen.dart';
 import 'manage_tickets_screen.dart';
 
@@ -99,50 +97,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkBrown),
                   ),
                   const SizedBox(height: 16),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.9,
-                    children: [
-                      _buildFeatureCard(
-                        context,
-                        title: 'Manage Users',
-                        subtitle: 'View, filter & inspect farmers',
-                        icon: Icons.people_alt_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Support Tickets',
-                        subtitle: 'Reply to help requests',
-                        icon: Icons.confirmation_number_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Audit Logs',
-                        subtitle: 'Track data changes & activity',
-                        icon: Icons.history_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AuditLogsScreen())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Analytics',
-                        subtitle: 'Active users & growth overview',
-                        icon: Icons.bar_chart_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalyticsScreen())),
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Data Export',
-                        subtitle: 'Export logs to CSV / JSON',
-                        icon: Icons.download_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DataExportScreen())),
-                      ),
-                    ],
+                  
+                  // Changed to a vertical list of wide cards to reduce empty space
+                  _buildWideFeatureCard(
+                    context,
+                    title: 'Manage Users',
+                    subtitle: 'View, filter & inspect registered farmers',
+                    icon: Icons.people_alt_outlined,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildWideFeatureCard(
+                    context,
+                    title: 'Support Tickets',
+                    subtitle: 'Manage and respond to user help requests',
+                    icon: Icons.confirmation_number_outlined,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildWideFeatureCard(
+                    context,
+                    title: 'Data Export',
+                    subtitle: 'Export logs and system data to CSV / JSON',
+                    icon: Icons.download_outlined,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DataExportScreen())),
                   ),
                 ],
               ),
@@ -197,45 +175,53 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildFeatureCard(
+  Widget _buildWideFeatureCard(
     BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 32),
-            const Spacer(),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.darkBrown),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 11),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.08),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkBrown),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );
