@@ -9,6 +9,10 @@ class AppConstants {
   /// Days before which no visual data (images/3D) is available.
   static const int VISUAL_DATA_START_DAY = 30;
 
+  /// Days after which no visual data is available in the dataset.
+  /// We repeat the last available day's data for subsequent days.
+  static const int VISUAL_DATA_END_DAY = 87;
+
   /// The real-world date corresponding to Day 31 (adjustedDay = 1) in the dataset.
   static const String DATASET_START_DATE = '2025-12-10';
 

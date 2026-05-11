@@ -24,8 +24,13 @@ class DayUtils {
   /// Returns an empty list when [currentDay] <= [AppConstants.VISUAL_DATA_START_DAY].
   static List<String> getImagesForDay(int currentDay) {
     if (currentDay <= AppConstants.VISUAL_DATA_START_DAY) return [];
+    
+    // Clamp to the last available day
+    final int effectiveDay = currentDay > AppConstants.VISUAL_DATA_END_DAY
+        ? AppConstants.VISUAL_DATA_END_DAY
+        : currentDay;
 
-    final int adjustedDay = currentDay - AppConstants.VISUAL_DATA_START_DAY;
+    final int adjustedDay = effectiveDay - AppConstants.VISUAL_DATA_START_DAY;
 
     final startDate = DateTime(2025, 12, 10);
     final date = startDate.add(Duration(days: adjustedDay - 1));
@@ -48,7 +53,13 @@ class DayUtils {
   /// Returns an empty string when [currentDay] <= [AppConstants.VISUAL_DATA_START_DAY].
   static String getModelUrlForDay(int currentDay) {
     if (currentDay <= AppConstants.VISUAL_DATA_START_DAY) return '';
-    final int adjustedDay = currentDay - AppConstants.VISUAL_DATA_START_DAY;
+
+    // Clamp to the last available day
+    final int effectiveDay = currentDay > AppConstants.VISUAL_DATA_END_DAY
+        ? AppConstants.VISUAL_DATA_END_DAY
+        : currentDay;
+
+    final int adjustedDay = effectiveDay - AppConstants.VISUAL_DATA_START_DAY;
     return '${AppConstants.MODEL_BASE_URL}/Day$adjustedDay.glb';
   }
 
