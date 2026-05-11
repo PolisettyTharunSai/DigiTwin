@@ -54,46 +54,21 @@ class MediaCarousel extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    img,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(color: AppColors.primary),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return _NoVisualInfoWidget(
-                        message:
-                            'No visual information available\nfor today.\n\nURL: $img',
-                        height: imageHeight,
-                      );
-                    },
-                  ),
-                  // Overlay to display the image URL for verification
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      color: Colors.black54,
-                      child: Text(
-                        img,
-                        style: const TextStyle(color: Colors.white, fontSize: 8),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Image.network(
+                img,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return _NoVisualInfoWidget(
+                    message: 'No visual information available\nfor today.',
+                    height: imageHeight,
+                  );
+                },
               ),
             ),
           ),
