@@ -510,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     if (_currentDay <= AppConstants.VISUAL_DATA_START_DAY) {
       return NoVisualInfoWidget(
-        message: 'No visual information available\nfor the first 30 days.',
+        message: 'No visual information available\nbefore day ${AppConstants.VISUAL_DATA_START_DAY + 1}.',
         height: imageHeight,
       );
     }

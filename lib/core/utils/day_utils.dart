@@ -32,20 +32,11 @@ class DayUtils {
 
     final int adjustedDay = effectiveDay - AppConstants.VISUAL_DATA_START_DAY;
 
-    final startDate = DateTime(2025, 12, 10);
-    final date = startDate.add(Duration(days: adjustedDay - 1));
-    final day = date.day;
-    final monthAbbr = DateFormat('MMM').format(date).toLowerCase();
-
-    final String monthYearFolder = date.month == 12
-        ? 'December ${date.year}'
-        : '${DateFormat('MMM').format(date)} ${date.year}';
-
-    final String dayFolder = '$day $monthAbbr';
-
     return List.generate(AppConstants.IMAGES_PER_DAY, (i) {
-      final frameName = 'frame_${i.toString().padLeft(3, '0')}.webp';
-      return '${AppConstants.IMAGE_BASE_URL}/${Uri.encodeComponent(monthYearFolder)}/${Uri.encodeComponent(dayFolder)}/1/$frameName';
+      // New format: D{adjustedDay}_{imagenumber}.jpg
+      // imagenumber is 1-based (1 to 10)
+      final imageName = 'D${adjustedDay}_${i + 1}.jpg';
+      return '${AppConstants.IMAGE_BASE_URL}/$imageName';
     });
   }
 

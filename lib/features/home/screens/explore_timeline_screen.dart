@@ -249,7 +249,7 @@ class _ExploreTimelineScreenState extends State<ExploreTimelineScreen> {
     // Days 1–30: no visual data yet
     if (_currentDay <= AppConstants.VISUAL_DATA_START_DAY) {
       return NoVisualInfoWidget(
-        message: 'No visual information available\nfor the first 30 days.',
+        message: 'No visual information available\nbefore day ${AppConstants.VISUAL_DATA_START_DAY + 1}.',
         height: imageHeight,
       );
     }

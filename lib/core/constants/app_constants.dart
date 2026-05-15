@@ -19,7 +19,7 @@ class AppConstants {
   // ── CDN / Asset URLs ──────────────────────────────────────────────────────
   /// Base URL for extracted frame images (2D carousel).
   static const String IMAGE_BASE_URL =
-      'https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/potato_extracted_frames_comp';
+      'https://raw.githubusercontent.com/PolisettyTharunSai/DigiTwin/Data/Rice';
 
   /// Base URL for 3D GLB model files.
   static const String MODEL_BASE_URL =
@@ -52,7 +52,7 @@ class AppConstants {
 
   /// Crop name used in advisory endpoint paths.
   /// The disease advisory endpoint requires: /advisory/disease/{crop_name}/{disease_name}
-  static const String CROP_NAME = 'potato';
+  static const String CROP_NAME = 'rice';
 
   // ── plant_daily_log — image analysis columns ──────────────────────────────
   /// 'pending' while the background pipeline is running,

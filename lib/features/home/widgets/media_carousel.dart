@@ -56,9 +56,33 @@ class MediaCarousel extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
               child: Image.network(
                 img,
-                fit: BoxFit.cover,
+                // Using loadingBuilder to intercept the raw image and apply custom cropping
                 loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
+                  if (loadingProgress == null) {
+                    // Image is fully loaded. Apply the required crop:
+                    // Top-left: (1100, 1404)
+                    // Bottom-right: (1982, 3500)
+                    // Width = 1982 - 1100 = 882
+                    // Height = 3500 - 1404 = 2096
+                    return FittedBox(
+                      fit: BoxFit.cover,
+                      clipBehavior: Clip.hardEdge,
+                      child: SizedBox(
+                        width: 882,
+                        height: 2096,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              left: -1100,
+                              top: -1404,
+                              child: child,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   return const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   );
